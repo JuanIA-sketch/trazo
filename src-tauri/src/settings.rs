@@ -444,7 +444,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 1;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 2;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -672,12 +672,66 @@ fn default_post_process_models() -> HashMap<String, String> {
     map
 }
 
+/// Shared core of the seeded Spanish dictation profiles: spoken
+/// self-corrections, the AI/automation community tech glossary, and cleanup
+/// rules. Each profile appends its own output-format block on top.
+const SPANISH_PROFILE_CORE: &str = r#"Eres el post-procesador de un dictado por voz en español de una comunidad de IA y automatización. Recibirás la transcripción cruda de un dictado. Devuelve ÚNICAMENTE el texto final, sin comentarios, sin comillas envolventes y sin explicaciones.
+
+REGLAS (aplícalas en este orden):
+
+1. AUTOCORRECCIONES HABLADAS: si el hablante se corrige a sí mismo, conserva SOLO la versión final y elimina la parte descartada y el marcador de corrección.
+   - "el martes... no, mejor el jueves" → "el jueves"
+   - "envíaselo a Juan, digo, a Pedro" → "envíaselo a Pedro"
+   - "tres reintentos, espera, mejor cinco reintentos" → "cinco reintentos"
+   Marcadores típicos: "no, mejor", "digo", "perdón", "quise decir", "bueno no", "espera", "mejor dicho", "borra eso".
+
+2. GLOSARIO TÉCNICO: estos términos NUNCA se traducen; si la transcripción los deformó, corrige a la forma canónica exacta:
+   commit, pull request ("pul reques" → "pull request"), merge, deploy, rollback, webhook ("güebjuc", "web juc" → "webhook"), endpoint, workflow, prompt, n8n ("ene ocho ene", "n eight n" → "n8n"), API, token, backend, frontend, repo, branch, pipeline, script, plugin, dashboard, LLM, embedding, fine-tuning.
+   El resto del texto va en español natural.
+
+3. LIMPIEZA: corrige puntuación, mayúsculas y ortografía; elimina muletillas ("eh", "este", "o sea" cuando son relleno); convierte números hablados a cifras (veinticinco → 25).
+
+4. Conserva el significado exacto y el registro del hablante. Mantén el idioma del dictado salvo que el FORMATO DE SALIDA indique otra cosa."#;
+
+/// The profile selected for fresh installs and for stores that had no
+/// selection (a `None` selection makes the post-process hotkey silently no-op).
+pub const DEFAULT_SELECTED_PROMPT_ID: &str = "default_es_casual";
+
+fn spanish_profile_prompt(format_block: &str) -> String {
+    // Ends with the `${output}` placeholder so the legacy (non-structured)
+    // LLM path still receives the transcript; the structured path strips it.
+    format!("{SPANISH_PROFILE_CORE}\n\n{format_block}\n\nTranscripción:\n${{output}}")
+}
+
 fn default_post_process_prompts() -> Vec<LLMPrompt> {
-    vec![LLMPrompt {
-        id: "default_improve_transcriptions".to_string(),
-        name: "Improve Transcriptions".to_string(),
-        prompt: "Clean this transcript:\n1. Fix spelling, capitalization, and punctuation errors\n2. Convert number words to digits (twenty-five → 25, ten percent → 10%, five dollars → $5)\n3. Replace spoken punctuation with symbols (period → ., comma → ,, question mark → ?)\n4. Remove filler words (um, uh, like as filler)\n5. Keep the language in the original version (if it was french, keep it in french for example)\n\nPreserve exact meaning and word order. Do not paraphrase or reorder content.\n\nReturn only the cleaned transcript.\n\nTranscript:\n${output}".to_string(),
-    }]
+    vec![
+        LLMPrompt {
+            id: "default_improve_transcriptions".to_string(),
+            name: "Improve Transcriptions".to_string(),
+            prompt: "Clean this transcript:\n1. Fix spelling, capitalization, and punctuation errors\n2. Convert number words to digits (twenty-five → 25, ten percent → 10%, five dollars → $5)\n3. Replace spoken punctuation with symbols (period → ., comma → ,, question mark → ?)\n4. Remove filler words (um, uh, like as filler)\n5. Keep the language in the original version (if it was french, keep it in french for example)\n\nPreserve exact meaning and word order. Do not paraphrase or reorder content.\n\nReturn only the cleaned transcript.\n\nTranscript:\n${output}".to_string(),
+        },
+        LLMPrompt {
+            id: DEFAULT_SELECTED_PROMPT_ID.to_string(),
+            name: "Mensaje casual (ES)".to_string(),
+            prompt: spanish_profile_prompt(
+                "FORMATO DE SALIDA: mensaje de chat (WhatsApp/Discord/Slack): tono cercano, frases cortas, sin añadir saludos ni despedidas que no estén en el dictado, en un solo párrafo salvo que el dictado enumere cosas. No parafrasees ni reordenes el contenido.",
+            ),
+        },
+        LLMPrompt {
+            id: "default_es_commit".to_string(),
+            name: "Commit convencional (ES→EN)".to_string(),
+            prompt: spanish_profile_prompt(
+                "FORMATO DE SALIDA: un conventional commit EN INGLÉS. Primera línea: \"tipo(scope opcional): descripción imperativa en minúsculas\", de máximo 72 caracteres; tipos permitidos: feat, fix, docs, refactor, chore, test, perf. Si el dictado aporta contexto adicional, añádelo como cuerpo tras una línea en blanco, explicando el porqué del cambio. Los términos del glosario se conservan tal cual. Aquí SÍ debes reestructurar el dictado al formato del commit y traducir la descripción al inglés.",
+            ),
+        },
+        LLMPrompt {
+            id: "default_es_community".to_string(),
+            name: "Post comunidad (ES)".to_string(),
+            prompt: spanish_profile_prompt(
+                "FORMATO DE SALIDA: un post estructurado para la comunidad: primera línea como título en **negrita**, después 1-3 párrafos cortos, con viñetas si el dictado enumera pasos o ideas, y cierre con pregunta o llamado a la acción SOLO si el dictado lo contiene. Aquí SÍ puedes reorganizar el contenido para darle estructura.",
+            ),
+        },
+    ]
 }
 
 fn default_transcribe_gpu_device() -> i32 {
@@ -836,7 +890,7 @@ pub fn get_default_settings() -> AppSettings {
         post_process_api_keys: default_post_process_api_keys(),
         post_process_models: default_post_process_models(),
         post_process_prompts: default_post_process_prompts(),
-        post_process_selected_prompt_id: None,
+        post_process_selected_prompt_id: Some(DEFAULT_SELECTED_PROMPT_ID.to_string()),
         mute_while_recording: false,
         append_trailing_space: false,
         app_language: default_app_language(),
@@ -1003,6 +1057,27 @@ fn apply_settings_migrations(
         if settings.transcribe_gpu_device > 0 {
             settings.transcribe_accelerator = TranscribeAcceleratorSetting::Auto;
             settings.transcribe_gpu_device = default_transcribe_gpu_device();
+        }
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
+    if stored_schema_version < 2 {
+        // Seed the Spanish dictation profiles introduced in schema v2 without
+        // clobbering user-edited prompts: append only ids that are absent, and
+        // only pick a selection when there was none (a `None` selection makes
+        // the post-process hotkey silently no-op, which reads as "broken").
+        for prompt in default_post_process_prompts() {
+            if !settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == prompt.id)
+            {
+                settings.post_process_prompts.push(prompt);
+            }
+        }
+        if settings.post_process_selected_prompt_id.is_none() {
+            settings.post_process_selected_prompt_id = Some(DEFAULT_SELECTED_PROMPT_ID.to_string());
         }
         settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
         updated = true;
@@ -1200,5 +1275,122 @@ mod tests {
         let out = format!("{:?}", map);
         assert!(!out.contains("secret"));
         assert!(out.contains("[REDACTED]"));
+    }
+
+    const SPANISH_PROFILE_IDS: [&str; 3] = [
+        "default_es_casual",
+        "default_es_commit",
+        "default_es_community",
+    ];
+
+    #[test]
+    fn default_prompts_include_spanish_profiles() {
+        let prompts = default_post_process_prompts();
+        for id in SPANISH_PROFILE_IDS {
+            let prompt = prompts
+                .iter()
+                .find(|p| p.id == id)
+                .unwrap_or_else(|| panic!("default prompts must include '{id}'"));
+            // Legacy (non-structured-output) mode inserts the transcript via
+            // this placeholder; without it the transcript never reaches the LLM.
+            assert!(
+                prompt.prompt.contains("${output}"),
+                "profile '{id}' must contain the ${{output}} placeholder"
+            );
+        }
+        assert_eq!(
+            get_default_settings()
+                .post_process_selected_prompt_id
+                .as_deref(),
+            Some("default_es_casual"),
+            "fresh installs must have a selected prompt so post-processing is not silently skipped"
+        );
+    }
+
+    #[test]
+    fn prompt_migration_appends_spanish_profiles_and_selects_one() {
+        let mut settings = get_default_settings();
+        settings.post_process_prompts = vec![LLMPrompt {
+            id: "default_improve_transcriptions".to_string(),
+            name: "Improve Transcriptions".to_string(),
+            prompt: "old prompt ${output}".to_string(),
+        }];
+        settings.post_process_selected_prompt_id = None;
+        settings.settings_schema_version = 1;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 1,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        for id in SPANISH_PROFILE_IDS {
+            assert!(
+                settings.post_process_prompts.iter().any(|p| p.id == id),
+                "migration must append missing profile '{id}'"
+            );
+        }
+        assert_eq!(
+            settings.post_process_selected_prompt_id.as_deref(),
+            Some("default_es_casual"),
+            "migration must select a prompt when none was selected"
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn prompt_migration_preserves_user_prompts_and_selection() {
+        let mut settings = get_default_settings();
+        settings.post_process_prompts = vec![
+            LLMPrompt {
+                id: "default_es_casual".to_string(),
+                name: "Mi casual editado".to_string(),
+                prompt: "texto editado por el usuario ${output}".to_string(),
+            },
+            LLMPrompt {
+                id: "my_custom".to_string(),
+                name: "Custom".to_string(),
+                prompt: "custom ${output}".to_string(),
+            },
+        ];
+        settings.post_process_selected_prompt_id = Some("my_custom".to_string());
+        settings.settings_schema_version = 1;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 1,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+        let casual_count = settings
+            .post_process_prompts
+            .iter()
+            .filter(|p| p.id == "default_es_casual")
+            .count();
+        assert_eq!(
+            casual_count, 1,
+            "migration must not duplicate an existing id"
+        );
+        let casual = settings
+            .post_process_prompts
+            .iter()
+            .find(|p| p.id == "default_es_casual")
+            .unwrap();
+        assert_eq!(
+            casual.prompt, "texto editado por el usuario ${output}",
+            "migration must not overwrite user-edited prompt text"
+        );
+        assert_eq!(
+            settings.post_process_selected_prompt_id.as_deref(),
+            Some("my_custom"),
+            "migration must not change an explicit selection"
+        );
     }
 }

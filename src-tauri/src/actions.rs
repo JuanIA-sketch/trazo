@@ -905,3 +905,134 @@ mod tests {
         assert!(!is_blank_transcription("  hello  "));
     }
 }
+
+/// Integration tests for the seeded Spanish post-processing profiles. They call
+/// the real LLM configured in the local settings store (OpenAI); when no API
+/// key is present the tests skip themselves so CI without credentials stays
+/// green. Assertions are written against behavior the profile prompts must
+/// guarantee regardless of model nondeterminism.
+#[cfg(test)]
+mod post_process_profile_tests {
+    use super::post_process_transcription;
+    use crate::settings::{get_default_settings, AppSettings};
+
+    /// Read the user's OpenAI key from the local Handy settings store without
+    /// ever logging it. Returns `None` when unavailable (test will skip).
+    fn user_openai_key() -> Option<String> {
+        let appdata = std::env::var("APPDATA").ok()?;
+        let path = std::path::Path::new(&appdata)
+            .join("com.pais.handy")
+            .join("settings_store.json");
+        let raw = std::fs::read_to_string(path).ok()?;
+        let json: serde_json::Value = serde_json::from_str(&raw).ok()?;
+        let key = json
+            .get("settings")?
+            .get("post_process_api_keys")?
+            .get("openai")?
+            .as_str()?
+            .trim()
+            .to_string();
+        if key.is_empty() {
+            None
+        } else {
+            Some(key)
+        }
+    }
+
+    fn settings_for_profile(profile_id: &str) -> Option<AppSettings> {
+        let key = user_openai_key()?;
+        let mut settings = get_default_settings();
+        settings.post_process_provider_id = "openai".to_string();
+        settings
+            .post_process_api_keys
+            .insert("openai".to_string(), key);
+        settings
+            .post_process_models
+            .insert("openai".to_string(), "gpt-4o-mini".to_string());
+        settings.post_process_selected_prompt_id = Some(profile_id.to_string());
+        Some(settings)
+    }
+
+    /// Runs post-processing with the given seeded profile. `None` means the
+    /// test should skip (no API key configured locally); a missing profile or
+    /// an API failure panics so the test fails loudly.
+    fn run_profile(profile_id: &str, transcript: &str) -> Option<String> {
+        let Some(settings) = settings_for_profile(profile_id) else {
+            eprintln!("SKIPPED: no OpenAI API key in the local settings store");
+            return None;
+        };
+        let output =
+            tauri::async_runtime::block_on(post_process_transcription(&settings, transcript));
+        Some(output.unwrap_or_else(|| {
+            panic!(
+                "post_process_transcription returned None for profile '{}' — \
+                 profile missing from defaults or LLM call failed",
+                profile_id
+            )
+        }))
+    }
+
+    #[test]
+    fn casual_profile_resolves_spoken_self_corrections() {
+        let Some(out) = run_profile(
+            "default_es_casual",
+            "oye agendemos la demo para el martes... no, mejor el jueves a las cinco de la tarde",
+        ) else {
+            return;
+        };
+        let lower = out.to_lowercase();
+        assert!(
+            lower.contains("jueves"),
+            "the corrected day must be kept, got: {out}"
+        );
+        assert!(
+            !lower.contains("martes"),
+            "the discarded day must be removed, got: {out}"
+        );
+    }
+
+    #[test]
+    fn casual_profile_normalizes_deformed_glossary_terms() {
+        let Some(out) = run_profile(
+            "default_es_casual",
+            "ya subí el commit y abrí el pul reques, solo falta configurar el güebjuc en ene ocho ene",
+        ) else {
+            return;
+        };
+        let lower = out.to_lowercase();
+        for term in ["pull request", "webhook", "n8n"] {
+            assert!(
+                lower.contains(term),
+                "glossary term '{term}' must appear canonically, got: {out}"
+            );
+        }
+        for deformed in ["pul reques", "güebjuc", "ene ocho ene"] {
+            assert!(
+                !lower.contains(deformed),
+                "deformed term '{deformed}' must be fixed, got: {out}"
+            );
+        }
+    }
+
+    #[test]
+    fn commit_profile_emits_conventional_commit_in_english() {
+        let Some(out) = run_profile(
+            "default_es_commit",
+            "arregla el bug del endpoint de usuarios que devolvía un error quinientos cuando no había token",
+        ) else {
+            return;
+        };
+        let first_line = out.lines().next().unwrap_or_default().trim();
+        let re = regex::Regex::new(r"^(feat|fix|docs|refactor|chore|test|perf)(\([^)]+\))?: \S")
+            .expect("valid regex");
+        assert!(
+            re.is_match(first_line),
+            "first line must be a conventional commit, got: {first_line}"
+        );
+        assert!(
+            first_line.len() <= 72,
+            "conventional commit subject must be <= 72 chars, got {} in: {first_line}",
+            first_line.len()
+        );
+    }
+}

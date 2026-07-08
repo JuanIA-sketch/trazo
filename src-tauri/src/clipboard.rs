@@ -12,70 +12,106 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 #[cfg(target_os = "linux")]
 use crate::utils::{is_kde_wayland, is_wayland};
 
-/// Pastes text using the clipboard: saves current content, writes text, sends paste keystroke, restores clipboard.
+/// Drives the clipboard paste sequence against injectable clipboard and
+/// keystroke primitives so the transcript-safety behavior is unit-testable.
+///
+/// Safety-net guarantees:
+/// - If the paste keystroke fails, the transcript is left on the clipboard
+///   (never restored away) so the user can still paste it manually.
+/// - With `keep_text_on_clipboard` (ClipboardHandling::CopyToClipboard) the
+///   transcript also stays on the clipboard after an apparently successful
+///   keystroke, covering silent paste failures (no focused window, read-only
+///   field) that cannot be detected.
+fn run_clipboard_paste_sequence<R, W, K>(
+    read_clipboard: R,
+    mut write_clipboard: W,
+    send_keys: K,
+    text: &str,
+    paste_delay_ms: u64,
+    keep_text_on_clipboard: bool,
+) -> Result<(), String>
+where
+    R: FnOnce() -> String,
+    W: FnMut(&str) -> Result<(), String>,
+    K: FnOnce() -> Result<(), String>,
+{
+    let original = read_clipboard();
+
+    write_clipboard(text)?;
+
+    std::thread::sleep(Duration::from_millis(paste_delay_ms));
+
+    // On keystroke failure this early-returns WITHOUT restoring the original
+    // clipboard: the transcript stays available for a manual paste, so the
+    // dictation is never lost.
+    send_keys()?;
+
+    std::thread::sleep(Duration::from_millis(50));
+
+    if !keep_text_on_clipboard {
+        let _ = write_clipboard(&original);
+    }
+
+    Ok(())
+}
+
+/// Pastes text using the clipboard: saves current content, writes text, sends
+/// paste keystroke, then restores the clipboard — unless
+/// `keep_text_on_clipboard` (ClipboardHandling::CopyToClipboard) or the
+/// keystroke failed, in which case the transcript stays on the clipboard.
 fn paste_via_clipboard(
     enigo: &mut Enigo,
     text: &str,
     app_handle: &AppHandle,
     paste_method: &PasteMethod,
     paste_delay_ms: u64,
+    keep_text_on_clipboard: bool,
 ) -> Result<(), String> {
     let clipboard = app_handle.clipboard();
-    let clipboard_content = clipboard.read_text().unwrap_or_default();
 
-    // Write text to clipboard first
     // On Wayland, prefer wl-copy for better compatibility (especially with umlauts)
     #[cfg(target_os = "linux")]
-    let write_result = if is_wayland() && is_wl_copy_available() {
-        info!("Using wl-copy for clipboard write on Wayland");
-        write_clipboard_via_wl_copy(text)
-    } else {
-        clipboard
-            .write_text(text)
-            .map_err(|e| format!("Failed to write to clipboard: {}", e))
+    let write_clipboard = |t: &str| {
+        if is_wayland() && is_wl_copy_available() {
+            info!("Using wl-copy for clipboard write on Wayland");
+            write_clipboard_via_wl_copy(t)
+        } else {
+            clipboard
+                .write_text(t)
+                .map_err(|e| format!("Failed to write to clipboard: {}", e))
+        }
     };
 
     #[cfg(not(target_os = "linux"))]
-    let write_result = clipboard
-        .write_text(text)
-        .map_err(|e| format!("Failed to write to clipboard: {}", e));
+    let write_clipboard = |t: &str| {
+        clipboard
+            .write_text(t)
+            .map_err(|e| format!("Failed to write to clipboard: {}", e))
+    };
 
-    write_result?;
-
-    std::thread::sleep(Duration::from_millis(paste_delay_ms));
-
-    // Send paste key combo
-    #[cfg(target_os = "linux")]
-    let key_combo_sent = try_send_key_combo_linux(paste_method)?;
-
-    #[cfg(not(target_os = "linux"))]
-    let key_combo_sent = false;
-
-    // Fall back to enigo if no native tool handled it
-    if !key_combo_sent {
-        match paste_method {
-            PasteMethod::CtrlV => input::send_paste_ctrl_v(enigo)?,
-            PasteMethod::CtrlShiftV => input::send_paste_ctrl_shift_v(enigo)?,
-            PasteMethod::ShiftInsert => input::send_paste_shift_insert(enigo)?,
-            _ => return Err("Invalid paste method for clipboard paste".into()),
+    let send_keys = || {
+        // Linux-native tools first; fall back to enigo if none handled it
+        #[cfg(target_os = "linux")]
+        if try_send_key_combo_linux(paste_method)? {
+            return Ok(());
         }
-    }
 
-    std::thread::sleep(std::time::Duration::from_millis(50));
+        match paste_method {
+            PasteMethod::CtrlV => input::send_paste_ctrl_v(enigo),
+            PasteMethod::CtrlShiftV => input::send_paste_ctrl_shift_v(enigo),
+            PasteMethod::ShiftInsert => input::send_paste_shift_insert(enigo),
+            _ => Err("Invalid paste method for clipboard paste".into()),
+        }
+    };
 
-    // Restore original clipboard content
-    // On Wayland, prefer wl-copy for better compatibility
-    #[cfg(target_os = "linux")]
-    if is_wayland() && is_wl_copy_available() {
-        let _ = write_clipboard_via_wl_copy(&clipboard_content);
-    } else {
-        let _ = clipboard.write_text(&clipboard_content);
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    let _ = clipboard.write_text(&clipboard_content);
-
-    Ok(())
+    run_clipboard_paste_sequence(
+        || clipboard.read_text().unwrap_or_default(),
+        write_clipboard,
+        send_keys,
+        text,
+        paste_delay_ms,
+        keep_text_on_clipboard,
+    )
 }
 
 /// Attempts to send a key combination using Linux-native tools.
@@ -615,18 +651,17 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("Failed to lock Enigo: {}", e))?;
 
     // Perform the paste operation
-    match paste_method {
+    let paste_result: Result<(), String> = match paste_method {
         PasteMethod::None => {
             info!("PasteMethod::None selected - skipping paste action");
+            Ok(())
         }
-        PasteMethod::Direct => {
-            paste_direct(
-                &mut enigo,
-                &text,
-                #[cfg(target_os = "linux")]
-                settings.typing_tool,
-            )?;
-        }
+        PasteMethod::Direct => paste_direct(
+            &mut enigo,
+            &text,
+            #[cfg(target_os = "linux")]
+            settings.typing_tool,
+        ),
         PasteMethod::CtrlV | PasteMethod::CtrlShiftV | PasteMethod::ShiftInsert => {
             paste_via_clipboard(
                 &mut enigo,
@@ -634,16 +669,23 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
                 &app_handle,
                 &paste_method,
                 paste_delay_ms,
-            )?
+                settings.clipboard_handling == ClipboardHandling::CopyToClipboard,
+            )
         }
-        PasteMethod::ExternalScript => {
-            let script_path = settings
-                .external_script_path
-                .as_ref()
-                .filter(|p| !p.is_empty())
-                .ok_or("External script path is not configured")?;
-            paste_via_external_script(&text, script_path)?;
-        }
+        PasteMethod::ExternalScript => settings
+            .external_script_path
+            .as_ref()
+            .filter(|p| !p.is_empty())
+            .ok_or_else(|| "External script path is not configured".to_string())
+            .and_then(|script_path| paste_via_external_script(&text, script_path)),
+    };
+
+    if let Err(e) = paste_result {
+        // Safety net: whatever failed, make sure the dictation survives on the
+        // clipboard before surfacing the error (the paste-error toast tells the
+        // user it is there).
+        let _ = app_handle.clipboard().write_text(&text);
+        return Err(e);
     }
 
     if should_send_auto_submit(settings.auto_submit, paste_method) {
@@ -683,5 +725,73 @@ mod tests {
         assert!(should_send_auto_submit(true, PasteMethod::Direct));
         assert!(should_send_auto_submit(true, PasteMethod::CtrlShiftV));
         assert!(should_send_auto_submit(true, PasteMethod::ShiftInsert));
+    }
+
+    mod paste_sequence {
+        use super::super::run_clipboard_paste_sequence;
+        use std::cell::RefCell;
+
+        fn writer(clip: &RefCell<String>) -> impl FnMut(&str) -> Result<(), String> + '_ {
+            move |t| {
+                *clip.borrow_mut() = t.to_string();
+                Ok(())
+            }
+        }
+
+        #[test]
+        fn failed_keystroke_leaves_transcript_on_clipboard() {
+            let clip = RefCell::new("contenido previo".to_string());
+            let result = run_clipboard_paste_sequence(
+                || clip.borrow().clone(),
+                writer(&clip),
+                || Err("keyboard simulation failed".to_string()),
+                "texto dictado",
+                0,
+                false,
+            );
+            assert!(result.is_err(), "keystroke failure must propagate");
+            assert_eq!(
+                *clip.borrow(),
+                "texto dictado",
+                "transcript must stay on the clipboard when the paste keystroke fails"
+            );
+        }
+
+        #[test]
+        fn silent_paste_failure_keeps_transcript_when_copy_to_clipboard() {
+            let clip = RefCell::new("contenido previo".to_string());
+            // Keystroke reports success but may have pasted nowhere (no focus,
+            // read-only field). With keep_text_on_clipboard the transcript must
+            // remain on the clipboard instead of being restored away.
+            let result = run_clipboard_paste_sequence(
+                || clip.borrow().clone(),
+                writer(&clip),
+                || Ok(()),
+                "texto dictado",
+                0,
+                true,
+            );
+            assert!(result.is_ok());
+            assert_eq!(*clip.borrow(), "texto dictado");
+        }
+
+        #[test]
+        fn successful_paste_restores_original_clipboard_when_dont_modify() {
+            let clip = RefCell::new("contenido previo".to_string());
+            let result = run_clipboard_paste_sequence(
+                || clip.borrow().clone(),
+                writer(&clip),
+                || Ok(()),
+                "texto dictado",
+                0,
+                false,
+            );
+            assert!(result.is_ok());
+            assert_eq!(
+                *clip.borrow(),
+                "contenido previo",
+                "without CopyToClipboard the original clipboard must be restored"
+            );
+        }
     }
 }

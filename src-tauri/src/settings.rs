@@ -158,8 +158,10 @@ pub enum PasteMethod {
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ClipboardHandling {
-    #[default]
     DontModify,
+    // Default so a silent paste failure (which cannot be detected) never loses
+    // a dictation: the transcript always survives on the clipboard.
+    #[default]
     CopyToClipboard,
 }
 
@@ -444,7 +446,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 2;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 3;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -1083,6 +1085,17 @@ fn apply_settings_migrations(
         updated = true;
     }
 
+    if stored_schema_version < 3 {
+        // One-time product-default flip (its own schema step so it also reaches
+        // stores an intermediate build already bumped to v2): keep the
+        // transcript on the clipboard after pasting so a silent paste failure
+        // never loses a dictation. Users who prefer DontModify can re-select
+        // it once in settings.
+        settings.clipboard_handling = ClipboardHandling::CopyToClipboard;
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
     // One-time overlay migration (only while the new key is absent): the retired
     // overlay_position `none` meant "hide the overlay" → OverlayStyle::None; any
     // other position had it visible → Live. The position enum no longer has a
@@ -1275,6 +1288,55 @@ mod tests {
         let out = format!("{:?}", map);
         assert!(!out.contains("secret"));
         assert!(out.contains("[REDACTED]"));
+    }
+
+    #[test]
+    fn default_clipboard_handling_keeps_transcript_on_clipboard() {
+        // Safety net: a silent paste failure cannot be detected, so the only
+        // way to guarantee a dictation is never lost is to leave it on the
+        // clipboard by default.
+        assert_eq!(
+            get_default_settings().clipboard_handling,
+            ClipboardHandling::CopyToClipboard
+        );
+    }
+
+    #[test]
+    fn migration_v2_switches_clipboard_handling_to_copy_to_clipboard() {
+        let mut settings = get_default_settings();
+        settings.clipboard_handling = ClipboardHandling::DontModify;
+        settings.settings_schema_version = 1;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 1,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "clipboard_handling": "dont_modify",
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(
+            settings.clipboard_handling,
+            ClipboardHandling::CopyToClipboard
+        );
+    }
+
+    #[test]
+    fn current_schema_respects_dont_modify_choice() {
+        let mut settings = get_default_settings();
+        settings.clipboard_handling = ClipboardHandling::DontModify;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": CURRENT_SETTINGS_SCHEMA_VERSION,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "clipboard_handling": "dont_modify",
+        });
+
+        assert!(!apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(settings.clipboard_handling, ClipboardHandling::DontModify);
     }
 
     const SPANISH_PROFILE_IDS: [&str; 3] = [

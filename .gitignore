@@ -42,3 +42,6 @@ blob-report/
 
 # Nix build output
 result
+
+# Local test fixtures that must never be committed (e.g. voice recordings)
+src-tauri/tests/fixtures/local/

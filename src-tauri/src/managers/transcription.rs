@@ -1252,7 +1252,20 @@ impl TranscriptionManager {
 
                         session
                             .run(&audio, &run_options)
-                            .map(|t| t.text)
+                            .map(|t| {
+                                // Diagnostics for the wrong-language investigation
+                                // (2026-07-08): short clips under language
+                                // auto-detection came back as Icelandic/English.
+                                // Correlates misdetections with clip length.
+                                info!(
+                                    "transcribe-cpp result: requested_language={:?}, \
+                                     detected_language={:?}, audio_secs={:.2}",
+                                    run_options.language,
+                                    t.language,
+                                    audio.len() as f32 / 16_000.0
+                                );
+                                t.text
+                            })
                             .map_err(|e| {
                                 anyhow::anyhow!("transcribe-cpp transcription failed: {}", e)
                             })
@@ -1935,6 +1948,118 @@ mod tests {
 
     fn languages(codes: &[&str]) -> Vec<String> {
         codes.iter().map(|code| (*code).to_string()).collect()
+    }
+
+    #[test]
+    fn transcribe_cpp_run_plan_forces_explicit_spanish() {
+        // A user-selected language must be pinned on the engine, not left to
+        // Whisper's detector (which hallucinates other languages on short clips).
+        let plan = transcribe_cpp_run_plan(false, "es", &languages(&["en", "es"]), true);
+
+        assert!(matches!(plan.task, Task::Transcribe));
+        assert_eq!(plan.language.as_deref(), Some("es"));
+    }
+
+    #[test]
+    fn transcribe_cpp_run_plan_auto_delegates_detection_to_the_model() {
+        let plan = transcribe_cpp_run_plan(false, "auto", &languages(&["en", "es"]), true);
+        assert_eq!(plan.language, None);
+    }
+
+    /// Reproduction of the 2026-07-08 wrong-language bug with the actual
+    /// captured recording: a 1.7s clip of "¿O tú qué opinas?" that
+    /// whisper-large-v3-turbo misdetects under language auto-detection
+    /// (history entry #39 came back as the phonetically-identical Icelandic
+    /// "Og þú kjópinast."), and transcribes correctly when Spanish is forced.
+    /// Note: with a forced language the model skips detection entirely, so
+    /// `Transcript::language` is `None` — the cure is asserted on the text.
+    /// Skips when the local model is not in the HF cache.
+    #[test]
+    #[ignore = "runs the real whisper model (~90s); include with `cargo test -- --ignored`"]
+    fn short_spanish_clip_misdetected_on_auto_is_fixed_by_forcing_es() {
+        fn find_local_turbo_model() -> Option<std::path::PathBuf> {
+            let home = std::env::var("USERPROFILE").ok()?;
+            let snapshots = std::path::Path::new(&home).join(
+                ".cache/huggingface/hub/models--handy-computer--whisper-large-v3-turbo-gguf/snapshots",
+            );
+            for snapshot in std::fs::read_dir(snapshots).ok()? {
+                for file in std::fs::read_dir(snapshot.ok()?.path()).ok()? {
+                    let path = file.ok()?.path();
+                    if path.extension().is_some_and(|e| e == "gguf") {
+                        return Some(path);
+                    }
+                }
+            }
+            None
+        }
+
+        let Some(model_path) = find_local_turbo_model() else {
+            eprintln!("SKIPPED: whisper-large-v3-turbo not in the local HF cache");
+            return;
+        };
+        // The clip is a real user recording, so it lives OUTSIDE version
+        // control (tests/fixtures/local/ is gitignored) and the test skips
+        // gracefully on machines that don't have it.
+        let wav_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/local/short-es-misdetected-as-is.wav");
+        if !wav_path.exists() {
+            eprintln!(
+                "SKIPPED: local voice fixture not present at {} (gitignored on purpose — \
+                 it contains a real user recording)",
+                wav_path.display()
+            );
+            return;
+        }
+
+        // Backend DLLs are staged next to the app binary (target dir root);
+        // the test executable runs one level deeper, in deps/.
+        let exe = std::env::current_exe().expect("test exe path");
+        let scan_dir = exe.parent().and_then(|p| p.parent()).expect("target dir");
+        let _ = transcribe_cpp::init_backends(scan_dir);
+
+        // CPU keeps the test independent from the GPU the running app may hold.
+        let model = Model::load_with(
+            &model_path,
+            &ModelOptions {
+                backend: Backend::Cpu,
+                gpu_device: 0,
+            },
+        )
+        .expect("load whisper model");
+        let mut session = model.session().expect("create session");
+
+        let audio: Vec<f32> = hound::WavReader::open(&wav_path)
+            .expect("open fixture wav")
+            .samples::<i16>()
+            .map(|s| s.expect("pcm sample") as f32 / 32768.0)
+            .collect();
+
+        let mut run = |language: Option<&str>| {
+            let options = RunOptions {
+                task: Task::Transcribe,
+                language: language.map(str::to_string),
+                ..Default::default()
+            };
+            session.run(&audio, &options).expect("transcription run")
+        };
+
+        let auto = run(None);
+        let forced = run(Some("es"));
+
+        assert_ne!(
+            auto.language.as_deref(),
+            Some("es"),
+            "reproduction failed: auto-detection now returns Spanish for this clip \
+             (detected {:?}, text {:?})",
+            auto.language,
+            auto.text
+        );
+        assert!(
+            forced.text.to_lowercase().contains("opinas"),
+            "forcing es must recover the Spanish utterance \"¿O tú qué opinas?\" \
+             (got {:?})",
+            forced.text
+        );
     }
 
     #[test]

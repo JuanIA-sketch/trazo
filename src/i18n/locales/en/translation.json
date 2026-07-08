@@ -100,7 +100,7 @@
     },
     "permissions": {
       "title": "Permissions Required",
-      "description": "Handy needs a couple of permissions to work properly.",
+      "description": "Trazo needs a couple of permissions to work properly.",
       "microphone": {
         "title": "Microphone Access",
         "description": "Required to hear your voice for transcription."
@@ -160,7 +160,7 @@
     "general": {
       "title": "General",
       "shortcut": {
-        "title": "Handy Shortcuts",
+        "title": "Trazo Shortcuts",
         "description": "Configure keyboard shortcuts to trigger speech-to-text recording",
         "loading": "Loading shortcuts...",
         "none": "No shortcuts configured",
@@ -212,7 +212,7 @@
       },
       "rescan": {
         "label": "Rescan",
-        "tooltip": "Rescan for models added to the models folder or Hugging Face cache outside Handy"
+        "tooltip": "Rescan for models added to the models folder or Hugging Face cache outside Trazo"
       },
       "noModelsMatch": "No models match this filter."
     },
@@ -276,11 +276,11 @@
       },
       "autostart": {
         "label": "Launch on Startup",
-        "description": "Automatically start Handy when you log in to your computer."
+        "description": "Automatically start Trazo when you log in to your computer."
       },
       "showTrayIcon": {
         "label": "Show Tray Icon",
-        "description": "Display the Handy icon in the system tray."
+        "description": "Display the Trazo icon in the system tray."
       },
       "overlay": {
         "style": {
@@ -463,7 +463,7 @@
       },
       "updateChecks": {
         "label": "Check for Updates",
-        "description": "Automatically check for new versions of Handy"
+        "description": "Automatically check for new versions of Trazo"
       },
       "whatsNewPreview": {
         "title": "Preview What's New",
@@ -538,15 +538,15 @@
       "title": "About",
       "version": {
         "title": "Version",
-        "description": "Current version of Handy"
+        "description": "Current version of Trazo"
       },
       "whatsNewUpdates": {
         "label": "Show What's New",
-        "description": "Show release notes after Handy updates"
+        "description": "Show release notes after Trazo updates"
       },
       "appDataDirectory": {
         "title": "App Data Directory",
-        "description": "Location where Handy stores its data"
+        "description": "Location where Trazo stores its data"
       },
       "sourceCode": {
         "title": "Source Code",
@@ -555,7 +555,7 @@
       },
       "supportDevelopment": {
         "title": "Support Development",
-        "description": "Help us continue building Handy",
+        "description": "Help us continue building Trazo",
         "button": "Donate"
       },
       "acknowledgments": {
@@ -563,7 +563,7 @@
         "ggml": {
           "title": "ggml",
           "description": "High-performance tensor library for on-device machine learning inference",
-          "details": "Handy's local speech-to-text is built on transcribe.cpp and ggml. Thanks to the amazing work by Georgi Gerganov and contributors."
+          "details": "Trazo's local speech-to-text is built on transcribe.cpp and ggml. Thanks to the amazing work by Georgi Gerganov and contributors."
         }
       }
     },
@@ -589,7 +589,7 @@
     "portableUpdateButton": "Open GitHub Releases"
   },
   "whatsNew": {
-    "title": "New in Handy v{{version}}"
+    "title": "New in Trazo v{{version}}"
   },
   "common": {
     "loading": "Loading...",
@@ -601,7 +601,7 @@
     "noOptionsFound": "No options found"
   },
   "accessibility": {
-    "permissionsDescription": "Handy needs accessibility permissions to type transcribed text.",
+    "permissionsDescription": "Trazo needs accessibility permissions to type transcribed text.",
     "openSettings": "Open System Settings"
   },
   "errors": {
@@ -624,7 +624,7 @@
   },
   "appLanguage": {
     "title": "Application Language",
-    "description": "Change the language of the Handy interface"
+    "description": "Change the language of the Trazo interface"
   },
   "overlay": {
     "transcribing": "Transcribing...",

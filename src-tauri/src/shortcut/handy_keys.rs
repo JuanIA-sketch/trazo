@@ -547,3 +547,47 @@ pub fn stop_handy_keys_recording(app: AppHandle) -> Result<(), String> {
         .ok_or("HandyKeysState not initialized")?;
     state.stop_recording()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::validate_shortcut;
+
+    // `change_binding` gates every user-provided shortcut through
+    // `validate_shortcut` before it can reach the hotkey manager. These tests
+    // lock that contract so an empty or unparseable string can never be
+    // registered as a global shortcut.
+    #[test]
+    fn empty_and_whitespace_shortcuts_are_rejected() {
+        assert!(validate_shortcut("").is_err());
+        assert!(validate_shortcut("   ").is_err());
+        assert!(validate_shortcut("\t").is_err());
+    }
+
+    #[test]
+    fn unparseable_shortcuts_are_rejected() {
+        assert!(validate_shortcut("not a key").is_err());
+        // "++" collapses to no modifiers and no key — the parser's final
+        // Hotkey::new(empty, None) must refuse it (EmptyHotkey).
+        assert!(validate_shortcut("++").is_err());
+        assert!(validate_shortcut("ctrl+notakey").is_err());
+    }
+
+    #[test]
+    fn conventional_combos_are_accepted() {
+        assert!(validate_shortcut("ctrl+space").is_ok());
+        assert!(validate_shortcut("ctrl+shift+space").is_ok());
+    }
+
+    // Bare-modifier (push-to-talk on Ctrl) and bare-key (Escape as cancel)
+    // shortcuts are supported features, NOT bugs: the July 2026 keyboard
+    // hijack was caused by the handy-keys Windows hook swallowing modifier
+    // RELEASES (fixed + regression-tested in
+    // vendor/handy-keys/src/platform/state.rs), not by these bindings
+    // existing. If either assertion below starts failing, existing user
+    // bindings like `ctrl_left` or `escape` would silently stop registering.
+    #[test]
+    fn bare_modifier_and_bare_key_shortcuts_remain_supported() {
+        assert!(validate_shortcut("ctrl_left").is_ok());
+        assert!(validate_shortcut("escape").is_ok());
+    }
+}

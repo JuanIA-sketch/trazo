@@ -150,6 +150,12 @@ transcribe-cpp = { version = "0.1.1", default-features = false, features = [
 tauri-runtime = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }
 tauri-runtime-wry = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }
 tauri-utils = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }
+# Vendored with a keyboard-hijack fix: the Windows low-level hook swallowed
+# modifier RELEASES whose resulting state matched a modifier-only hotkey
+# (e.g. bare ctrl_left push-to-talk + Ctrl+Shift chord → Shift-up eaten →
+# Shift/Alt/Win stuck down system-wide). See vendor/handy-keys/src/platform/
+# state.rs::should_block_modifier_event and its regression tests.
+handy-keys = { path = "vendor/handy-keys" }
 
 [dev-dependencies]
 tempfile = "3"

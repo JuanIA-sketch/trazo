@@ -625,7 +625,8 @@
   },
   "overlay": {
     "transcribing": "Transkribiere...",
-    "processing": "Verarbeite..."
+    "processing": "Verarbeite...",
+    "copied": "Copied — press Ctrl+V to paste"
   },
   "whatsNew": {
     "title": "Neu in Handy v{{version}}"

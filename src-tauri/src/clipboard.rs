@@ -624,6 +624,18 @@ fn should_send_auto_submit(auto_submit: bool, paste_method: PasteMethod) -> bool
     auto_submit && paste_method != PasteMethod::None
 }
 
+/// Whether the transcript is guaranteed to be on the clipboard after a paste
+/// attempt — drives the post-dictation "copied" notice. Always true with
+/// `CopyToClipboard`; with `DontModify` only a FAILED paste leaves the text
+/// behind (the error safety net re-copies it), a successful one restores the
+/// user's original clipboard.
+pub fn transcript_lands_on_clipboard(handling: ClipboardHandling, paste_succeeded: bool) -> bool {
+    match handling {
+        ClipboardHandling::CopyToClipboard => true,
+        ClipboardHandling::DontModify => !paste_succeeded,
+    }
+}
+
 pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
     let settings = get_settings(&app_handle);
     let paste_method = settings.paste_method;
@@ -725,6 +737,38 @@ mod tests {
         assert!(should_send_auto_submit(true, PasteMethod::Direct));
         assert!(should_send_auto_submit(true, PasteMethod::CtrlShiftV));
         assert!(should_send_auto_submit(true, PasteMethod::ShiftInsert));
+    }
+
+    mod copied_notice {
+        use super::super::transcript_lands_on_clipboard;
+        use crate::settings::ClipboardHandling;
+
+        #[test]
+        fn copy_to_clipboard_always_leaves_the_transcript() {
+            assert!(transcript_lands_on_clipboard(
+                ClipboardHandling::CopyToClipboard,
+                true
+            ));
+            assert!(transcript_lands_on_clipboard(
+                ClipboardHandling::CopyToClipboard,
+                false
+            ));
+        }
+
+        #[test]
+        fn dont_modify_only_leaves_it_when_paste_failed() {
+            // Successful paste restores the user's original clipboard: claiming
+            // "copied" would lie.
+            assert!(!transcript_lands_on_clipboard(
+                ClipboardHandling::DontModify,
+                true
+            ));
+            // Failed paste: the safety net re-copied the transcript.
+            assert!(transcript_lands_on_clipboard(
+                ClipboardHandling::DontModify,
+                false
+            ));
+        }
     }
 
     mod paste_sequence {

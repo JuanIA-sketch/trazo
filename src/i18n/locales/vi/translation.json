@@ -625,7 +625,8 @@
   },
   "overlay": {
     "transcribing": "Đang chuyển đổi...",
-    "processing": "Đang xử lý..."
+    "processing": "Đang xử lý...",
+    "copied": "Copied — press Ctrl+V to paste"
   },
   "whatsNew": {
     "title": "Điểm mới trong Handy v{{version}}"

@@ -625,7 +625,8 @@
   },
   "overlay": {
     "transcribing": "Trascrizione...",
-    "processing": "Elaborazione..."
+    "processing": "Elaborazione...",
+    "copied": "Copied — press Ctrl+V to paste"
   },
   "whatsNew": {
     "title": "Novità in Handy v{{version}}"

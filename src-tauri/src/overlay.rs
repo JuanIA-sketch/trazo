@@ -355,7 +355,15 @@ pub fn create_recording_overlay(app_handle: &AppHandle) {
     }
 }
 
+/// Bumped on every overlay state change so a pending delayed hide (the
+/// "copied" notice auto-dismiss) can tell whether the overlay still shows ITS
+/// state or something newer — a new recording must never be hidden by a stale
+/// timer.
+static OVERLAY_STATE_GENERATION: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
 fn show_overlay_state(app_handle: &AppHandle, state: &str) {
+    OVERLAY_STATE_GENERATION.fetch_add(1, Ordering::Relaxed);
     // Whether the overlay shows at all is governed by overlay_style; position
     // only chooses Top vs Bottom placement.
     let settings = settings::get_settings(app_handle);
@@ -421,6 +429,24 @@ pub fn show_transcribing_overlay(app_handle: &AppHandle) {
 /// Shows the processing overlay window
 pub fn show_processing_overlay(app_handle: &AppHandle) {
     show_overlay_state(app_handle, "processing");
+}
+
+/// Brief post-dictation notice ("copied — Ctrl+V to paste") that dismisses
+/// itself. Shown instead of hiding the overlay right after a paste attempt, so
+/// the user knows the transcript is on the clipboard even if they switched
+/// windows mid-dictation. The delayed hide is generation-guarded: if a new
+/// recording (or another notice) changed the overlay state meanwhile, the
+/// stale timer does nothing.
+pub fn show_copied_notice(app_handle: &AppHandle) {
+    show_overlay_state(app_handle, "copied");
+    let generation = OVERLAY_STATE_GENERATION.load(Ordering::Relaxed);
+    let app_handle = app_handle.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(2400));
+        if OVERLAY_STATE_GENERATION.load(Ordering::Relaxed) == generation {
+            hide_recording_overlay(&app_handle);
+        }
+    });
 }
 
 /// Updates the overlay window position based on current settings

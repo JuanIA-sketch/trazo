@@ -625,7 +625,8 @@
   },
   "overlay": {
     "transcribing": "Transkriberar...",
-    "processing": "Bearbetar..."
+    "processing": "Bearbetar...",
+    "copied": "Copied — press Ctrl+V to paste"
   },
   "whatsNew": {
     "title": "Nytt i Handy v{{version}}"

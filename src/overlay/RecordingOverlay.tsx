@@ -12,7 +12,12 @@ import type {
 import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 
-type OverlayState = "recording" | "streaming" | "transcribing" | "processing";
+type OverlayState =
+  | "recording"
+  | "streaming"
+  | "transcribing"
+  | "processing"
+  | "copied";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
@@ -207,6 +212,27 @@ const RecordingOverlay: React.FC = () => {
     </div>
   );
 
+  // check (left) | label (center) — post-dictation "copied" notice; nothing to
+  // cancel, it dismisses itself from the backend.
+  const copiedRow = (
+    <div className="sbase">
+      <div className="sbase-l">
+        <svg className="scheck" viewBox="0 0 16 16" aria-hidden="true">
+          <path
+            d="M3 8.5 L6.5 12 L13 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <span className="swork-label">{t("overlay.copied")}</span>
+      <div className="sbase-r" />
+    </div>
+  );
+
   // ---- Live overlay: a pill that sculpts open into a panel ----
   if (state === "streaming") {
     const hasText =
@@ -259,10 +285,12 @@ const RecordingOverlay: React.FC = () => {
     );
   }
 
-  // ---- Minimal overlay: exactly one row at a time — waveform (recording), or a
-  // spinner + label (transcribing / processing). Never both. The pill animates its
-  // width between them; the cancel button is in both rows so it stays put.
+  // ---- Minimal overlay: exactly one row at a time — waveform (recording), a
+  // spinner + label (transcribing / processing), or the post-paste copied
+  // notice. Never several. The pill animates its width between them; the cancel
+  // button is in both active rows so it stays put.
   const working = state === "transcribing" || state === "processing";
+  const copied = state === "copied";
   const workLabel =
     state === "processing"
       ? t("overlay.processing")
@@ -274,9 +302,13 @@ const RecordingOverlay: React.FC = () => {
       className={`ov-stage ${position} ov-fade ${isVisible ? "show" : ""}`}
     >
       <div
-        className={`scard compact ${working && isVisible ? "cworking" : ""}`}
+        className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""}`}
       >
-        {working ? workingRow(workLabel, true) : listeningRow(false, true)}
+        {copied
+          ? copiedRow
+          : working
+            ? workingRow(workLabel, true)
+            : listeningRow(false, true)}
       </div>
     </div>
   );

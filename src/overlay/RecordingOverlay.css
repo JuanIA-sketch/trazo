@@ -352,6 +352,15 @@
   animation: sspin 0.7s linear infinite;
   flex: none;
 }
+
+/* Checkmark for the post-dictation "copied" notice — same footprint as the
+   spinner so the row layout doesn't shift. */
+.scheck {
+  width: 14px;
+  height: 14px;
+  color: var(--s-accent);
+  flex: none;
+}
 @keyframes sspin {
   to {
     transform: rotate(1turn);

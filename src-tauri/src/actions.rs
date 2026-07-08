@@ -765,17 +765,35 @@ impl ShortcutAction for TranscribeAction {
                                         return;
                                     }
 
-                                    match utils::paste(final_text, ah_clone.clone()) {
-                                        Ok(()) => debug!(
-                                            "Text pasted successfully in {:?}",
-                                            paste_time.elapsed()
-                                        ),
-                                        Err(e) => {
-                                            error!("Failed to paste transcription: {}", e);
-                                            let _ = ah_clone.emit("paste-error", ());
-                                        }
+                                    let paste_succeeded =
+                                        match utils::paste(final_text, ah_clone.clone()) {
+                                            Ok(()) => {
+                                                debug!(
+                                                    "Text pasted successfully in {:?}",
+                                                    paste_time.elapsed()
+                                                );
+                                                true
+                                            }
+                                            Err(e) => {
+                                                error!("Failed to paste transcription: {}", e);
+                                                let _ = ah_clone.emit("paste-error", ());
+                                                false
+                                            }
+                                        };
+                                    // Brief "copied — Ctrl+V" notice whenever the
+                                    // transcript is on the clipboard, so switching
+                                    // windows mid-dictation never leaves the user
+                                    // guessing whether their text survived.
+                                    let clipboard_handling =
+                                        get_settings(&ah_clone).clipboard_handling;
+                                    if utils::transcript_lands_on_clipboard(
+                                        clipboard_handling,
+                                        paste_succeeded,
+                                    ) {
+                                        utils::show_copied_notice(&ah_clone);
+                                    } else {
+                                        utils::hide_recording_overlay(&ah_clone);
                                     }
-                                    utils::hide_recording_overlay(&ah_clone);
                                     change_tray_icon(&ah_clone, TrayIconState::Idle);
                                 })
                                 .unwrap_or_else(|e| {

@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "transcribe.cpp アクセラレーション",
-          "description": "transcribe.cpp (Whisper 系) モデルのハードウェアアクセラレーション。「自動」では利用可能な場合 GPU を使用します (macOS では Metal、Windows/Linux では Vulkan)。"
+          "description": "transcribe.cpp (Whisper 系) モデルのハードウェアアクセラレーション。「自動」では利用可能な場合 GPU を使用します (macOS では Metal、Windows/Linux では Vulkan)。",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "ONNX アクセラレーション",

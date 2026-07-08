@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "transcribe.cpp-versnelling",
-          "description": "Hardwareversnelling voor transcribe.cpp-modellen (Whisper-familie). 'Automatisch' gebruikt de GPU indien beschikbaar (Metal op macOS, Vulkan op Windows/Linux)."
+          "description": "Hardwareversnelling voor transcribe.cpp-modellen (Whisper-familie). 'Automatisch' gebruikt de GPU indien beschikbaar (Metal op macOS, Vulkan op Windows/Linux).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "ONNX-versnelling",

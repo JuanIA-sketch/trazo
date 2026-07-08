@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "Прискорення Whisper",
-          "description": "Апаратне прискорення для моделей Whisper. Автоматичний режим використовує GPU за наявності (Metal на macOS, Vulkan на Windows/Linux)."
+          "description": "Апаратне прискорення для моделей Whisper. Автоматичний режим використовує GPU за наявності (Metal на macOS, Vulkan на Windows/Linux).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "Прискорення ONNX",

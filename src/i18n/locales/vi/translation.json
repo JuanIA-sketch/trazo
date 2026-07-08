@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "Tăng tốc Whisper",
-          "description": "Tăng tốc phần cứng cho các mô hình Whisper. Chế độ tự động sử dụng GPU nếu có (Metal trên macOS, Vulkan trên Windows/Linux)."
+          "description": "Tăng tốc phần cứng cho các mô hình Whisper. Chế độ tự động sử dụng GPU nếu có (Metal trên macOS, Vulkan trên Windows/Linux).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "Tăng tốc ONNX",

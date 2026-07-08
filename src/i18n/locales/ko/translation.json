@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "Whisper 가속",
-          "description": "Whisper 모델의 하드웨어 가속. 자동 모드는 GPU를 사용합니다 (macOS에서는 Metal, Windows/Linux에서는 Vulkan)."
+          "description": "Whisper 모델의 하드웨어 가속. 자동 모드는 GPU를 사용합니다 (macOS에서는 Metal, Windows/Linux에서는 Vulkan).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "ONNX 가속",

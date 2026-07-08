@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "Aceleração Whisper",
-          "description": "Aceleração por hardware para modelos Whisper. Auto usa GPU se disponível (Metal no macOS, Vulkan no Windows/Linux)."
+          "description": "Aceleração por hardware para modelos Whisper. Auto usa GPU se disponível (Metal no macOS, Vulkan no Windows/Linux).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "Aceleração ONNX",

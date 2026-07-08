@@ -258,7 +258,9 @@
       "acceleration": {
         "transcribe": {
           "title": "Ускорение за Whisper",
-          "description": "Хардуерно ускорение за моделите Whisper. „Автоматично“ използва GPU при наличност (Metal на macOS, Vulkan на Windows/Linux)."
+          "description": "Хардуерно ускорение за моделите Whisper. „Автоматично“ използва GPU при наличност (Metal на macOS, Vulkan на Windows/Linux).",
+          "activeDevice": "Active: {{device}}",
+          "cpuFallbackWarning": "GPU was requested but transcription is running on the CPU."
         },
         "ort": {
           "title": "Ускорение за ONNX",

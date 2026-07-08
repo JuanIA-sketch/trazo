@@ -1125,6 +1125,7 @@ pub fn change_mute_while_recording_setting(app: AppHandle, enabled: bool) -> Res
     Ok(())
 }
 
+
 #[tauri::command]
 #[specta::specta]
 pub fn change_append_trailing_space_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
@@ -1232,4 +1233,12 @@ pub async fn get_available_accelerators() -> crate::managers::transcription::Ava
     tauri::async_runtime::spawn_blocking(crate::managers::transcription::get_available_accelerators)
         .await
         .expect("get_available_accelerators panicked")
+}
+
+/// Which device the transcribe.cpp engine actually bound on the last model
+/// load (None until a whisper-family model has loaded this session).
+#[tauri::command]
+#[specta::specta]
+pub fn get_active_compute_info() -> Option<crate::managers::transcription::ActiveComputeInfo> {
+    crate::managers::transcription::get_active_compute_info()
 }

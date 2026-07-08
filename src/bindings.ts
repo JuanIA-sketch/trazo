@@ -431,6 +431,13 @@ async getAvailableAccelerators() : Promise<AvailableAccelerators> {
     return await TAURI_INVOKE("get_available_accelerators");
 },
 /**
+ * Which device the transcribe.cpp engine actually bound on the last model
+ * load (None until a whisper-family model has loaded this session).
+ */
+async getActiveComputeInfo() : Promise<ActiveComputeInfo | null> {
+    return await TAURI_INVOKE("get_active_compute_info");
+},
+/**
  * Start key recording mode
  */
 async startHandyKeysRecording(bindingId: string) : Promise<Result<null, string>> {
@@ -830,10 +837,8 @@ async updateRecordingRetentionPeriod(period: string) : Promise<Result<null, stri
 }
 },
 /**
- * Checks if the Mac is a laptop by detecting battery presence
- * 
- * This uses pmset to check for battery information.
- * Returns true if a battery is detected (laptop), false otherwise (desktop)
+ * Stub implementation for non-macOS platforms
+ * Always returns false since laptop detection is macOS-specific
  */
 async isLaptop() : Promise<Result<boolean, string>> {
     try {
@@ -864,6 +869,31 @@ streamTextEvent: "stream-text-event"
 
 /** user-defined types **/
 
+/**
+ * What the transcribe.cpp engine is actually running on after the last model
+ * load. The bound backend can differ from the request (e.g. silent CPU
+ * fallback under Auto), and until now that truth only existed in the log —
+ * this surfaces it to the UI.
+ */
+export type ActiveComputeInfo = { 
+/**
+ * Accelerator/backend the load requested (e.g. "Auto", "Vulkan", "Cpu").
+ */
+requested_backend: string; 
+/**
+ * Registry device transcribe-cpp actually bound (e.g. "Vulkan1", "CPU").
+ */
+bound_backend: string; 
+/**
+ * Human-readable device description when the registry reports one
+ * (e.g. "NVIDIA GeForce GTX 1650").
+ */
+device_name: string | null; 
+/**
+ * True when something other than CPU was requested but execution bound
+ * to a CPU device.
+ */
+is_cpu_fallback: boolean }
 export type AppSettings = { 
 /**
  * Internal settings schema marker for one-time migrations. Fresh installs
@@ -877,7 +907,13 @@ settings_schema_version?: number; bindings: Partial<{ [key in string]: ShortcutB
  * upgrading from before this key existed are blanked by the migration so they
  * see the current release's notes — see `apply_settings_migrations`.
  */
-whats_new_last_seen_version?: string; selected_model?: string; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; typing_tool?: TypingTool; external_script_path: string | null; custom_filler_words?: string[] | null; transcribe_accelerator?: TranscribeAcceleratorSetting; ort_accelerator?: OrtAcceleratorSetting; transcribe_gpu_device?: number; extra_recording_buffer_ms?: number; vad_enabled?: boolean; 
+whats_new_last_seen_version?: string; selected_model?: string; onboarding_completed?: boolean; always_on_microphone?: boolean; selected_microphone?: string | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; 
+/**
+ * System output volume to hold while recording: `None` leaves the volume
+ * alone, `Some(0.0)` mutes, anything above ducks to that level (0.0-1.0).
+ * Levels above zero are only honored on Windows for now.
+ */
+recording_volume?: number | null; append_trailing_space?: boolean; app_language?: string; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; typing_tool?: TypingTool; external_script_path: string | null; custom_filler_words?: string[] | null; transcribe_accelerator?: TranscribeAcceleratorSetting; ort_accelerator?: OrtAcceleratorSetting; transcribe_gpu_device?: number; extra_recording_buffer_ms?: number; vad_enabled?: boolean; 
 /**
  * Which recording overlay to show: None / Minimal / Live. Streaming mode is
  * not gated on this — that follows model capability. Migrated from the old

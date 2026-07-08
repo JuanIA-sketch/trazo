@@ -1,10 +1,12 @@
 import { type FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { listen } from "@tauri-apps/api/event";
 import { SettingContainer } from "../ui/SettingContainer";
 import { Dropdown, type DropdownOption } from "../ui/Dropdown";
 import { useSettings } from "../../hooks/useSettings";
 import { commands } from "@/bindings";
 import type {
+  ActiveComputeInfo,
   TranscribeAcceleratorSetting,
   OrtAcceleratorSetting,
 } from "@/bindings";
@@ -61,6 +63,23 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
     [],
   );
   const [ortOptions, setOrtOptions] = useState<DropdownOption[]>([]);
+  const [activeCompute, setActiveCompute] = useState<ActiveComputeInfo | null>(
+    null,
+  );
+
+  useEffect(() => {
+    // The bound device can differ from the request (silent CPU fallback under
+    // Auto), so surface what the engine actually loaded on; refresh after
+    // every model (re)load.
+    const refresh = () => {
+      commands.getActiveComputeInfo().then(setActiveCompute);
+    };
+    refresh();
+    const unlisten = listen("model-state-changed", refresh);
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   useEffect(() => {
     commands.getAvailableAccelerators().then((available) => {
@@ -122,15 +141,36 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
         grouped={grouped}
         layout="horizontal"
       >
-        <Dropdown
-          options={transcribeOptions}
-          selectedValue={currentTranscribe}
-          onSelect={handleTranscribeChange}
-          disabled={
-            isUpdating("transcribe_accelerator") ||
-            isUpdating("transcribe_gpu_device")
-          }
-        />
+        <div className="flex flex-col items-end gap-1">
+          <Dropdown
+            options={transcribeOptions}
+            selectedValue={currentTranscribe}
+            onSelect={handleTranscribeChange}
+            disabled={
+              isUpdating("transcribe_accelerator") ||
+              isUpdating("transcribe_gpu_device")
+            }
+          />
+          {activeCompute && (
+            <p
+              className={`text-xs ${
+                activeCompute.is_cpu_fallback
+                  ? "text-amber-500"
+                  : "text-mid-gray"
+              }`}
+            >
+              {activeCompute.is_cpu_fallback
+                ? t(
+                    "settings.advanced.acceleration.transcribe.cpuFallbackWarning",
+                  )
+                : t("settings.advanced.acceleration.transcribe.activeDevice", {
+                    device: activeCompute.device_name
+                      ? `${activeCompute.device_name} (${activeCompute.bound_backend})`
+                      : activeCompute.bound_backend,
+                  })}
+            </p>
+          )}
+        </div>
       </SettingContainer>
       {ortOptions.length > 2 && (
         <SettingContainer

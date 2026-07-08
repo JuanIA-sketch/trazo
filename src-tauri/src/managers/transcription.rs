@@ -580,6 +580,7 @@ impl TranscriptionManager {
                     caps.supports_translate,
                     caps.supports_language_detect
                 );
+                record_active_compute(backend, &bound_backend.to_string());
                 LoadedEngine::TranscribeCpp(session)
             }
             EngineType::Parakeet => {
@@ -1218,15 +1219,14 @@ impl TranscriptionManager {
                         // whisper run extension to a non-whisper arch is rejected
                         // with INVALID_ARG, so skip it there and let the fuzzy
                         // post-correction handle custom words instead.
-                        let family =
-                            if settings.custom_words.is_empty() || !model_is_whisper {
-                                None
-                            } else {
-                                Some(RunExtension::Whisper(WhisperRunOptions {
-                                    initial_prompt: Some(settings.custom_words.join(", ")),
-                                    ..Default::default()
-                                }))
-                            };
+                        let family = if settings.custom_words.is_empty() || !model_is_whisper {
+                            None
+                        } else {
+                            Some(RunExtension::Whisper(WhisperRunOptions {
+                                initial_prompt: Some(settings.custom_words.join(", ")),
+                                ..Default::default()
+                            }))
+                        };
 
                         let run_plan = transcribe_cpp_run_plan(
                             settings.translate_to_english,
@@ -1387,8 +1387,7 @@ impl TranscriptionManager {
         // family). We don't pass a prompt to non-whisper models (it requires the
         // whisper-kind run extension), so they still get fuzzy correction here,
         // same as the ONNX engines.
-        let filtered_result =
-            post_process_transcription_text(result, &settings, model_is_whisper);
+        let filtered_result = post_process_transcription_text(result, &settings, model_is_whisper);
 
         let et = std::time::Instant::now();
         let translation_note = if settings.translate_to_english {
@@ -1822,6 +1821,55 @@ pub fn apply_accelerator_settings(app: &tauri::AppHandle) {
     };
     accel::set_ort_accelerator(ort_pref);
     info!("ORT accelerator set to: {}", ort_pref);
+}
+
+/// What the transcribe.cpp engine is actually running on after the last model
+/// load. The bound backend can differ from the request (e.g. silent CPU
+/// fallback under Auto), and until now that truth only existed in the log —
+/// this surfaces it to the UI.
+#[derive(Serialize, Clone, Debug, Type)]
+pub struct ActiveComputeInfo {
+    /// Accelerator/backend the load requested (e.g. "Auto", "Vulkan", "Cpu").
+    pub requested_backend: String,
+    /// Registry device transcribe-cpp actually bound (e.g. "Vulkan1", "CPU").
+    pub bound_backend: String,
+    /// Human-readable device description when the registry reports one
+    /// (e.g. "NVIDIA GeForce GTX 1650").
+    pub device_name: Option<String>,
+    /// True when something other than CPU was requested but execution bound
+    /// to a CPU device.
+    pub is_cpu_fallback: bool,
+}
+
+static ACTIVE_COMPUTE: Mutex<Option<ActiveComputeInfo>> = Mutex::new(None);
+
+pub fn get_active_compute_info() -> Option<ActiveComputeInfo> {
+    ACTIVE_COMPUTE.lock().unwrap().clone()
+}
+
+/// Record which device a whisper model load actually bound to, looking up the
+/// registry for the human-readable description and CPU-fallback detection.
+fn record_active_compute(requested: Backend, bound_backend: &str) {
+    let device = transcribe_cpp::devices()
+        .into_iter()
+        .find(|d| d.name == bound_backend);
+    let bound_is_cpu = device
+        .as_ref()
+        .map(|d| d.kind == "cpu")
+        .unwrap_or_else(|| bound_backend.eq_ignore_ascii_case("cpu"));
+    let info = ActiveComputeInfo {
+        requested_backend: format!("{:?}", requested),
+        bound_backend: bound_backend.to_string(),
+        device_name: device.and_then(|d| {
+            if d.description.is_empty() {
+                None
+            } else {
+                Some(d.description)
+            }
+        }),
+        is_cpu_fallback: bound_is_cpu && !matches!(requested, Backend::Cpu),
+    };
+    *ACTIVE_COMPUTE.lock().unwrap() = Some(info);
 }
 
 #[derive(Serialize, Clone, Debug, Type)]

@@ -10,6 +10,7 @@ import { AudioFeedback } from "../AudioFeedback";
 import { useSettings } from "../../../hooks/useSettings";
 import { VolumeSlider } from "../VolumeSlider";
 import { MuteWhileRecording } from "../MuteWhileRecording";
+import { RecordingVolume } from "../RecordingVolume";
 import { ModelSettingsCard } from "./ModelSettingsCard";
 
 export const GeneralSettings: React.FC = () => {
@@ -17,6 +18,9 @@ export const GeneralSettings: React.FC = () => {
   const { audioFeedbackEnabled, getSetting } = useSettings();
   const pushToTalk = getSetting("push_to_talk");
   const isLinux = type() === "linux";
+  // Scalar ducking (recording_volume > 0) is only implemented on Windows;
+  // other platforms keep the binary mute toggle.
+  const isWindows = type() === "windows";
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
       <SettingsGroup title={t("settings.general.title")}>
@@ -30,7 +34,11 @@ export const GeneralSettings: React.FC = () => {
       <ModelSettingsCard />
       <SettingsGroup title={t("settings.sound.title")}>
         <MicrophoneSelector descriptionMode="tooltip" grouped={true} />
-        <MuteWhileRecording descriptionMode="tooltip" grouped={true} />
+        {isWindows ? (
+          <RecordingVolume descriptionMode="tooltip" grouped={true} />
+        ) : (
+          <MuteWhileRecording descriptionMode="tooltip" grouped={true} />
+        )}
         <AudioFeedback descriptionMode="tooltip" grouped={true} />
         <OutputDeviceSelector
           descriptionMode="tooltip"

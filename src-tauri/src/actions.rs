@@ -515,8 +515,10 @@ impl ShortcutAction for TranscribeAction {
             // The blocking helper exits immediately if audio feedback is disabled,
             // so we can always reuse this thread to ensure mute happens right after playback.
             std::thread::spawn(move || {
+                // Scalar ducking goes first — instant, and the cue stays audible.
+                rm_clone.apply_duck_early();
                 play_feedback_sound_blocking(&app_clone, SoundType::Start);
-                rm_clone.apply_mute();
+                rm_clone.apply_duck();
             });
 
             if let Err(e) = rm.try_start_recording(&binding_id, vad_policy) {
@@ -535,12 +537,14 @@ impl ShortcutAction for TranscribeAction {
                     let app_clone = app.clone();
                     let rm_clone = Arc::clone(&rm);
                     std::thread::spawn(move || {
+                        // Scalar ducking goes first — instant, and the cue stays audible.
+                        rm_clone.apply_duck_early();
                         std::thread::sleep(std::time::Duration::from_millis(100));
                         debug!("Handling delayed audio feedback/mute sequence");
                         // Helper handles disabled audio feedback by returning early, so we reuse it
                         // to keep mute sequencing consistent in every mode.
                         play_feedback_sound_blocking(&app_clone, SoundType::Start);
-                        rm_clone.apply_mute();
+                        rm_clone.apply_duck();
                     });
                 }
                 Err(e) => {
@@ -609,7 +613,7 @@ impl ShortcutAction for TranscribeAction {
         }
 
         // Unmute before playing audio feedback so the stop sound is audible
-        rm.remove_mute();
+        rm.remove_duck();
 
         // Play audio feedback for recording stop
         play_feedback_sound(app, SoundType::Stop);

@@ -24,6 +24,9 @@ pub fn cancel_current_operation(app: &AppHandle) {
     let audio_manager = app.state::<Arc<AudioRecordingManager>>();
     let recording_was_active = audio_manager.is_recording();
     audio_manager.cancel_recording();
+    // Cancelling skips the normal stop path, so restore the system volume /
+    // mute here or the audio stays ducked (upstream issue #1501).
+    audio_manager.remove_duck();
 
     // Abandon any live streaming transcription
     let tm = app.state::<Arc<TranscriptionManager>>();

@@ -566,6 +566,13 @@
         "label": "顯示新功能",
         "description": "Handy 更新後顯示版本資訊"
       }
+    },
+    "recordingVolume": {
+      "label": "Lower system volume while recording",
+      "description": "While recording, the system volume is lowered to the chosen level (0% = mute) and restored when you finish, so your music does not bleed into the dictation.",
+      "levelLabel": "Volume while recording",
+      "levelDescription": "Level the system audio is held at while recording. 0% mutes it entirely.",
+      "muteValue": "Muted"
     }
   },
   "footer": {

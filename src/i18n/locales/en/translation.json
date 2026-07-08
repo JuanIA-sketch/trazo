@@ -566,6 +566,13 @@
           "details": "Handy's local speech-to-text is built on transcribe.cpp and ggml. Thanks to the amazing work by Georgi Gerganov and contributors."
         }
       }
+    },
+    "recordingVolume": {
+      "label": "Lower system volume while recording",
+      "description": "While recording, the system volume is lowered to the chosen level (0% = mute) and restored when you finish, so your music does not bleed into the dictation.",
+      "levelLabel": "Volume while recording",
+      "levelDescription": "Level the system audio is held at while recording. 0% mutes it entirely.",
+      "muteValue": "Muted"
     }
   },
   "footer": {

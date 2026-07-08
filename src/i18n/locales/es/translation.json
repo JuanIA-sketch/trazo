@@ -566,6 +566,13 @@
         "label": "Mostrar novedades",
         "description": "Mostrar notas de la versión después de las actualizaciones de Handy"
       }
+    },
+    "recordingVolume": {
+      "label": "Bajar el volumen del sistema al grabar",
+      "description": "Mientras grabas, el volumen del sistema baja al nivel elegido (0% = silencio) y se restaura al terminar. Así tu música no se cuela en el dictado.",
+      "levelLabel": "Volumen durante la grabación",
+      "levelDescription": "Nivel al que queda el audio del sistema mientras grabas. 0% lo silencia por completo.",
+      "muteValue": "Silencio"
     }
   },
   "footer": {

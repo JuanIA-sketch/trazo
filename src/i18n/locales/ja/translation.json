@@ -566,6 +566,13 @@
         "label": "新機能を表示",
         "description": "Handy のアップデート後にリリースノートを表示"
       }
+    },
+    "recordingVolume": {
+      "label": "Lower system volume while recording",
+      "description": "While recording, the system volume is lowered to the chosen level (0% = mute) and restored when you finish, so your music does not bleed into the dictation.",
+      "levelLabel": "Volume while recording",
+      "levelDescription": "Level the system audio is held at while recording. 0% mutes it entirely.",
+      "muteValue": "Muted"
     }
   },
   "footer": {

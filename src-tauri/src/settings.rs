@@ -406,6 +406,11 @@ pub struct AppSettings {
     pub post_process_selected_prompt_id: Option<String>,
     #[serde(default)]
     pub mute_while_recording: bool,
+    /// System output volume to hold while recording: `None` leaves the volume
+    /// alone, `Some(0.0)` mutes, anything above ducks to that level (0.0-1.0).
+    /// Levels above zero are only honored on Windows for now.
+    #[serde(default)]
+    pub recording_volume: Option<f32>,
     #[serde(default)]
     pub append_trailing_space: bool,
     #[serde(default = "default_app_language")]
@@ -446,7 +451,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 3;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 4;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -894,6 +899,7 @@ pub fn get_default_settings() -> AppSettings {
         post_process_prompts: default_post_process_prompts(),
         post_process_selected_prompt_id: Some(DEFAULT_SELECTED_PROMPT_ID.to_string()),
         mute_while_recording: false,
+        recording_volume: None,
         append_trailing_space: false,
         app_language: default_app_language(),
         experimental_enabled: false,
@@ -1092,6 +1098,20 @@ fn apply_settings_migrations(
         // never loses a dictation. Users who prefer DontModify can re-select
         // it once in settings.
         settings.clipboard_handling = ClipboardHandling::CopyToClipboard;
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
+    if stored_schema_version < 4 {
+        // Fold the binary mute into the recording-volume model: mute becomes
+        // "duck to 0". The legacy flag is turned off so both paths never apply
+        // at once, and an explicit duck level a user already set wins.
+        if settings.mute_while_recording {
+            if settings.recording_volume.is_none() {
+                settings.recording_volume = Some(0.0);
+            }
+            settings.mute_while_recording = false;
+        }
         settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
         updated = true;
     }
@@ -1319,6 +1339,108 @@ mod tests {
         assert_eq!(
             settings.clipboard_handling,
             ClipboardHandling::CopyToClipboard
+        );
+    }
+
+    #[test]
+    fn clipboard_migration_applies_to_stores_already_at_v2() {
+        // A dev-machine store can have been bumped to v2 (prompts seeded) by an
+        // intermediate build that predated the clipboard flip; the flip must
+        // still apply to it, which is why it lives in its own schema step.
+        let mut settings = get_default_settings();
+        settings.clipboard_handling = ClipboardHandling::DontModify;
+        settings.settings_schema_version = 2;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 2,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "clipboard_handling": "dont_modify",
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(
+            settings.clipboard_handling,
+            ClipboardHandling::CopyToClipboard
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn default_recording_volume_is_disabled() {
+        assert_eq!(get_default_settings().recording_volume, None);
+    }
+
+    #[test]
+    fn mute_migration_converts_mute_to_recording_volume_zero() {
+        let mut settings = get_default_settings();
+        settings.mute_while_recording = true;
+        settings.recording_volume = None;
+        settings.settings_schema_version = 3;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 3,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "mute_while_recording": true,
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(settings.recording_volume, Some(0.0));
+        assert!(
+            !settings.mute_while_recording,
+            "legacy flag must be turned off so muting is not applied twice"
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn mute_migration_leaves_disabled_mute_alone() {
+        let mut settings = get_default_settings();
+        settings.mute_while_recording = false;
+        settings.recording_volume = None;
+        settings.settings_schema_version = 3;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 3,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "mute_while_recording": false,
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+        assert_eq!(settings.recording_volume, None);
+    }
+
+    #[test]
+    fn mute_migration_keeps_existing_recording_volume() {
+        let mut settings = get_default_settings();
+        settings.mute_while_recording = true;
+        settings.recording_volume = Some(0.3);
+        settings.settings_schema_version = 3;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 3,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "mute_while_recording": true,
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+        assert_eq!(
+            settings.recording_volume,
+            Some(0.3),
+            "an explicit duck level must not be overwritten by the mute migration"
         );
     }
 

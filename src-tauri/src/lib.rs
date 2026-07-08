@@ -16,6 +16,7 @@ pub mod portable;
 mod settings;
 mod shortcut;
 mod signal_handle;
+mod system_volume;
 mod transcription_coordinator;
 mod tray;
 mod tray_i18n;
@@ -585,6 +586,7 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_transcribe_gpu_device,
             shortcut::get_available_accelerators,
             shortcut::get_active_compute_info,
+            shortcut::change_recording_volume_setting,
             shortcut::handy_keys::start_handy_keys_recording,
             shortcut::handy_keys::stop_handy_keys_recording,
             trigger_update_check,
@@ -841,6 +843,12 @@ pub fn run(cli_args: CliArgs) {
             overlay::update_overlay_enabled_cache(
                 settings.overlay_style != settings::OverlayStyle::None,
             );
+
+            // Heal a crash that happened while recording had the system volume
+            // ducked: restore the persisted pre-duck volume, if any.
+            std::thread::spawn(|| {
+                system_volume::recover_volume_on_startup();
+            });
 
             // Pre-warm GPU/accelerator enumeration on a background thread. The first
             // get_available_accelerators call enumerates ORT execution providers and

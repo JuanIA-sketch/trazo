@@ -183,6 +183,9 @@ pub struct AudioRecordingManager {
     is_open: Arc<Mutex<bool>>,
     is_recording: Arc<Mutex<bool>>,
     did_mute: Arc<Mutex<bool>>,
+    /// Original system volume saved while ducking is active (`None` when not
+    /// ducked). Restored by `remove_duck`.
+    duck_original: Arc<Mutex<Option<f32>>>,
     close_generation: Arc<AtomicU64>,
     cancel_generation: Arc<AtomicU64>,
     stream_router: Arc<StreamRouter>,
@@ -218,6 +221,7 @@ impl AudioRecordingManager {
             is_open: Arc::new(Mutex::new(false)),
             is_recording: Arc::new(Mutex::new(false)),
             did_mute: Arc::new(Mutex::new(false)),
+            duck_original: Arc::new(Mutex::new(None)),
             close_generation: Arc::new(AtomicU64::new(0)),
             cancel_generation: Arc::new(AtomicU64::new(0)),
             stream_router,
@@ -344,6 +348,71 @@ impl AudioRecordingManager {
             *did_mute_guard = false;
             debug!("Mute removed");
         }
+    }
+
+    /// Scalar ducking applied *before* the start feedback sound: unlike the
+    /// hard mute it does not silence the cue (it just plays quieter), and
+    /// ducking first removes the perceived delay of waiting for the sound to
+    /// finish (upstream issue #642). No-op for the mute cases, which keep
+    /// running after the sound via [`apply_duck`].
+    pub fn apply_duck_early(&self) {
+        let settings = get_settings(&self.app_handle);
+        if !*self.is_open.lock().unwrap() {
+            return;
+        }
+        if let Some(level) = settings.recording_volume {
+            if level > 0.0 {
+                let mut original_guard = self.duck_original.lock().unwrap();
+                if original_guard.is_none() {
+                    *original_guard = crate::system_volume::duck_to(level);
+                }
+            }
+        }
+    }
+
+    /// Lowers (or mutes) the system output while recording, per the
+    /// `recording_volume` setting: `Some(0.0)` hard-mutes via the proven
+    /// [`set_mute`] path, a positive level ducks the master volume
+    /// (Windows only), and `None` falls back to the legacy
+    /// `mute_while_recording` flag. Idempotent while already ducked.
+    pub fn apply_duck(&self) {
+        let settings = get_settings(&self.app_handle);
+        if !*self.is_open.lock().unwrap() {
+            return;
+        }
+
+        match settings.recording_volume {
+            Some(level) if level > 0.0 => {
+                let mut original_guard = self.duck_original.lock().unwrap();
+                if original_guard.is_none() {
+                    *original_guard = crate::system_volume::duck_to(level);
+                }
+            }
+            Some(_) => {
+                let mut did_mute_guard = self.did_mute.lock().unwrap();
+                set_mute(true);
+                *did_mute_guard = true;
+                debug!("Mute applied (recording_volume = 0)");
+            }
+            None => {
+                drop(settings);
+                self.apply_mute();
+            }
+        }
+    }
+
+    /// Restores whatever [`apply_duck`] changed: the saved system volume when
+    /// ducking, or the mute state otherwise. Safe to call when nothing was
+    /// applied (recording cancelled before the duck, ducking skipped, ...).
+    pub fn remove_duck(&self) {
+        let original = self.duck_original.lock().unwrap().take();
+        if let Some(original) = original {
+            let ducked_level = get_settings(&self.app_handle)
+                .recording_volume
+                .unwrap_or(0.0);
+            crate::system_volume::restore_from_duck(original, ducked_level);
+        }
+        self.remove_mute();
     }
 
     pub fn preload_vad(&self) -> Result<(), anyhow::Error> {

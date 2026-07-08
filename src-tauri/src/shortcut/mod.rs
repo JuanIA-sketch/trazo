@@ -1125,6 +1125,16 @@ pub fn change_mute_while_recording_setting(app: AppHandle, enabled: bool) -> Res
     Ok(())
 }
 
+/// `None` leaves the system volume alone while recording, `Some(0.0)` mutes,
+/// a positive level ducks to it (Windows only). Values are clamped to 0.0-1.0.
+#[tauri::command]
+#[specta::specta]
+pub fn change_recording_volume_setting(app: AppHandle, volume: Option<f32>) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.recording_volume = volume.map(|v| v.clamp(0.0, 1.0));
+    settings::write_settings(&app, settings);
+    Ok(())
+}
 
 #[tauri::command]
 #[specta::specta]

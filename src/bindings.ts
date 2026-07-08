@@ -438,6 +438,18 @@ async getActiveComputeInfo() : Promise<ActiveComputeInfo | null> {
     return await TAURI_INVOKE("get_active_compute_info");
 },
 /**
+ * `None` leaves the system volume alone while recording, `Some(0.0)` mutes,
+ * a positive level ducks to it (Windows only). Values are clamped to 0.0-1.0.
+ */
+async changeRecordingVolumeSetting(volume: number | null) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_recording_volume_setting", { volume }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start key recording mode
  */
 async startHandyKeysRecording(bindingId: string) : Promise<Result<null, string>> {

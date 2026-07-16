@@ -11,13 +11,7 @@ import type {
 } from "@/bindings";
 import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
-
-type OverlayState =
-  | "recording"
-  | "streaming"
-  | "transcribing"
-  | "processing"
-  | "copied";
+import { handleShowOverlay, type OverlayState } from "./showOverlayHandler";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
@@ -55,32 +49,31 @@ const RecordingOverlay: React.FC = () => {
 
   useEffect(() => {
     const setupEventListeners = async () => {
-      const unlistenShow = await listen("show-overlay", async (event) => {
-        await syncLanguageFromSettings();
-        // The Live panel flows downward from a top overlay and upward from a
-        // bottom one; read the placement so the layout can flip to match.
-        try {
-          const settings = await commands.getAppSettings();
-          if (settings.status === "ok") {
-            setPosition(
-              settings.data.overlay_position === "top" ? "top" : "bottom",
-            );
-          }
-        } catch {
-          // Keep the previous/default placement if settings can't be read.
-        }
-        const overlayState = event.payload as OverlayState;
-        setState(overlayState);
-        if (overlayState === "recording" || overlayState === "streaming") {
-          setStreamText({ committed: "", tentative: "" });
-        }
-        if (overlayState === "streaming") {
-          setPhase("listening");
-          setWorkKind("transcribing");
-          setElapsed(0);
-          setSession((s) => s + 1); // remount the card fresh for this session
-        }
-        setIsVisible(true);
+      const unlistenShow = await listen("show-overlay", (event) => {
+        handleShowOverlay(event.payload as OverlayState, {
+          syncLanguage: syncLanguageFromSettings,
+          // The Live panel flows downward from a top overlay and upward from
+          // a bottom one; the placement is re-read in the background on every
+          // show, keeping the previous value if settings can't be read.
+          getOverlayPosition: async () => {
+            const settings = await commands.getAppSettings();
+            if (settings.status !== "ok") {
+              throw new Error("settings unavailable");
+            }
+            return settings.data.overlay_position === "top" ? "top" : "bottom";
+          },
+          setPosition,
+          setState,
+          resetStreamText: () =>
+            setStreamText({ committed: "", tentative: "" }),
+          startStreamingSession: () => {
+            setPhase("listening");
+            setWorkKind("transcribing");
+            setElapsed(0);
+            setSession((s) => s + 1); // remount the card fresh for this session
+          },
+          setVisible: setIsVisible,
+        });
       });
 
       const unlistenHide = await listen("hide-overlay", () => {

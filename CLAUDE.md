@@ -81,5 +81,9 @@ bun run tauri dev
    (`HandyTextLogo`/`HandyHand`), repo propio y updater.
 9. **Bug de overlay invisible (2026-07-08)**: no reproducible tras reinicio;
    diagnóstico completo descartó paleta/CSS/eventos (ventana y webview sanos
-   verificados por CDP y captura de píxeles). Fragilidad latente conocida: el
-   handler de `show-overlay` espera dos IPC antes de `setIsVisible(true)`.
+   verificados por CDP y captura de píxeles). La fragilidad sospechosa (el
+   handler de `show-overlay` esperaba dos IPC antes de `setIsVisible(true)`)
+   quedó eliminada: la lógica vive en `src/overlay/showOverlayHandler.ts`
+   (visibilidad síncrona; idioma/posición en segundo plano, best-effort) con
+   tests en `showOverlayHandler.test.ts` (`bun test src/` — acotado a `src/`
+   para no pisar los specs de Playwright en `tests/`).

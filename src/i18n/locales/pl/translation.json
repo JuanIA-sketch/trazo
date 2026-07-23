@@ -117,6 +117,11 @@
         "checkFailed": "Nie udało się sprawdzić uprawnień. Spróbuj ponownie.",
         "requestFailed": "Nie udało się poprosić o uprawnienie. Spróbuj ponownie."
       }
+    },
+    "autostart": {
+      "title": "Uruchamiać Trazo po włączeniu komputera?",
+      "subtitle": "Opcjonalne — możesz to zmienić w każdej chwili w ustawieniach zaawansowanych.",
+      "continue": "Kontynuuj"
     }
   },
   "modelSelector": {

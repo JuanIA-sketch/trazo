@@ -117,6 +117,11 @@
         "checkFailed": "Impossibile verificare i permessi. Riprova.",
         "requestFailed": "Impossibile richiedere il permesso. Riprova."
       }
+    },
+    "autostart": {
+      "title": "Avviare Trazo all'accensione del computer?",
+      "subtitle": "Facoltativo — puoi cambiarlo in qualsiasi momento nelle impostazioni avanzate.",
+      "continue": "Continua"
     }
   },
   "modelSelector": {

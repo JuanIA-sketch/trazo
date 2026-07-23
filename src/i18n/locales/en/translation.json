@@ -117,6 +117,11 @@
         "checkFailed": "Failed to check permissions. Please try again.",
         "requestFailed": "Failed to request permission. Please try again."
       }
+    },
+    "autostart": {
+      "title": "Start Trazo when you turn on your computer?",
+      "subtitle": "Optional — you can change this anytime in Advanced settings.",
+      "continue": "Continue"
     }
   },
   "modelSelector": {

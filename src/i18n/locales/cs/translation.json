@@ -117,6 +117,11 @@
         "checkFailed": "Nepodařilo se zkontrolovat oprávnění. Zkuste to prosím znovu.",
         "requestFailed": "Nepodařilo se požádat o oprávnění. Zkuste to prosím znovu."
       }
+    },
+    "autostart": {
+      "title": "Spouštět Trazo po zapnutí počítače?",
+      "subtitle": "Volitelné — kdykoli to můžete změnit v pokročilém nastavení.",
+      "continue": "Pokračovat"
     }
   },
   "modelSelector": {

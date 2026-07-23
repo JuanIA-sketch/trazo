@@ -11,15 +11,20 @@ import { ModelStateEvent, RecordingErrorEvent } from "./lib/types/events";
 import "./App.css";
 import AccessibilityPermissions from "./components/AccessibilityPermissions";
 import Footer from "./components/footer";
-import Onboarding, { AccessibilityOnboarding } from "./components/onboarding";
+import Onboarding, {
+  AccessibilityOnboarding,
+  AutostartOnboarding,
+} from "./components/onboarding";
+import {
+  nextOnboardingStep,
+  type OnboardingStep,
+} from "./components/onboarding/onboardingFlow";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
 import { WhatsNewGate } from "./components/whats-new";
 import { useSettings } from "./hooks/useSettings";
 import { useSettingsStore } from "./stores/settingsStore";
 import { commands } from "@/bindings";
 import { getLanguageDirection, initializeRTL } from "@/lib/utils/rtl";
-
-type OnboardingStep = "accessibility" | "model" | "done";
 
 const renderSettingsContent = (section: SidebarSection) => {
   const ActiveComponent =
@@ -239,14 +244,15 @@ function App() {
   };
 
   const handleAccessibilityComplete = () => {
-    // Returning users already have models, skip to main app
-    // New users need to select a model
-    setOnboardingStep(isReturningUser ? "done" : "model");
+    setOnboardingStep(nextOnboardingStep("accessibility", isReturningUser));
+  };
+
+  const handleAutostartComplete = () => {
+    setOnboardingStep(nextOnboardingStep("autostart", isReturningUser));
   };
 
   const handleModelSelected = () => {
-    // Transition to main app - user has started a download
-    setOnboardingStep("done");
+    setOnboardingStep(nextOnboardingStep("model", isReturningUser));
   };
 
   // Still checking onboarding status
@@ -256,6 +262,10 @@ function App() {
 
   if (onboardingStep === "accessibility") {
     return <AccessibilityOnboarding onComplete={handleAccessibilityComplete} />;
+  }
+
+  if (onboardingStep === "autostart") {
+    return <AutostartOnboarding onComplete={handleAutostartComplete} />;
   }
 
   if (onboardingStep === "model") {

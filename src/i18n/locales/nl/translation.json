@@ -117,6 +117,11 @@
         "checkFailed": "Machtigingen controleren mislukt. Probeer het opnieuw.",
         "requestFailed": "Machtiging aanvragen mislukt. Probeer het opnieuw."
       }
+    },
+    "autostart": {
+      "title": "Trazo starten wanneer je je computer aanzet?",
+      "subtitle": "Optioneel — je kunt dit altijd wijzigen in de geavanceerde instellingen.",
+      "continue": "Doorgaan"
     }
   },
   "modelSelector": {

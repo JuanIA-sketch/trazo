@@ -87,3 +87,15 @@ bun run tauri dev
    (visibilidad síncrona; idioma/posición en segundo plano, best-effort) con
    tests en `showOverlayHandler.test.ts` (`bun test src/` — acotado a `src/`
    para no pisar los specs de Playwright en `tests/`).
+10. **Paso de autostart en el onboarding (2026-07-23)**: pregunta explícita
+    con los toggles existentes (`AutostartToggle` + `StartHidden`) entre
+    permisos y modelo; secuencia en `onboardingFlow.ts` (función pura con
+    tests); defaults siguen en `false`; claves `onboarding.autostart.*` en
+    las 21 locales. Spec en `docs/superpowers/specs/`. **BUG PENDIENTE**:
+    con `start_hidden=true` y onboarding incompleto la app arranca a la
+    bandeja sin mostrar el onboarding (la condición de `lib.rs` ~870 no
+    consulta `onboarding_completed`) — nuestro paso lo hace alcanzable.
+    PAUSADO (sesión propia): auto-selección de modelo default con descarga
+    en background (candidato Nemotron Streaming vs Turbo, probar en es);
+    desacoplar `onboarding_completed` de la descarga; pantalla manual como
+    fallback.

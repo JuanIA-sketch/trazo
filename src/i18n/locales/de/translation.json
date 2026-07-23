@@ -117,6 +117,11 @@
         "checkFailed": "Berechtigungsprüfung fehlgeschlagen. Bitte erneut versuchen.",
         "requestFailed": "Berechtigungsanfrage fehlgeschlagen. Bitte erneut versuchen."
       }
+    },
+    "autostart": {
+      "title": "Trazo beim Einschalten des Computers starten?",
+      "subtitle": "Optional — jederzeit in den erweiterten Einstellungen änderbar.",
+      "continue": "Weiter"
     }
   },
   "modelSelector": {

@@ -117,6 +117,11 @@
         "checkFailed": "Erro ao verificar permissões. Por favor, tente novamente.",
         "requestFailed": "Erro ao solicitar permissão. Por favor, tente novamente."
       }
+    },
+    "autostart": {
+      "title": "Iniciar o Trazo ao ligar o computador?",
+      "subtitle": "Opcional — pode alterar isto a qualquer momento nas definições avançadas.",
+      "continue": "Continuar"
     }
   },
   "modelSelector": {

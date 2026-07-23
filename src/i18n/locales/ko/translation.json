@@ -117,6 +117,11 @@
         "checkFailed": "권한 확인에 실패했습니다. 다시 시도해주세요.",
         "requestFailed": "권한 요청에 실패했습니다. 다시 시도해주세요."
       }
+    },
+    "autostart": {
+      "title": "컴퓨터를 켤 때 Trazo를 시작할까요?",
+      "subtitle": "선택 사항 — 고급 설정에서 언제든지 변경할 수 있습니다.",
+      "continue": "계속"
     }
   },
   "modelSelector": {

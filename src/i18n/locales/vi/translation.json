@@ -117,6 +117,11 @@
         "checkFailed": "Không thể kiểm tra quyền. Vui lòng thử lại.",
         "requestFailed": "Không thể yêu cầu quyền. Vui lòng thử lại."
       }
+    },
+    "autostart": {
+      "title": "Khởi động Trazo khi bạn bật máy tính?",
+      "subtitle": "Tùy chọn — bạn có thể thay đổi bất cứ lúc nào trong cài đặt nâng cao.",
+      "continue": "Tiếp tục"
     }
   },
   "modelSelector": {

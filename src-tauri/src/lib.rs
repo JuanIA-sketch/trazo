@@ -121,6 +121,23 @@ fn show_main_window(app: &AppHandle) {
     );
 }
 
+/// Whether the main window must be shown at app launch.
+///
+/// `hide_requested` mirrors start_hidden (setting or CLI flag). Even when
+/// hiding was requested the window must still appear when permission
+/// onboarding forces it, when there is no tray icon (a hidden window would
+/// be unreachable), or when first-run onboarding is still pending —
+/// otherwise the app sits in the tray with the onboarding rendered in a
+/// window nobody can see.
+fn should_show_main_window_at_launch(
+    hide_requested: bool,
+    force_show_permissions: bool,
+    tray_available: bool,
+    onboarding_completed: bool,
+) -> bool {
+    force_show_permissions || !hide_requested || !tray_available || !onboarding_completed
+}
+
 #[allow(unused_variables)]
 fn should_force_show_permissions_window(app: &AppHandle) -> bool {
     #[cfg(target_os = "windows")]
@@ -866,14 +883,12 @@ pub fn run(cli_args: CliArgs) {
 
             // Show main window only if not starting hidden.
             // CLI --start-hidden flag overrides the setting.
-            // But if permission onboarding is required, always show the window.
-            let should_hide = settings.start_hidden || cli_args.start_hidden;
-            let should_force_show = should_force_show_permissions_window(&app_handle);
-
-            // If start_hidden but tray is disabled, we must show the window
-            // anyway. Without a tray icon, the dock is the only way back in.
-            let tray_available = settings.show_tray_icon && !cli_args.no_tray;
-            if should_force_show || !should_hide || !tray_available {
+            if should_show_main_window_at_launch(
+                settings.start_hidden || cli_args.start_hidden,
+                should_force_show_permissions_window(&app_handle),
+                settings.show_tray_icon && !cli_args.no_tray,
+                settings.onboarding_completed,
+            ) {
                 show_main_window(&app_handle);
             }
 
@@ -924,4 +939,43 @@ pub fn run(cli_args: CliArgs) {
             }
             _ => {}
         });
+}
+
+#[cfg(test)]
+mod launch_visibility_tests {
+    use super::should_show_main_window_at_launch;
+
+    /// Regresión del bug 2026-07-23: con start_hidden=true y el onboarding
+    /// sin completar, la app arrancaba a la bandeja con el onboarding
+    /// renderizado en una ventana invisible. Un primer arranque real debe
+    /// mostrar la ventana SIEMPRE, sin importar start_hidden.
+    #[test]
+    fn shows_when_onboarding_pending_even_if_hide_requested() {
+        assert!(should_show_main_window_at_launch(
+            true,  // hide_requested (start_hidden)
+            false, // force_show_permissions
+            true,  // tray_available
+            false, // onboarding_completed
+        ));
+    }
+
+    #[test]
+    fn hides_when_hide_requested_and_onboarding_done() {
+        assert!(!should_show_main_window_at_launch(true, false, true, true));
+    }
+
+    #[test]
+    fn shows_by_default_when_no_hide_requested() {
+        assert!(should_show_main_window_at_launch(false, false, true, true));
+    }
+
+    #[test]
+    fn shows_when_tray_unavailable_even_if_hide_requested() {
+        assert!(should_show_main_window_at_launch(true, false, false, true));
+    }
+
+    #[test]
+    fn shows_when_permissions_force_it() {
+        assert!(should_show_main_window_at_launch(true, true, true, true));
+    }
 }

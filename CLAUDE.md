@@ -91,10 +91,11 @@ bun run tauri dev
     con los toggles existentes (`AutostartToggle` + `StartHidden`) entre
     permisos y modelo; secuencia en `onboardingFlow.ts` (función pura con
     tests); defaults siguen en `false`; claves `onboarding.autostart.*` en
-    las 21 locales. Spec en `docs/superpowers/specs/`. **BUG PENDIENTE**:
-    con `start_hidden=true` y onboarding incompleto la app arranca a la
-    bandeja sin mostrar el onboarding (la condición de `lib.rs` ~870 no
-    consulta `onboarding_completed`) — nuestro paso lo hace alcanzable.
+    las 21 locales. Spec en `docs/superpowers/specs/`. El bug asociado
+    (con `start_hidden=true` y onboarding incompleto la app arrancaba a la
+    bandeja sin mostrar el onboarding) quedó arreglado: la decisión vive en
+    `should_show_main_window_at_launch()` (lib.rs, función pura con tests
+    `launch_visibility_tests`) y ahora consulta `onboarding_completed`.
     PAUSADO (sesión propia): auto-selección de modelo default con descarga
     en background (candidato Nemotron Streaming vs Turbo, probar en es);
     desacoplar `onboarding_completed` de la descarga; pantalla manual como

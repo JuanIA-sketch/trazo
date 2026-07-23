@@ -76,9 +76,12 @@ bun run tauri dev
 8. **Rebrand parcial**: paleta Trazo en `src/styles/theme.css` (morado #7B2FBE
    + naranja #F97316), copy "Handy"→"Trazo" en las **21 locales** (en es la
    referencia; check:translations valida las otras 20), título de ventana,
-   tooltip del tray, CLI e index.html. PENDIENTE (esperan logo/decisión):
-   identifier `com.pais.handy`, productName, iconos, SVGs del logo
-   (`HandyTextLogo`/`HandyHand`), repo propio y updater.
+   tooltip del tray, CLI e index.html. Repo propio (JuanIA-sketch/trazo) y
+   updater con clave propia: hechos (2026-07-16). Los SVGs del logo
+   (`HandyTextLogo`/`HandyHand`) llevan placeholder de texto "Trazo"/"T" en
+   el morado de marca (2026-07-23) — los nombres de componente se conservan
+   para que el logo final sea drop-in. PENDIENTE (esperan logo/decisión):
+   logo final, iconos de app, identifier `com.pais.handy`, productName.
 9. **Bug de overlay invisible (2026-07-08)**: no reproducible tras reinicio;
    diagnóstico completo descartó paleta/CSS/eventos (ventana y webview sanos
    verificados por CDP y captura de píxeles). La fragilidad sospechosa (el

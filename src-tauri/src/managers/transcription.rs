@@ -35,6 +35,11 @@ use transcribe_rs::{
 
 const STREAM_PERF_LOG_INTERVAL: Duration = Duration::from_secs(5);
 const STREAM_FINALIZE_REPLY_TIMEOUT: Duration = Duration::from_secs(30);
+/// Audio that must be fed before [`StreamHealth`] may declare the stream
+/// unsustainable — model warm-up spikes must not trigger an abort.
+const STREAM_HEALTH_GRACE_SECS: f32 = 5.0;
+/// Compute/audio ratio above which the stream is judged unable to catch up.
+const STREAM_HEALTH_BEHIND_RATIO: f32 = 1.15;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ModelStateEvent {
@@ -91,6 +96,67 @@ enum StreamCmd {
     /// was ever active (caller should fall back to batch transcription).
     Finalize(mpsc::Sender<Option<String>>),
     Cancel,
+}
+
+/// Drain every command already queued on the stream channel, concatenating
+/// consecutive `Feed` audio into one buffer and stopping at the first terminal
+/// command (`Finalize`/`Cancel`).
+///
+/// Mic callbacks push ~30ms frames in real time; when the model computes
+/// slower than that, feeding frame-by-frame makes the queue grow without
+/// bound and `Finalize` waits behind the whole backlog (the 2026-07-24
+/// "timed out waiting 30s to finalize" bug). Feeding the coalesced buffer in
+/// one call keeps the worker at most one `recv` away from the terminal
+/// command. `Cancel` discards the accumulated audio — it is never fed.
+fn coalesce_pending_cmds(
+    first: StreamCmd,
+    rx: &mpsc::Receiver<StreamCmd>,
+) -> (Vec<f32>, Option<StreamCmd>) {
+    let mut pcm = Vec::new();
+    let mut cmd = first;
+    loop {
+        match cmd {
+            StreamCmd::Feed(chunk) => pcm.extend_from_slice(&chunk),
+            StreamCmd::Cancel => return (Vec::new(), Some(StreamCmd::Cancel)),
+            terminal @ StreamCmd::Finalize(_) => return (pcm, Some(terminal)),
+        }
+        match rx.try_recv() {
+            Ok(next) => cmd = next,
+            Err(_) => return (pcm, None),
+        }
+    }
+}
+
+/// Keep-up accounting for the streaming worker: total audio fed vs. total
+/// model compute spent on it. When compute sustainedly exceeds the audio's
+/// real-time duration the stream can never catch up — the worker should
+/// abandon streaming early so the stop path falls back to batch transcription
+/// instead of timing out with no text at all.
+struct StreamHealth {
+    fed_samples: usize,
+    compute: Duration,
+}
+
+impl StreamHealth {
+    fn new() -> Self {
+        StreamHealth {
+            fed_samples: 0,
+            compute: Duration::ZERO,
+        }
+    }
+
+    fn record(&mut self, fed_samples: usize, compute: Duration) {
+        self.fed_samples += fed_samples;
+        self.compute += compute;
+    }
+
+    /// True once enough audio has been fed to judge (grace period) and the
+    /// accumulated compute exceeds the audio duration by a clear margin.
+    fn is_falling_behind(&self) -> bool {
+        let fed_secs = self.fed_samples as f32 / 16_000.0;
+        fed_secs >= STREAM_HEALTH_GRACE_SECS
+            && self.compute.as_secs_f32() > fed_secs * STREAM_HEALTH_BEHIND_RATIO
+    }
 }
 
 /// Routes real-time audio frames to the active streaming worker. Shared between
@@ -925,35 +991,70 @@ impl TranscriptionManager {
             );
 
             let mut perf = StreamPerf::new();
+            let mut health = StreamHealth::new();
             while let Ok(cmd) = rx.recv() {
-                match cmd {
-                    StreamCmd::Feed(pcm) => {
-                        self.touch_activity();
-                        perf.record_feed(pcm.len());
-                        let feed_start = Instant::now();
-                        match stream.feed(&pcm) {
-                            Ok(update) => {
-                                perf.record_compute(feed_start.elapsed());
-                                perf.record_update(
-                                    update.revision,
-                                    update.input_received_ms,
-                                    update.audio_committed_ms,
-                                    update.buffered_ms,
-                                );
-                                if update.committed_changed || update.tentative_changed {
-                                    let text = stream.text();
-                                    perf.record_emit();
-                                    self.emit_stream_text(&text.committed, &text.tentative);
-                                }
-                                perf.maybe_log();
+                // Drain everything already queued: audio arrives in real-time
+                // ~30ms frames, so when compute is slower than real time the
+                // coalesced buffer grows adaptively (larger, cheaper feeds)
+                // and Finalize/Cancel is reached without chewing a backlog
+                // one frame at a time.
+                let (pcm, terminal) = coalesce_pending_cmds(cmd, &rx);
+                if !pcm.is_empty() {
+                    self.touch_activity();
+                    perf.record_feed(pcm.len());
+                    let feed_start = Instant::now();
+                    match stream.feed(&pcm) {
+                        Ok(update) => {
+                            perf.record_compute(feed_start.elapsed());
+                            perf.record_update(
+                                update.revision,
+                                update.input_received_ms,
+                                update.audio_committed_ms,
+                                update.buffered_ms,
+                            );
+                            if update.committed_changed || update.tentative_changed {
+                                let text = stream.text();
+                                perf.record_emit();
+                                self.emit_stream_text(&text.committed, &text.tentative);
                             }
-                            Err(e) => {
-                                perf.record_compute(feed_start.elapsed());
-                                warn!("stream feed failed: {}", e);
-                            }
+                            perf.maybe_log();
+                        }
+                        Err(e) => {
+                            perf.record_compute(feed_start.elapsed());
+                            warn!("stream feed failed: {}", e);
                         }
                     }
-                    StreamCmd::Finalize(reply) => {
+                    health.record(pcm.len(), feed_start.elapsed());
+                }
+
+                // A stream that computes slower than the audio arrives can
+                // never catch up; waiting only ends in the finalize timeout
+                // with no text at all (2026-07-24 regression). Abandon it
+                // while the recording continues — the exit path below drains
+                // the channel and replies `None` to Finalize, so the stop
+                // path batch-transcribes the full recording instead.
+                if terminal.is_none() && health.is_falling_behind() {
+                    warn!(
+                        "Live streaming cannot keep up on this backend \
+                         (compute {:.1}s for {:.1}s audio); abandoning stream, \
+                         stop will fall back to batch transcription",
+                        health.compute.as_secs_f32(),
+                        health.fed_samples as f32 / 16_000.0
+                    );
+                    stream.reset();
+                    break 'stream false;
+                }
+
+                match terminal {
+                    None => continue,
+                    Some(StreamCmd::Feed(_)) => {
+                        unreachable!("coalesce never returns Feed as terminal")
+                    }
+                    Some(StreamCmd::Cancel) => {
+                        stream.reset();
+                        break;
+                    }
+                    Some(StreamCmd::Finalize(reply)) => {
                         let finalize_start = Instant::now();
                         let result = match stream.finalize() {
                             // After finalize the committed prefix holds the full
@@ -984,10 +1085,6 @@ impl TranscriptionManager {
                         perf.log_finalized(chars);
                         finalize_reply = Some(reply);
                         finalize_result = Some(result);
-                        break;
-                    }
-                    StreamCmd::Cancel => {
-                        stream.reset();
                         break;
                     }
                 }
@@ -1976,6 +2073,82 @@ mod tests {
     fn transcribe_cpp_run_plan_auto_delegates_detection_to_the_model() {
         let plan = transcribe_cpp_run_plan(false, "auto", &languages(&["en", "es"]), true);
         assert_eq!(plan.language, None);
+    }
+
+    #[test]
+    fn coalesce_concatenates_queued_feeds_in_order() {
+        let (tx, rx) = mpsc::channel();
+        tx.send(StreamCmd::Feed(vec![3.0])).unwrap();
+        tx.send(StreamCmd::Feed(vec![4.0, 5.0])).unwrap();
+
+        let (pcm, terminal) = coalesce_pending_cmds(StreamCmd::Feed(vec![1.0, 2.0]), &rx);
+
+        assert_eq!(pcm, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        assert!(terminal.is_none());
+    }
+
+    #[test]
+    fn coalesce_stops_at_finalize_keeping_prior_audio() {
+        let (tx, rx) = mpsc::channel();
+        let (reply_tx, _reply_rx) = mpsc::channel();
+        tx.send(StreamCmd::Feed(vec![2.0])).unwrap();
+        tx.send(StreamCmd::Finalize(reply_tx)).unwrap();
+        // Anything queued after the terminal stays in the channel untouched.
+        tx.send(StreamCmd::Feed(vec![9.0])).unwrap();
+
+        let (pcm, terminal) = coalesce_pending_cmds(StreamCmd::Feed(vec![1.0]), &rx);
+
+        assert_eq!(pcm, vec![1.0, 2.0]);
+        assert!(matches!(terminal, Some(StreamCmd::Finalize(_))));
+        assert!(matches!(rx.try_recv(), Ok(StreamCmd::Feed(_))));
+    }
+
+    #[test]
+    fn coalesce_cancel_discards_accumulated_audio() {
+        let (tx, rx) = mpsc::channel();
+        tx.send(StreamCmd::Feed(vec![2.0])).unwrap();
+        tx.send(StreamCmd::Cancel).unwrap();
+
+        let (pcm, terminal) = coalesce_pending_cmds(StreamCmd::Feed(vec![1.0]), &rx);
+
+        assert!(pcm.is_empty(), "cancelled audio must never be fed");
+        assert!(matches!(terminal, Some(StreamCmd::Cancel)));
+    }
+
+    #[test]
+    fn coalesce_passes_a_leading_terminal_through() {
+        let (_tx, rx) = mpsc::channel::<StreamCmd>();
+        let (reply_tx, _reply_rx) = mpsc::channel();
+
+        let (pcm, terminal) = coalesce_pending_cmds(StreamCmd::Finalize(reply_tx), &rx);
+
+        assert!(pcm.is_empty());
+        assert!(matches!(terminal, Some(StreamCmd::Finalize(_))));
+    }
+
+    #[test]
+    fn stream_health_stays_quiet_while_keeping_up() {
+        let mut health = StreamHealth::new();
+        // 10s of audio computed in 5s — comfortably real-time.
+        health.record(160_000, Duration::from_secs(5));
+        assert!(!health.is_falling_behind());
+    }
+
+    #[test]
+    fn stream_health_gives_grace_before_judging() {
+        let mut health = StreamHealth::new();
+        // Way behind (2s audio, 6s compute) but below the grace threshold:
+        // model warm-up must not trigger an abort.
+        health.record(32_000, Duration::from_secs(6));
+        assert!(!health.is_falling_behind());
+    }
+
+    #[test]
+    fn stream_health_aborts_when_sustainedly_behind() {
+        let mut health = StreamHealth::new();
+        // 6s of audio needing 8s of compute — can never catch up.
+        health.record(96_000, Duration::from_secs(8));
+        assert!(health.is_falling_behind());
     }
 
     #[test]

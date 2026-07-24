@@ -1591,9 +1591,21 @@ fn transcribe_cpp_run_plan(
     };
     // Only pass a language the loaded model actually advertises (per
     // capabilities().languages); otherwise auto-detect rather than failing with
-    // UNSUPPORTED_LANGUAGE. Language-agnostic models report an empty list, so
-    // they always stay on auto.
-    let language = requested_language.filter(|lang| model_languages.iter().any(|l| l == lang));
+    // UNSUPPORTED_LANGUAGE. Models that advertise only regional codes (Nemotron:
+    // es-US, es-ES, …) accept a bare settings code via its first advertised
+    // "xx-YY" variant. Language-agnostic models report an empty list, so they
+    // always stay on auto.
+    let language = requested_language.and_then(|lang| {
+        if model_languages.iter().any(|l| l == &lang) {
+            return Some(lang);
+        }
+        model_languages
+            .iter()
+            .find(|l| {
+                l.len() > lang.len() && l.starts_with(&lang) && l.as_bytes()[lang.len()] == b'-'
+            })
+            .cloned()
+    });
     let (task, target_language) = cpp_translation_task(
         translate_to_english,
         model_supports_translate,
@@ -1963,6 +1975,36 @@ mod tests {
     #[test]
     fn transcribe_cpp_run_plan_auto_delegates_detection_to_the_model() {
         let plan = transcribe_cpp_run_plan(false, "auto", &languages(&["en", "es"]), true);
+        assert_eq!(plan.language, None);
+    }
+
+    #[test]
+    fn transcribe_cpp_run_plan_maps_base_language_to_regional_variant() {
+        // Nemotron-family GGUFs advertise regional codes (es-US, es-ES, …), so
+        // a bare "es" from settings must pin the model's own variant instead of
+        // silently falling back to auto-detect, which would reopen the
+        // wrong-language failure mode the language pin exists to prevent. The
+        // first advertised variant wins (the model's preference order).
+        let plan = transcribe_cpp_run_plan(
+            false,
+            "es",
+            &languages(&["en-US", "en-GB", "es-US", "es-ES"]),
+            false,
+        );
+        assert_eq!(plan.language.as_deref(), Some("es-US"));
+    }
+
+    #[test]
+    fn transcribe_cpp_run_plan_prefers_exact_language_over_regional_variant() {
+        let plan = transcribe_cpp_run_plan(false, "es", &languages(&["es-ES", "es"]), false);
+        assert_eq!(plan.language.as_deref(), Some("es"));
+    }
+
+    #[test]
+    fn transcribe_cpp_run_plan_regional_mapping_requires_a_dash_boundary() {
+        // "e" must not match "es-ES" (or any code that merely starts with the
+        // requested string): an unadvertised language stays on auto-detect.
+        let plan = transcribe_cpp_run_plan(false, "e", &languages(&["es-ES", "en-US"]), false);
         assert_eq!(plan.language, None);
     }
 

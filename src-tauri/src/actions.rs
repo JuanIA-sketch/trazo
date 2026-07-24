@@ -1037,6 +1037,36 @@ mod post_process_profile_tests {
     }
 
     #[test]
+    fn casual_profile_restores_spanish_opening_question_marks() {
+        // Nemotron-family models never emit "¿" — real output shape from the
+        // 2026-07-24 model eval. Rule 3 (LIMPIEZA: puntuación) must repair the
+        // interrogative when the closing "?" is present.
+        let Some(out) = run_profile(
+            "default_es_casual",
+            "Listo. Mira lo que dijo Claude. O tú qué opinas?",
+        ) else {
+            return;
+        };
+        assert!(
+            out.contains('¿'),
+            "an interrogative with a bare closing '?' must gain its opening '¿', got: {out}"
+        );
+    }
+
+    #[test]
+    fn casual_profile_repairs_question_missing_all_marks() {
+        // Harder shape, also seen in the eval: Nemotron closed the question
+        // with a period, so the interrogative must be inferred from syntax.
+        let Some(out) = run_profile("default_es_casual", "Ya con esto que hacemos ahora.") else {
+            return;
+        };
+        assert!(
+            out.contains('¿') && out.contains('?'),
+            "a question dictated without any marks must come back fully punctuated, got: {out}"
+        );
+    }
+
+    #[test]
     fn commit_profile_emits_conventional_commit_in_english() {
         let Some(out) = run_profile(
             "default_es_commit",

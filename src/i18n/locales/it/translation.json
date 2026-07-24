@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Impossibile completare la configurazione"
     },
     "permissions": {
       "title": "Permessi Richiesti",
@@ -122,6 +123,13 @@
       "title": "Avviare Trazo all'accensione del computer?",
       "subtitle": "Facoltativo — puoi cambiarlo in qualsiasi momento nelle impostazioni avanzate.",
       "continue": "Continua"
+    },
+    "autoDownload": {
+      "title": "Preparazione del modello vocale",
+      "description": "{{model}} si sta scaricando in background. Puoi continuare — la dettatura si attiverà da sola quando sarà pronto.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Continua",
+      "chooseAnother": "Scegli un altro modello"
     }
   },
   "modelSelector": {

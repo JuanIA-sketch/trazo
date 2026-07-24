@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Не вдалося завершити налаштування"
     },
     "permissions": {
       "title": "Потрібні дозволи",
@@ -122,6 +123,13 @@
       "title": "Запускати Trazo після ввімкнення комп'ютера?",
       "subtitle": "Необов'язково — це можна змінити будь-коли в розширених налаштуваннях.",
       "continue": "Продовжити"
+    },
+    "autoDownload": {
+      "title": "Налаштування мовної моделі",
+      "description": "{{model}} завантажується у фоновому режимі. Можете продовжити — диктування ввімкнеться автоматично, щойно модель буде готова.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Продовжити",
+      "chooseAnother": "Вибрати іншу модель"
     }
   },
   "modelSelector": {

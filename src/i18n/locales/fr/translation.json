@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Impossible de terminer la configuration"
     },
     "permissions": {
       "title": "Autorisations requises",
@@ -122,6 +123,13 @@
       "title": "Lancer Trazo au démarrage de l'ordinateur ?",
       "subtitle": "Facultatif — modifiable à tout moment dans les réglages avancés.",
       "continue": "Continuer"
+    },
+    "autoDownload": {
+      "title": "Préparation de votre modèle vocal",
+      "description": "{{model}} se télécharge en arrière-plan. Vous pouvez continuer — la dictée s'activera automatiquement dès qu'il sera prêt.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Continuer",
+      "chooseAnother": "Choisir un autre modèle"
     }
   },
   "modelSelector": {

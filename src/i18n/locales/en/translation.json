@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Failed to finish setup"
     },
     "permissions": {
       "title": "Permissions Required",
@@ -122,6 +123,13 @@
       "title": "Start Trazo when you turn on your computer?",
       "subtitle": "Optional — you can change this anytime in Advanced settings.",
       "continue": "Continue"
+    },
+    "autoDownload": {
+      "title": "Setting up your speech model",
+      "description": "{{model}} is downloading in the background. You can continue now — dictation will switch on by itself when it's ready.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Continue",
+      "chooseAnother": "Choose another model"
     }
   },
   "modelSelector": {

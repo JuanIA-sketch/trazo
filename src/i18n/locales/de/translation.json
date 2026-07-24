@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Einrichtung konnte nicht abgeschlossen werden"
     },
     "permissions": {
       "title": "Berechtigungen erforderlich",
@@ -122,6 +123,13 @@
       "title": "Trazo beim Einschalten des Computers starten?",
       "subtitle": "Optional — jederzeit in den erweiterten Einstellungen änderbar.",
       "continue": "Weiter"
+    },
+    "autoDownload": {
+      "title": "Dein Sprachmodell wird eingerichtet",
+      "description": "{{model}} wird im Hintergrund heruntergeladen. Du kannst jetzt fortfahren — das Diktat aktiviert sich automatisch, sobald es bereit ist.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Weiter",
+      "chooseAnother": "Anderes Modell wählen"
     }
   },
   "modelSelector": {

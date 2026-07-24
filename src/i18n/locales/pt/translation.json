@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Falha ao concluir a configuração"
     },
     "permissions": {
       "title": "Permissões Necessárias",
@@ -122,6 +123,13 @@
       "title": "Iniciar o Trazo ao ligar o computador?",
       "subtitle": "Opcional — pode alterar isto a qualquer momento nas definições avançadas.",
       "continue": "Continuar"
+    },
+    "autoDownload": {
+      "title": "Preparando seu modelo de voz",
+      "description": "{{model}} está sendo baixado em segundo plano. Você pode continuar — o ditado será ativado automaticamente quando estiver pronto.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Continuar",
+      "chooseAnother": "Escolher outro modelo"
     }
   },
   "modelSelector": {

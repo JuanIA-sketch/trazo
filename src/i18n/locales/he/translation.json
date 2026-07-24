@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "לא ניתן להשלים את ההגדרה"
     },
     "permissions": {
       "title": "נדרשות הרשאות",
@@ -122,6 +123,13 @@
       "title": "להפעיל את Trazo עם הדלקת המחשב?",
       "subtitle": "אופציונלי — אפשר לשנות זאת בכל עת בהגדרות המתקדמות.",
       "continue": "המשך"
+    },
+    "autoDownload": {
+      "title": "מגדיר את מודל הדיבור שלך",
+      "description": "{{model}} יורד ברקע. אפשר להמשיך עכשיו — ההכתבה תופעל אוטומטית כשהמודל יהיה מוכן.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "המשך",
+      "chooseAnother": "בחירת מודל אחר"
     }
   },
   "modelSelector": {

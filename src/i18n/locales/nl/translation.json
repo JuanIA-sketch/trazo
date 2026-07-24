@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Model selecteren mislukt"
+      "selectModel": "Model selecteren mislukt",
+      "completeOnboarding": "Kan de installatie niet voltooien"
     },
     "permissions": {
       "title": "Machtigingen vereist",
@@ -122,6 +123,13 @@
       "title": "Trazo starten wanneer je je computer aanzet?",
       "subtitle": "Optioneel — je kunt dit altijd wijzigen in de geavanceerde instellingen.",
       "continue": "Doorgaan"
+    },
+    "autoDownload": {
+      "title": "Je spraakmodel wordt ingesteld",
+      "description": "{{model}} wordt op de achtergrond gedownload. Je kunt nu verdergaan — dicteren wordt automatisch geactiveerd zodra het klaar is.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Doorgaan",
+      "chooseAnother": "Ander model kiezen"
     }
   },
   "modelSelector": {

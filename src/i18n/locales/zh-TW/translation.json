@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "無法完成設定"
     },
     "permissions": {
       "title": "需要權限",
@@ -122,6 +123,13 @@
       "title": "開機時自動啟動 Trazo？",
       "subtitle": "可選 — 隨時可在進階設定中變更。",
       "continue": "繼續"
+    },
+    "autoDownload": {
+      "title": "正在準備語音模型",
+      "description": "{{model}} 正在背景下載。你可以先繼續 — 模型就緒後聽寫將自動啟用。",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "繼續",
+      "chooseAnother": "選擇其他模型"
     }
   },
   "modelSelector": {

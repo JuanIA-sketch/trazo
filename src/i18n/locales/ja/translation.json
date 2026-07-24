@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "モデルの選択に失敗しました"
+      "selectModel": "モデルの選択に失敗しました",
+      "completeOnboarding": "セットアップを完了できませんでした"
     },
     "permissions": {
       "title": "権限が必要です",
@@ -122,6 +123,13 @@
       "title": "コンピューターの起動時にTrazoを開始しますか？",
       "subtitle": "任意です — 詳細設定でいつでも変更できます。",
       "continue": "続行"
+    },
+    "autoDownload": {
+      "title": "音声モデルを準備しています",
+      "description": "{{model}} をバックグラウンドでダウンロード中です。このまま続行できます — 準備ができると音声入力は自動的に有効になります。",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "続行",
+      "chooseAnother": "別のモデルを選ぶ"
     }
   },
   "modelSelector": {

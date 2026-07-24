@@ -3,6 +3,27 @@ use crate::managers::transcription::{ModelStateEvent, TranscriptionManager};
 use crate::settings::{get_settings, write_settings, ModelUnloadTimeout};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, State};
+use transcribe_cpp::DeviceType;
+
+/// True when any enumerated compute device is a discrete GPU. Integrated GPUs
+/// don't count: on iGPU-only machines whisper-class models are as slow as on
+/// CPU, so the onboarding should pick the CPU-friendly default there.
+fn any_dedicated_gpu(device_types: &[DeviceType]) -> bool {
+    device_types.iter().any(|t| matches!(t, DeviceType::Gpu))
+}
+
+/// Whether this machine has a dedicated (discrete) GPU registered as a
+/// transcribe-cpp compute device. Drives the onboarding's model preselection:
+/// dedicated GPU → Whisper Turbo, otherwise → Nemotron (2026-07-24 eval).
+#[tauri::command]
+#[specta::specta]
+pub async fn has_dedicated_gpu() -> Result<bool, String> {
+    let types: Vec<DeviceType> = transcribe_cpp::devices()
+        .into_iter()
+        .map(|d| d.device_type)
+        .collect();
+    Ok(any_dedicated_gpu(&types))
+}
 
 #[tauri::command]
 #[specta::specta]
@@ -80,6 +101,20 @@ pub async fn delete_model(
     model_manager
         .delete_model(&model_id)
         .map_err(|e| e.to_string())
+}
+
+/// Mark onboarding as completed without requiring a selected model. Decouples
+/// finishing the onboarding flow from the background model download: the user
+/// can continue into the app while the default model is still downloading
+/// (`select_model` keeps setting the flag too — idempotent — for the manual
+/// path).
+#[tauri::command]
+#[specta::specta]
+pub async fn complete_onboarding(app_handle: AppHandle) -> Result<(), String> {
+    let mut settings = get_settings(&app_handle);
+    settings.onboarding_completed = true;
+    write_settings(&app_handle, settings);
+    Ok(())
 }
 
 /// Shared logic for switching the active model, used by both the Tauri command
@@ -199,4 +234,39 @@ pub async fn cancel_download(
     model_manager
         .cancel_download(&model_id)
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::any_dedicated_gpu;
+    use transcribe_cpp::DeviceType;
+
+    #[test]
+    fn cpu_only_machine_has_no_dedicated_gpu() {
+        assert!(!any_dedicated_gpu(&[DeviceType::Cpu]));
+    }
+
+    #[test]
+    fn integrated_gpu_does_not_count_as_dedicated() {
+        assert!(!any_dedicated_gpu(&[DeviceType::Cpu, DeviceType::Igpu]));
+    }
+
+    #[test]
+    fn discrete_gpu_is_detected_alongside_igpu() {
+        // The GTX 1650 + Intel UHD layout this decision was tuned on.
+        assert!(any_dedicated_gpu(&[
+            DeviceType::Cpu,
+            DeviceType::Igpu,
+            DeviceType::Gpu
+        ]));
+    }
+
+    #[test]
+    fn unknown_device_types_are_not_dedicated_gpus() {
+        assert!(!any_dedicated_gpu(&[
+            DeviceType::Cpu,
+            DeviceType::Unknown,
+            DeviceType::Accel
+        ]));
+    }
 }

@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Настройката не можа да бъде завършена"
     },
     "permissions": {
       "title": "Необходими разрешения",
@@ -122,6 +123,13 @@
       "title": "Да стартира ли Trazo при включване на компютъра?",
       "subtitle": "По избор — можете да промените това по всяко време в разширените настройки.",
       "continue": "Продължи"
+    },
+    "autoDownload": {
+      "title": "Подготовка на гласовия модел",
+      "description": "{{model}} се изтегля във фонов режим. Можете да продължите — диктуването ще се активира автоматично, щом моделът е готов.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Продължи",
+      "chooseAnother": "Избери друг модел"
     }
   },
   "modelSelector": {

@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "تعذّر إكمال الإعداد"
     },
     "permissions": {
       "title": "الأذونات المطلوبة",
@@ -122,6 +123,13 @@
       "title": "هل تريد تشغيل Trazo عند تشغيل جهاز الكمبيوتر؟",
       "subtitle": "اختياري — يمكنك تغيير ذلك في أي وقت من الإعدادات المتقدمة.",
       "continue": "متابعة"
+    },
+    "autoDownload": {
+      "title": "جارٍ إعداد نموذج الصوت",
+      "description": "يتم تنزيل {{model}} في الخلفية. يمكنك المتابعة الآن — سيتم تفعيل الإملاء تلقائيًا عندما يصبح جاهزًا.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "متابعة",
+      "chooseAnother": "اختيار نموذج آخر"
     }
   },
   "modelSelector": {

@@ -4,6 +4,10 @@ import { produce } from "immer";
 import { listen } from "@tauri-apps/api/event";
 import { commands, type ModelInfo } from "@/bindings";
 import { toast } from "sonner";
+import {
+  runAutoModelDownload,
+  type AutoDownloadOutcome,
+} from "@/components/onboarding/autoDownloadFlow";
 
 interface DownloadProgress {
   model_id: string;
@@ -19,6 +23,8 @@ interface DownloadStats {
   speed: number; // MB/s
 }
 
+type AutoDownloadStatus = "downloading" | AutoDownloadOutcome;
+
 // Using Record instead of Set/Map for Immer compatibility
 interface ModelsStore {
   models: ModelInfo[];
@@ -32,9 +38,16 @@ interface ModelsStore {
   error: string | null;
   initialized: boolean;
   isRescanning: boolean;
+  /**
+   * The onboarding auto-download in flight (or its outcome). Lives in the
+   * store — not the onboarding component — so the download→select chain
+   * survives the user continuing into the app before it finishes.
+   */
+  autoDownload: { modelId: string; status: AutoDownloadStatus } | null;
 
   // Actions
   initialize: () => Promise<void>;
+  startAutoDownload: (modelId: string) => void;
   loadModels: () => Promise<void>;
   loadCurrentModel: () => Promise<void>;
   rescanLocalModels: () => Promise<void>;
@@ -68,6 +81,7 @@ export const useModelStore = create<ModelsStore>()(
     error: null,
     initialized: false,
     isRescanning: false,
+    autoDownload: null,
 
     // Internal setters
     setModels: (models) => set({ models }),
@@ -142,9 +156,37 @@ export const useModelStore = create<ModelsStore>()(
       }
     },
 
+    startAutoDownload: (modelId: string) => {
+      // Idempotent: re-entering the onboarding model step must not spawn a
+      // second chain for a download already in flight.
+      if (get().autoDownload?.modelId === modelId) return;
+
+      set({ autoDownload: { modelId, status: "downloading" } });
+      void runAutoModelDownload(modelId, {
+        download: (id) => get().downloadModel(id),
+        select: (id) => get().selectModel(id),
+        // A manual selection made while downloading marks the record
+        // superseded (see selectModel), so the finished download must not
+        // steal the selection back: only a live "downloading" record counts.
+        stillWanted: (id) => {
+          const auto = get().autoDownload;
+          return auto?.modelId === id && auto.status === "downloading";
+        },
+      }).then((outcome) => {
+        const current = get().autoDownload;
+        if (current?.modelId === modelId) {
+          set({ autoDownload: { modelId, status: outcome } });
+        }
+      });
+    },
+
     selectModel: async (modelId: string) => {
       try {
         set({ error: null });
+        const auto = get().autoDownload;
+        if (auto && auto.modelId !== modelId) {
+          set({ autoDownload: { ...auto, status: "superseded" } });
+        }
         const result = await commands.setActiveModel(modelId);
         if (result.status === "ok") {
           set({ currentModel: modelId });

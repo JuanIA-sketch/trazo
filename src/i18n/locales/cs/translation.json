@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Nastavení se nepodařilo dokončit"
     },
     "permissions": {
       "title": "Vyžadována oprávnění",
@@ -122,6 +123,13 @@
       "title": "Spouštět Trazo po zapnutí počítače?",
       "subtitle": "Volitelné — kdykoli to můžete změnit v pokročilém nastavení.",
       "continue": "Pokračovat"
+    },
+    "autoDownload": {
+      "title": "Příprava hlasového modelu",
+      "description": "{{model}} se stahuje na pozadí. Můžete pokračovat — diktování se zapne automaticky, jakmile bude model připraven.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Pokračovat",
+      "chooseAnother": "Vybrat jiný model"
     }
   },
   "modelSelector": {

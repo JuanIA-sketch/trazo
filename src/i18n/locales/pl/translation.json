@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Nie udało się ukończyć konfiguracji"
     },
     "permissions": {
       "title": "Wymagane uprawnienia",
@@ -122,6 +123,13 @@
       "title": "Uruchamiać Trazo po włączeniu komputera?",
       "subtitle": "Opcjonalne — możesz to zmienić w każdej chwili w ustawieniach zaawansowanych.",
       "continue": "Kontynuuj"
+    },
+    "autoDownload": {
+      "title": "Przygotowywanie modelu mowy",
+      "description": "{{model}} pobiera się w tle. Możesz kontynuować — dyktowanie włączy się automatycznie, gdy model będzie gotowy.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Kontynuuj",
+      "chooseAnother": "Wybierz inny model"
     }
   },
   "modelSelector": {

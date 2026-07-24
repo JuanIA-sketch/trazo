@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Det gick inte att slutföra konfigurationen"
     },
     "permissions": {
       "title": "Behörigheter krävs",
@@ -122,6 +123,13 @@
       "title": "Starta Trazo när du slår på datorn?",
       "subtitle": "Valfritt — du kan ändra detta när som helst i avancerade inställningar.",
       "continue": "Fortsätt"
+    },
+    "autoDownload": {
+      "title": "Din röstmodell förbereds",
+      "description": "{{model}} laddas ner i bakgrunden. Du kan fortsätta nu — dikteringen aktiveras automatiskt när den är klar.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Fortsätt",
+      "chooseAnother": "Välj en annan modell"
     }
   },
   "modelSelector": {

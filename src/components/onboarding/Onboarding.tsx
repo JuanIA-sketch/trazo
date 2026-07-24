@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
-import type { ModelInfo } from "@/bindings";
+import { commands, type ModelInfo } from "@/bindings";
 import type { ModelCardStatus } from "./ModelCard";
 import ModelCard, { isLegacySource } from "./ModelCard";
 import HandyTextLogo from "../icons/HandyTextLogo";
 import { useModelStore } from "../../stores/modelStore";
+import { planModelStep } from "./onboardingFlow";
 
 interface OnboardingProps {
   onModelSelected: () => void;
@@ -23,12 +24,76 @@ const Onboarding: React.FC<OnboardingProps> = ({ onModelSelected }) => {
     extractingModels,
     downloadProgress,
     downloadStats,
+    autoDownload,
+    startAutoDownload,
   } = useModelStore();
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const hasStartedSelection = useRef(false);
+  // "deciding" until the model list arrives and planModelStep picks a mode.
+  const [mode, setMode] = useState<"deciding" | "auto" | "manual">("deciding");
+  // null while the hardware probe is in flight; the conservative fallback is
+  // false (CPU default) — Nemotron runs everywhere, Turbo crawls without GPU.
+  const [hasDedicatedGpu, setHasDedicatedGpu] = useState<boolean | null>(null);
+  const hasPlanned = useRef(false);
+  const hasFinished = useRef(false);
 
   const isBusy = selectedModelId !== null;
+
+  useEffect(() => {
+    commands
+      .hasDedicatedGpu()
+      .then((result) =>
+        setHasDedicatedGpu(result.status === "ok" ? result.data : false),
+      )
+      .catch(() => setHasDedicatedGpu(false));
+  }, []);
+
+  // Plan the step once the catalog and the hardware probe are available:
+  // auto-download the default the hardware calls for, select it directly if
+  // already on disk, or fall back to the manual chooser.
+  useEffect(() => {
+    if (hasPlanned.current || models.length === 0 || hasDedicatedGpu === null)
+      return;
+    hasPlanned.current = true;
+
+    const plan = planModelStep(models, hasDedicatedGpu);
+    if (plan.kind === "download") {
+      setMode("auto");
+      startAutoDownload(plan.modelId);
+    } else {
+      setMode("manual");
+      if (plan.kind === "select") {
+        setSelectedModelId(plan.modelId);
+      }
+    }
+  }, [models, hasDedicatedGpu, startAutoDownload]);
+
+  // React to the background chain: advance when the default model got
+  // selected, drop to the manual chooser when the download failed (the store
+  // already toasts the error).
+  useEffect(() => {
+    if (mode !== "auto" || !autoDownload) return;
+    if (autoDownload.status === "selected" && !hasFinished.current) {
+      hasFinished.current = true;
+      onModelSelected();
+    } else if (autoDownload.status === "failed") {
+      setMode("manual");
+    }
+  }, [mode, autoDownload, onModelSelected]);
+
+  const handleContinueWhileDownloading = async () => {
+    if (hasFinished.current) return;
+    // Decoupled from the download on purpose: mark onboarding complete now;
+    // the store chain keeps running and selects the model when it lands.
+    const result = await commands.completeOnboarding();
+    if (result.status === "ok") {
+      hasFinished.current = true;
+      onModelSelected();
+    } else {
+      toast.error(t("onboarding.errors.completeOnboarding"));
+    }
+  };
 
   // Curate the download list: legacy (.bin/ONNX) downloads are deprecated and
   // never shown here (they still appear in the compatible section if already on
@@ -134,6 +199,67 @@ const Onboarding: React.FC<OnboardingProps> = ({ onModelSelected }) => {
   const getModelDownloadSpeed = (modelId: string): number | undefined => {
     return downloadStats[modelId]?.speed;
   };
+
+  if (mode === "auto" && autoDownload) {
+    const autoModel = models.find((m) => m.id === autoDownload.modelId);
+    const percentage = Math.min(
+      100,
+      downloadProgress[autoDownload.modelId]?.percentage ?? 0,
+    );
+    const speed = downloadStats[autoDownload.modelId]?.speed;
+    return (
+      <div className="h-screen w-screen flex flex-col p-6 gap-6 items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <HandyTextLogo width={200} />
+        </div>
+
+        <div className="max-w-md w-full flex flex-col items-center gap-4">
+          <div className="text-center mb-2">
+            <h2 className="text-xl font-semibold text-text mb-2">
+              {t("onboarding.autoDownload.title")}
+            </h2>
+            <p className="text-text/70">
+              {t("onboarding.autoDownload.description", {
+                model: autoModel?.name ?? "",
+              })}
+            </p>
+          </div>
+
+          <div className="w-full p-4 rounded-lg bg-white/5 border border-mid-gray/20 flex flex-col gap-2">
+            <div className="flex justify-between text-sm text-text/70">
+              <span>{autoModel?.name}</span>
+              <span>
+                {t("onboarding.autoDownload.progress", {
+                  percentage: Math.round(percentage),
+                  speed: speed ? speed.toFixed(1) : "0.0",
+                })}
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-mid-gray/20 overflow-hidden">
+              <div
+                className="h-full bg-logo-primary transition-all"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleContinueWhileDownloading}
+            className="px-4 py-2 rounded-lg bg-logo-primary hover:bg-logo-primary/90 text-white text-sm font-medium transition-colors"
+          >
+            {t("onboarding.autoDownload.continue")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("manual")}
+            className="py-1 text-sm font-medium text-text/60 hover:text-text transition-colors"
+          >
+            {t("onboarding.autoDownload.chooseAnother")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col p-6 gap-4 inset-0">

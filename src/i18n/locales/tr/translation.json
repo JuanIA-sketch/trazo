@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Kurulum tamamlanamadı"
     },
     "permissions": {
       "title": "İzinler Gerekli",
@@ -122,6 +123,13 @@
       "title": "Bilgisayarınızı açtığınızda Trazo başlatılsın mı?",
       "subtitle": "İsteğe bağlı — gelişmiş ayarlardan istediğiniz zaman değiştirebilirsiniz.",
       "continue": "Devam"
+    },
+    "autoDownload": {
+      "title": "Konuşma modeliniz hazırlanıyor",
+      "description": "{{model}} arka planda indiriliyor. Şimdi devam edebilirsiniz — model hazır olduğunda dikte otomatik olarak etkinleşecek.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Devam et",
+      "chooseAnother": "Başka bir model seç"
     }
   },
   "modelSelector": {

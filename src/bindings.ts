@@ -673,6 +673,34 @@ async rescanLocalModels() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Mark onboarding as completed without requiring a selected model. Decouples
+ * finishing the onboarding flow from the background model download: the user
+ * can continue into the app while the default model is still downloading
+ * (`select_model` keeps setting the flag too — idempotent — for the manual
+ * path).
+ */
+async completeOnboarding() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("complete_onboarding") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Whether this machine has a dedicated (discrete) GPU registered as a
+ * transcribe-cpp compute device. Drives the onboarding's model preselection:
+ * dedicated GPU → Whisper Turbo, otherwise → Nemotron (2026-07-24 eval).
+ */
+async hasDedicatedGpu() : Promise<Result<boolean, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("has_dedicated_gpu") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async updateMicrophoneMode(alwaysOn: boolean) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_microphone_mode", { alwaysOn }) };

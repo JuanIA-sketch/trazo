@@ -7,13 +7,18 @@ use std::time::{Duration, Instant};
 
 /// A hold shorter than this is a "tap" (a real push-to-talk dictation always
 /// holds longer); a release after a tap waits for a possible second tap.
-/// 450 ms: live validation showed 250 ms rejected sloppy-but-honest taps,
-/// while even a one-word dictation holds well past 450 ms.
-pub const TAP_MS: Duration = Duration::from_millis(450);
+/// 600 ms (2nd live pass, 2026-07-24): the real shortcut is a CHORD
+/// (Ctrl+Space) — pressing and releasing two keys cleanly runs ~500-550 ms,
+/// which the earlier 450 ms still classified as a hold. Even a one-word
+/// dictation (press, speak, release) holds well past 600 ms, and a
+/// misclassified ultra-short dictation only pays the pending window as extra
+/// latency, never loses audio.
+pub const TAP_MS: Duration = Duration::from_millis(600);
 /// How long after a tap's release a second press still counts as a double-tap.
-/// 550 ms: a relaxed human double-tap gaps ~300-450 ms; 350 ms forced
-/// machine-like timing and took several attempts to hit.
-pub const DOUBLE_TAP_WINDOW: Duration = Duration::from_millis(550);
+/// 800 ms (2nd live pass): re-pressing a two-key chord gaps ~600-700 ms;
+/// 550 ms still took several attempts. The only cost of a wider window is a
+/// slightly later stop after an accidental single tap.
+pub const DOUBLE_TAP_WINDOW: Duration = Duration::from_millis(800);
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Gesture {
@@ -226,6 +231,21 @@ mod tests {
         let base = t0();
         d.on_press(base);
         assert_eq!(d.on_release(ms(base, 350)), Gesture::TapPending);
+    }
+
+    /// Regresión 2026-07-24, segunda pasada en vivo: el atajo real es un
+    /// ACORDE (Ctrl+Espacio) — bajar y soltar dos teclas alarga el hold
+    /// (~550 ms) y re-presionar el acorde abre huecos de ~700 ms entre taps.
+    /// Con 450/550 el doble-tap seguía costando varios intentos; el perfil
+    /// de acorde relajado debe latchear a la primera.
+    #[test]
+    fn relaxed_chord_double_tap_latches() {
+        let mut d = TapGestureDetector::new();
+        let base = t0();
+        d.on_press(base);
+        assert_eq!(d.on_release(ms(base, 550)), Gesture::TapPending);
+        // Segundo acorde 700 ms después de soltar el primero.
+        assert_eq!(d.on_press(ms(base, 1250)), Gesture::DoubleTap);
     }
 
     #[test]

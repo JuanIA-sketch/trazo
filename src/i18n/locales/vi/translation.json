@@ -96,7 +96,8 @@
       }
     },
     "errors": {
-      "selectModel": "Failed to select model"
+      "selectModel": "Failed to select model",
+      "completeOnboarding": "Không thể hoàn tất thiết lập"
     },
     "permissions": {
       "title": "Cần cấp quyền",
@@ -122,6 +123,13 @@
       "title": "Khởi động Trazo khi bạn bật máy tính?",
       "subtitle": "Tùy chọn — bạn có thể thay đổi bất cứ lúc nào trong cài đặt nâng cao.",
       "continue": "Tiếp tục"
+    },
+    "autoDownload": {
+      "title": "Đang chuẩn bị mô hình giọng nói",
+      "description": "{{model}} đang được tải xuống trong nền. Bạn có thể tiếp tục ngay — tính năng đọc chính tả sẽ tự bật khi mô hình sẵn sàng.",
+      "progress": "{{percentage}}% — {{speed}} MB/s",
+      "continue": "Tiếp tục",
+      "chooseAnother": "Chọn mô hình khác"
     }
   },
   "modelSelector": {

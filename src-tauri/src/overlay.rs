@@ -42,12 +42,17 @@ tauri_panel! {
 // Compact overlay (Minimal / transcribing / processing): the 40h pill animates
 // width from 172 (--ov-rest-w) to 216 (--ov-work-w) and expands from center, so
 // the window must fit the widest state plus a little slack.
+//
+// The heights also reserve headroom for the Trazo crown emblem, which overhangs
+// the card's top-left corner by --ov-crown-up (13px) / --ov-crown-left (9px).
+// The card stays anchored flush to the screen edge, so the extra height becomes
+// slack on the far side of the card and the pill does not move.
 const OVERLAY_WIDTH: f64 = 256.0;
-const OVERLAY_HEIGHT: f64 = 46.0;
+const OVERLAY_HEIGHT: f64 = 64.0;
 
-// Actual is 394x118, just a little extra
-const OVERLAY_STREAM_WIDTH: f64 = 400.0;
-const OVERLAY_STREAM_HEIGHT: f64 = 120.0;
+// Actual is 394x118, plus slack for the crown overhang
+const OVERLAY_STREAM_WIDTH: f64 = 420.0;
+const OVERLAY_STREAM_HEIGHT: f64 = 140.0;
 
 /// Overlay window size (logical) for a given UI state.
 fn overlay_dimensions(state: &str) -> (f64, f64) {

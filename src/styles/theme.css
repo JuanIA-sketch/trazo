@@ -1,21 +1,22 @@
-/* Trazo Colors — morado #7B2FBE (primario/logo) + naranja #F97316 (acento UI) */
+/* Trazo Colors — azul eléctrico #2563EB (primario/logo) + acento UI azul */
 
 :root {
-  --color-text: #0f0f0f;
-  --color-background: #fbfbfb;
-  --color-background-ui: #f97316;
-  --color-logo-primary: #7b2fbe;
-  --color-logo-stroke: #2e1065;
-  --color-text-stroke: #f6f6f6;
-  --color-mid-gray: #808080;
+  --color-text: #0f172a;
+  --color-background: #f8fafc;
+  --color-background-ui: #2563eb;
+  --color-logo-primary: #2563eb;
+  --color-logo-stroke: #1e3a8a;
+  --color-text-stroke: #f8fafc;
+  --color-mid-gray: #64748b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-text: #fbfbfb;
-    --color-background: #2c2b29;
-    /* Morado más claro para mantener contraste sobre fondo oscuro */
-    --color-logo-primary: #a855f7;
-    --color-logo-stroke: #e9d5ff;
+    --color-text: #f8fafc;
+    /* Navy premium del rebrand Trazo (mockup #0B1220) */
+    --color-background: #0b1220;
+    /* Azul más claro para mantener contraste sobre el navy */
+    --color-logo-primary: #3b82f6;
+    --color-logo-stroke: #93c5fd;
   }
 }

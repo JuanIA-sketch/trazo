@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./RecordingOverlay.css";
+import coronaUrl from "./corona.png";
 import { commands, events } from "@/bindings";
 import type {
   StreamPhase,
@@ -148,6 +149,10 @@ const RecordingOverlay: React.FC = () => {
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   // ---- Shared building blocks (one visual language for every overlay form) ----
+  // Trazo emblem, pinned to the pill's top-left corner. Decorative only, so it
+  // is hidden from assistive tech and never takes pointer events.
+  const crown = <img className="scrown" src={coronaUrl} alt="" aria-hidden />;
+
   const waveform = (
     <div className="swave">
       {levels.map((v, i) => (
@@ -240,39 +245,39 @@ const RecordingOverlay: React.FC = () => {
 
     return (
       <div dir={direction} className={`ov-stage ${position}`}>
-        <div
-          key={session}
-          className={`scard ${open ? "open" : ""} ${collapsed ? "working" : ""} ${
-            isVisible ? "" : "leaving"
-          }`}
-        >
-          <div className="stext">
-            <div className="stext-clip">
-              <div
-                className={`stext-cap ${overflowing ? "overflowing" : ""}`}
-                ref={capRef}
-                onScroll={handleStreamScroll}
-              >
-                <p>
-                  <span className="committed">
-                    {streamText.committed ? streamText.committed + " " : ""}
-                  </span>
-                  <span className="tentative">{streamText.tentative}</span>
-                  {/* Drop the blinking caret once finalizing — it's no longer
+        <div key={session} className={`sholder ${isVisible ? "" : "leaving"}`}>
+          {crown}
+          <div
+            className={`scard ${open ? "open" : ""} ${collapsed ? "working" : ""}`}
+          >
+            <div className="stext">
+              <div className="stext-clip">
+                <div
+                  className={`stext-cap ${overflowing ? "overflowing" : ""}`}
+                  ref={capRef}
+                  onScroll={handleStreamScroll}
+                >
+                  <p>
+                    <span className="committed">
+                      {streamText.committed ? streamText.committed + " " : ""}
+                    </span>
+                    <span className="tentative">{streamText.tentative}</span>
+                    {/* Drop the blinking caret once finalizing — it's no longer
                       capturing, and a static spinner conveys the work. */}
-                  {!working && <span className="scaret" />}
-                </p>
+                    {!working && <span className="scaret" />}
+                  </p>
+                </div>
               </div>
             </div>
+            {working
+              ? workingRow(
+                  workKind === "polishing"
+                    ? t("overlay.processing")
+                    : t("overlay.transcribing"),
+                  true,
+                )
+              : listeningRow(open, true)}
           </div>
-          {working
-            ? workingRow(
-                workKind === "polishing"
-                  ? t("overlay.processing")
-                  : t("overlay.transcribing"),
-                true,
-              )
-            : listeningRow(open, true)}
         </div>
       </div>
     );
@@ -294,14 +299,17 @@ const RecordingOverlay: React.FC = () => {
       dir={direction}
       className={`ov-stage ${position} ov-fade ${isVisible ? "show" : ""}`}
     >
-      <div
-        className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""}`}
-      >
-        {copied
-          ? copiedRow
-          : working
-            ? workingRow(workLabel, true)
-            : listeningRow(false, true)}
+      <div className="sholder compact">
+        {crown}
+        <div
+          className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""}`}
+        >
+          {copied
+            ? copiedRow
+            : working
+              ? workingRow(workLabel, true)
+              : listeningRow(false, true)}
+        </div>
       </div>
     </div>
   );

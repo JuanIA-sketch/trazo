@@ -15,7 +15,7 @@ use cpal::{
 use crate::audio_toolkit::{
     audio::{AudioVisualiser, FrameResampler},
     constants,
-    vad::{self, VadFrame},
+    vad::{self, SpeechStateTracker, VadFrame},
     VoiceActivityDetector,
 };
 
@@ -70,12 +70,16 @@ impl VadConfig {
 /// policy while recording. Used to feed a live streaming transcription as audio arrives.
 pub type AudioFrameCallback = Arc<dyn Fn(&[f32]) + Send + Sync + 'static>;
 
+/// Callback invoked on VAD voice↔no-voice transitions while recording.
+pub type SpeechStateCallback = Arc<dyn Fn(bool) + Send + Sync + 'static>;
+
 pub struct AudioRecorder {
     device: Option<Device>,
     cmd_tx: Option<mpsc::Sender<Cmd>>,
     worker_handle: Option<std::thread::JoinHandle<()>>,
     vad: Option<VadConfig>,
     level_cb: Option<Arc<dyn Fn(Vec<f32>) + Send + Sync + 'static>>,
+    speech_cb: Option<SpeechStateCallback>,
     audio_cb: Option<AudioFrameCallback>,
     /// Preferred stream config cached per device name. The two HAL property
     /// queries in `get_preferred_config` cost ~40-85ms per open (worse on
@@ -94,6 +98,7 @@ impl AudioRecorder {
             worker_handle: None,
             vad: None,
             level_cb: None,
+            speech_cb: None,
             audio_cb: None,
             config_cache: Arc::new(Mutex::new(None)),
         })
@@ -121,6 +126,17 @@ impl AudioRecorder {
         F: Fn(Vec<f32>) + Send + Sync + 'static,
     {
         self.level_cb = Some(Arc::new(cb));
+        self
+    }
+
+    /// Register a callback fired on VAD voice↔no-voice transitions while
+    /// recording (never at frame rate, and never when VAD is disabled), so
+    /// UI can show a truthful "speech detected" signal.
+    pub fn with_speech_callback<F>(mut self, cb: F) -> Self
+    where
+        F: Fn(bool) + Send + Sync + 'static,
+    {
+        self.speech_cb = Some(Arc::new(cb));
         self
     }
 
@@ -157,6 +173,7 @@ impl AudioRecorder {
         let vad = self.vad.clone();
         // Move the optional level callback into the worker thread
         let level_cb = self.level_cb.clone();
+        let speech_cb = self.speech_cb.clone();
         // Move the optional real-time audio frame callback into the worker thread
         let audio_cb = self.audio_cb.clone();
         let config_cache = Arc::clone(&self.config_cache);
@@ -274,6 +291,7 @@ impl AudioRecorder {
                         sample_rx,
                         cmd_rx,
                         level_cb,
+                        speech_cb,
                         audio_cb,
                         stop_flag,
                         stream_running_at,
@@ -520,6 +538,7 @@ fn run_consumer(
     sample_rx: mpsc::Receiver<AudioChunk>,
     cmd_rx: mpsc::Receiver<Cmd>,
     level_cb: Option<Arc<dyn Fn(Vec<f32>) + Send + Sync + 'static>>,
+    speech_cb: Option<SpeechStateCallback>,
     audio_cb: Option<AudioFrameCallback>,
     stop_flag: Arc<AtomicBool>,
     stream_running_at: Instant,
@@ -533,6 +552,7 @@ fn run_consumer(
     let mut processed_samples = Vec::<f32>::new();
     let mut recording = false;
     let mut vad_policy = VadPolicy::Offline;
+    let mut speech_tracker = SpeechStateTracker::new();
 
     // ---------- latency instrumentation ---------------------------------- //
     // First-chunk arrival exposes the play()->samples-flowing gap; the
@@ -562,11 +582,14 @@ fn run_consumer(
         4000.0, // vocal_max_hz
     );
 
+    #[allow(clippy::too_many_arguments)]
     fn handle_frame(
         samples: &[f32],
         recording: bool,
         vad_policy: VadPolicy,
         vad: &Option<VadConfig>,
+        speech_cb: &Option<SpeechStateCallback>,
+        speech_tracker: &mut SpeechStateTracker,
         audio_cb: &Option<AudioFrameCallback>,
         out_buf: &mut Vec<f32>,
     ) {
@@ -588,7 +611,15 @@ fn run_consumer(
 
         if let Some(cfg) = vad {
             let mut det = cfg.detector.lock().unwrap();
-            match det.push_frame(samples).unwrap_or(VadFrame::Speech(samples)) {
+            let verdict = det.push_frame(samples).unwrap_or(VadFrame::Speech(samples));
+            // Surface voice↔no-voice transitions (never at frame rate) so UI
+            // can show a truthful "speech detected" signal.
+            if let Some(cb) = speech_cb {
+                if let Some(state) = speech_tracker.update(verdict.is_speech()) {
+                    cb(state);
+                }
+            }
+            match verdict {
                 VadFrame::Speech(buf) => emit(buf),
                 VadFrame::Noise => {}
             }
@@ -617,6 +648,8 @@ fn run_consumer(
                     processed_samples.clear();
                     recording = true;
                     visualizer.reset();
+                    // Fresh session: the first VAD verdict must be reported.
+                    speech_tracker = SpeechStateTracker::new();
                     // Reconfigure the single VAD engine for this session's policy
                     // and clear its smoothing + recurrent state before it sees
                     // any frames.
@@ -641,6 +674,8 @@ fn run_consumer(
                                 true,
                                 vad_policy,
                                 &vad,
+                                &speech_cb,
+                                &mut speech_tracker,
                                 &audio_cb,
                                 &mut processed_samples,
                             )
@@ -660,6 +695,8 @@ fn run_consumer(
                                         true,
                                         vad_policy,
                                         &vad,
+                                        &speech_cb,
+                                        &mut speech_tracker,
                                         &audio_cb,
                                         &mut processed_samples,
                                     )
@@ -679,6 +716,8 @@ fn run_consumer(
                             true,
                             vad_policy,
                             &vad,
+                            &speech_cb,
+                            &mut speech_tracker,
                             &audio_cb,
                             &mut processed_samples,
                         )
@@ -727,6 +766,8 @@ fn run_consumer(
                 recording,
                 vad_policy,
                 &vad,
+                &speech_cb,
+                &mut speech_tracker,
                 &audio_cb,
                 &mut processed_samples,
             )

@@ -34,8 +34,65 @@ pub trait VoiceActivityDetector: Send + Sync {
     fn reset(&mut self) {}
 }
 
+/// Reduces the per-frame VAD verdict to voice↔no-voice transitions, so
+/// consumers (e.g. the overlay's "speech detected" pulse) get one event per
+/// change instead of one per 30 ms frame.
+pub struct SpeechStateTracker {
+    last: Option<bool>,
+}
+
+impl SpeechStateTracker {
+    pub fn new() -> Self {
+        Self { last: None }
+    }
+
+    /// Feed the current frame's verdict; returns Some(state) only when the
+    /// state differs from the previously reported one (the first call always
+    /// reports).
+    pub fn update(&mut self, is_speech: bool) -> Option<bool> {
+        if self.last == Some(is_speech) {
+            return None;
+        }
+        self.last = Some(is_speech);
+        Some(is_speech)
+    }
+}
+
+impl Default for SpeechStateTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 mod silero;
 mod smoothed;
 
 pub use silero::SileroVad;
 pub use smoothed::SmoothedVad;
+
+#[cfg(test)]
+mod speech_state_tracker_tests {
+    use super::SpeechStateTracker;
+
+    #[test]
+    fn first_verdict_is_always_reported() {
+        let mut t = SpeechStateTracker::new();
+        assert_eq!(t.update(false), Some(false));
+    }
+
+    #[test]
+    fn repeated_verdicts_report_nothing() {
+        let mut t = SpeechStateTracker::new();
+        assert_eq!(t.update(true), Some(true));
+        assert_eq!(t.update(true), None);
+        assert_eq!(t.update(true), None);
+    }
+
+    #[test]
+    fn transitions_report_the_new_state() {
+        let mut t = SpeechStateTracker::new();
+        assert_eq!(t.update(false), Some(false));
+        assert_eq!(t.update(true), Some(true));
+        assert_eq!(t.update(false), Some(false));
+    }
+}

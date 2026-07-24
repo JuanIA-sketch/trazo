@@ -271,6 +271,11 @@
   flex: none;
   animation: sdot-pulse 1.9s infinite;
 }
+/* VAD hears voice: faster, brighter pulse so the user trusts they're heard. */
+.sdot.speaking {
+  animation: sdot-pulse 0.8s infinite;
+  filter: brightness(1.35) saturate(1.3);
+}
 @keyframes sdot-pulse {
   0% {
     box-shadow: 0 0 0 0 var(--s-accent-soft);

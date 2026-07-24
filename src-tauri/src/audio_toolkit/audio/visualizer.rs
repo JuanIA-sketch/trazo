@@ -1,7 +1,11 @@
 use rustfft::{num_complex::Complex32, Fft, FftPlanner};
 use std::sync::Arc;
 
-const DB_MIN: f32 = -55.0;
+// Lower bound of the visible dynamic range. -55 hid whispers entirely: a
+// ~0.01-amplitude whisper lands around -58 dB per bucket, so the overlay
+// showed silence and users couldn't tell the mic was listening (live
+// validation, 2026-07-24). -68 sits just above quiet-room ambience.
+const DB_MIN: f32 = -68.0;
 const DB_MAX: f32 = -8.0;
 const GAIN: f32 = 1.3;
 const CURVE_POWER: f32 = 0.7;
@@ -152,5 +156,62 @@ impl AudioVisualiser {
         self.buffer.clear();
         // Reset noise floor to initial values
         self.noise_floor.fill(-40.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sine(freq_hz: f32, amplitude: f32, sample_rate: u32, len: usize) -> Vec<f32> {
+        (0..len)
+            .map(|i| {
+                amplitude
+                    * (2.0 * std::f32::consts::PI * freq_hz * i as f32 / sample_rate as f32).sin()
+            })
+            .collect()
+    }
+
+    fn max_level(viz: &mut AudioVisualiser, samples: &[f32]) -> f32 {
+        viz.feed(samples)
+            .expect("enough samples for a window")
+            .into_iter()
+            .fold(0.0, f32::max)
+    }
+
+    /// Regresión 2026-07-24 (validación en vivo): un susurro (~0.01 de
+    /// amplitud) cae alrededor de -58 dB por bucket, por debajo del piso
+    /// DB_MIN histórico de -55 — el overlay lo mostraba como silencio y el
+    /// usuario no podía saber si la app lo escuchaba.
+    #[test]
+    fn whisper_amplitude_is_clearly_visible() {
+        let mut viz = AudioVisualiser::new(16000, 512, 16, 400.0, 4000.0);
+        let level = max_level(&mut viz, &sine(1000.0, 0.01, 16000, 512));
+        assert!(
+            level > 0.2,
+            "whisper-level input should be visible, got {level}"
+        );
+    }
+
+    #[test]
+    fn near_silence_stays_near_the_floor() {
+        let mut viz = AudioVisualiser::new(16000, 512, 16, 400.0, 4000.0);
+        let level = max_level(&mut viz, &sine(1000.0, 0.0005, 16000, 512));
+        assert!(
+            level < 0.05,
+            "near-silence should stay near zero, got {level}"
+        );
+    }
+
+    #[test]
+    fn normal_speech_amplitude_keeps_headroom_over_whisper() {
+        let mut viz = AudioVisualiser::new(16000, 512, 16, 400.0, 4000.0);
+        let whisper = max_level(&mut viz, &sine(1000.0, 0.01, 16000, 512));
+        viz.reset();
+        let speech = max_level(&mut viz, &sine(1000.0, 0.2, 16000, 512));
+        assert!(
+            speech > whisper + 0.15,
+            "speech ({speech}) should render clearly above whisper ({whisper})"
+        );
     }
 }

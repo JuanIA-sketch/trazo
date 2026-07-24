@@ -521,3 +521,13 @@ pub fn emit_levels(app_handle: &AppHandle, levels: &[f32]) {
     // dispatch work in half.
     let _ = app_handle.emit_to("recording_overlay", "mic-level", levels);
 }
+
+/// VAD voice↔no-voice transition for the overlay's "speech detected" pulse.
+/// Fires only on transitions (a handful per dictation), but keeps the same
+/// OVERLAY_ENABLED gate and emit_to targeting as emit_levels for consistency.
+pub fn emit_speech_state(app_handle: &AppHandle, speech_active: bool) {
+    if !OVERLAY_ENABLED.load(Ordering::Relaxed) {
+        return;
+    }
+    let _ = app_handle.emit_to("recording_overlay", "speech-active", speech_active);
+}

@@ -12,6 +12,7 @@ import type {
 import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 import { handleShowOverlay, type OverlayState } from "./showOverlayHandler";
+import { barHeightPx } from "./waveform";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
@@ -38,6 +39,9 @@ const RecordingOverlay: React.FC = () => {
   // True once live text overflows the cap. A top overlay fades its top edge only
   // while overflowing, so the resting first line stays crisp flush under the pill.
   const [overflowing, setOverflowing] = useState(false);
+  // True while the VAD hears voice (not mere noise) — drives the dot's
+  // faster/brighter pulse so the user can trust they're being heard.
+  const [speaking, setSpeaking] = useState(false);
 
   const smoothedLevelsRef = useRef<number[]>(Array(16).fill(0));
   // Live-text scroll-back: the text region "sticks" to the newest line while the
@@ -50,6 +54,7 @@ const RecordingOverlay: React.FC = () => {
   useEffect(() => {
     const setupEventListeners = async () => {
       const unlistenShow = await listen("show-overlay", (event) => {
+        setSpeaking(false); // stale pulse must never survive into a new show
         handleShowOverlay(event.payload as OverlayState, {
           syncLanguage: syncLanguageFromSettings,
           // The Live panel flows downward from a top overlay and upward from
@@ -80,6 +85,10 @@ const RecordingOverlay: React.FC = () => {
         setIsVisible(false);
       });
 
+      const unlistenSpeech = await listen<boolean>("speech-active", (event) => {
+        setSpeaking(event.payload);
+      });
+
       const unlistenLevel = await listen<number[]>("mic-level", (event) => {
         const newLevels = event.payload as number[];
         // Exponential smoothing across the 16 buckets, then take the first N
@@ -105,6 +114,7 @@ const RecordingOverlay: React.FC = () => {
       return () => {
         unlistenShow();
         unlistenHide();
+        unlistenSpeech();
         unlistenLevel();
         unlistenStream();
         unlistenPhase();
@@ -151,12 +161,7 @@ const RecordingOverlay: React.FC = () => {
   const waveform = (
     <div className="swave">
       {levels.map((v, i) => (
-        <i
-          key={i}
-          style={{
-            height: `${Math.max(3, Math.min(18, 3 + Math.pow(v, 0.7) * 15))}px`,
-          }}
-        />
+        <i key={i} style={{ height: `${barHeightPx(v)}px` }} />
       ))}
     </div>
   );
@@ -183,7 +188,7 @@ const RecordingOverlay: React.FC = () => {
   const listeningRow = (showTimer: boolean, showCancel: boolean) => (
     <div className="sbase">
       <div className="sbase-l">
-        <span className="sdot" />
+        <span className={`sdot ${speaking ? "speaking" : ""}`} />
       </div>
       {waveform}
       <div className="sbase-r">

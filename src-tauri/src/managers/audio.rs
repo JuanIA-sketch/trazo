@@ -161,6 +161,12 @@ fn create_audio_recorder(
                 utils::emit_levels(&app_handle, &levels);
             }
         })
+        .with_speech_callback({
+            let app_handle = app_handle.clone();
+            move |speech_active| {
+                utils::emit_speech_state(&app_handle, speech_active);
+            }
+        })
         .with_audio_callback({
             let router = stream_router;
             move |frame| {

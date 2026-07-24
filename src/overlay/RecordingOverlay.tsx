@@ -166,6 +166,34 @@ const RecordingOverlay: React.FC = () => {
     </div>
   );
 
+  // Brand mark: serif italic "T" in the brand gradient over a loose diagonal
+  // flick (the "trazo"). Replaces the recording dot and the working spinner:
+  // the VAD speech pulse lives on the letter, and while transcribing the
+  // flick redraws itself in a loop — the stroke IS the progress indicator.
+  const BRAND_INITIAL = "T";
+  const tMark = (working: boolean) => (
+    <span
+      className={`tmark ${speaking ? "speaking" : ""} ${working ? "working" : ""}`}
+      aria-hidden="true"
+    >
+      <span className="tmark-letter">{BRAND_INITIAL}</span>
+      <svg className="tmark-stroke" viewBox="0 0 16 7" fill="none">
+        <defs>
+          <linearGradient id="tmark-grad" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stopColor="#7B2FBE" />
+            <stop offset="1" stopColor="#F97316" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M1.5 5.2 C 5 6.4, 10 2.4, 14.5 1.6"
+          stroke="url(#tmark-grad)"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+
   const cancelBtn = (
     <button
       className="sx"
@@ -192,9 +220,7 @@ const RecordingOverlay: React.FC = () => {
     continuousBadge = false,
   ) => (
     <div className="sbase">
-      <div className="sbase-l">
-        <span className={`sdot ${speaking ? "speaking" : ""}`} />
-      </div>
+      <div className="sbase-l">{tMark(false)}</div>
       {waveform}
       <div className="sbase-r">
         {continuousBadge && (
@@ -217,9 +243,7 @@ const RecordingOverlay: React.FC = () => {
   // listening row, so the label is centered.
   const workingRow = (label: string, showCancel: boolean) => (
     <div className="sbase">
-      <div className="sbase-l">
-        <span className="sspinner" />
-      </div>
+      <div className="sbase-l">{tMark(true)}</div>
       <span className="swork-label">{label}</span>
       <div className="sbase-r">{showCancel && cancelBtn}</div>
     </div>

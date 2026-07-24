@@ -115,3 +115,16 @@ bun run tauri dev
     coordinator con `recv_timeout` para el stop diferido; overlay estado
     `continuous` (badge ∞, `overlay.continuous` en 21 locales). El detector
     es la base reutilizable si algún día se planea Command Mode.
+12. **Rediseño visual del overlay (2026-07-24, validado por Charly)**: pill
+    negro sólido #000 en ambos temas
+    (objeto de marca fijo; neutrales pinneados, sin bloque dark en el CSS
+    del overlay); borde 1.3px degradado #7B2FBE→#F97316 (padding-box/
+    border-box) + highlight interior "vidrio"; halo partido morado/naranja
+    mientras está visible; marca "T" serif itálica 400 con degradado y
+    trazo diagonal SVG debajo — reemplaza punto y spinner (el pulso VAD
+    ahora vive en la letra; en transcribing el trazo se redibuja en loop
+    como indicador de progreso; el check de "copiado" se conserva a
+    propósito); barras de onda en gris neutro. Estado continuo rediseñado:
+    el halo RESPIRA (2,2 s, único estado animado) + badge ∞ en degradado;
+    con prefers-reduced-motion, halo estático más intenso. Todo en
+    RecordingOverlay.{css,tsx}; sin cambios Rust.

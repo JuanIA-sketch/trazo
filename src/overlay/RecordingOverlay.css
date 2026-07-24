@@ -276,6 +276,18 @@
   animation: sdot-pulse 0.8s infinite;
   filter: brightness(1.35) saturate(1.3);
 }
+/* Double-tap latched capture: mic open with no key held — ring + badge make
+   the state unmistakable. */
+.scard.compact.continuous {
+  box-shadow: 0 0 0 1.5px var(--s-accent);
+}
+.scont {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--s-accent);
+  flex: none;
+}
 @keyframes sdot-pulse {
   0% {
     box-shadow: 0 0 0 0 var(--s-accent-soft);

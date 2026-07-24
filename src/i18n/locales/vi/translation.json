@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Đang chuyển đổi...",
     "processing": "Đang xử lý...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Nghe liên tục"
   },
   "whatsNew": {
     "title": "Điểm mới trong Trazo v{{version}}"

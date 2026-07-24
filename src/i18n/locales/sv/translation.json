@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Transkriberar...",
     "processing": "Bearbetar...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Kontinuerlig lyssning"
   },
   "whatsNew": {
     "title": "Nytt i Trazo v{{version}}"

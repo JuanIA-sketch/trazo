@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "...جاري التفريغ",
     "processing": "...جاري المعالجة",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "استماع مستمر"
   },
   "whatsNew": {
     "title": "الجديد في Trazo v{{version}}"

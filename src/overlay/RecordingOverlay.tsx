@@ -184,14 +184,29 @@ const RecordingOverlay: React.FC = () => {
   );
 
   // dot (left) | waveform (center) | timer + cancel (right) — same structure for
-  // pill & panel, so the Live morph is a pure width change.
-  const listeningRow = (showTimer: boolean, showCancel: boolean) => (
+  // pill & panel, so the Live morph is a pure width change. The continuous
+  // badge marks a mic latched open with no key held (double-tap mode).
+  const listeningRow = (
+    showTimer: boolean,
+    showCancel: boolean,
+    continuousBadge = false,
+  ) => (
     <div className="sbase">
       <div className="sbase-l">
         <span className={`sdot ${speaking ? "speaking" : ""}`} />
       </div>
       {waveform}
       <div className="sbase-r">
+        {continuousBadge && (
+          <span
+            className="scont"
+            role="img"
+            title={t("overlay.continuous")}
+            aria-label={t("overlay.continuous")}
+          >
+            {"∞"}
+          </span>
+        )}
         {showTimer && <span className="stimer">{fmtTime(elapsed)}</span>}
         {showCancel && cancelBtn}
       </div>
@@ -289,6 +304,7 @@ const RecordingOverlay: React.FC = () => {
   // button is in both active rows so it stays put.
   const working = state === "transcribing" || state === "processing";
   const copied = state === "copied";
+  const continuous = state === "continuous";
   const workLabel =
     state === "processing"
       ? t("overlay.processing")
@@ -300,13 +316,15 @@ const RecordingOverlay: React.FC = () => {
       className={`ov-stage ${position} ov-fade ${isVisible ? "show" : ""}`}
     >
       <div
-        className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""}`}
+        className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""} ${
+          continuous ? "continuous" : ""
+        }`}
       >
         {copied
           ? copiedRow
           : working
             ? workingRow(workLabel, true)
-            : listeningRow(false, true)}
+            : listeningRow(false, true, continuous)}
       </div>
     </div>
   );

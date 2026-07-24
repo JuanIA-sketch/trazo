@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Transcription...",
     "processing": "Traitement...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Écoute continue"
   },
   "whatsNew": {
     "title": "Nouveautés de Trazo v{{version}}"

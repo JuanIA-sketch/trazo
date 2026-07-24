@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "正在轉錄...",
     "processing": "處理中...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "持續聆聽"
   },
   "whatsNew": {
     "title": "Trazo v{{version}} 新功能"

@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Transcribiendo...",
     "processing": "Procesando...",
-    "copied": "Texto copiado — Ctrl+V para pegar"
+    "copied": "Texto copiado — Ctrl+V para pegar",
+    "continuous": "Escucha continua"
   },
   "whatsNew": {
     "title": "Nuevo en Trazo v{{version}}"

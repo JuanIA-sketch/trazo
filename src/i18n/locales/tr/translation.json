@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Transkribe ediliyor...",
     "processing": "İşleniyor...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Sürekli dinleme"
   },
   "whatsNew": {
     "title": "Trazo v{{version}} yenilikleri"

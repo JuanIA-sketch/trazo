@@ -1,5 +1,6 @@
 use crate::actions::ACTION_MAP;
 use crate::managers::audio::AudioRecordingManager;
+use crate::shortcut::tap_gesture::{Gesture, TapGestureDetector};
 use log::{debug, error, warn};
 use std::sync::mpsc::{self, Sender};
 use std::sync::Arc;
@@ -49,8 +50,43 @@ impl TranscriptionCoordinator {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut stage = Stage::Idle;
                 let mut last_press: Option<Instant> = None;
+                // Tap-gesture state for push-to-talk (double-tap latches
+                // continuous capture). Tracks only the binding that started
+                // the capture; other bindings keep the old busy semantics.
+                let mut gesture = TapGestureDetector::new();
+                let mut gesture_binding: Option<(String, String)> = None;
 
-                while let Ok(cmd) = rx.recv() {
+                loop {
+                    // While a tap is pending its double-tap window, wake up at
+                    // the deadline even if no input arrives.
+                    let cmd = match gesture.deadline() {
+                        Some(deadline) => {
+                            let timeout = deadline.saturating_duration_since(Instant::now());
+                            match rx.recv_timeout(timeout) {
+                                Ok(cmd) => Some(cmd),
+                                Err(mpsc::RecvTimeoutError::Timeout) => None,
+                                Err(mpsc::RecvTimeoutError::Disconnected) => break,
+                            }
+                        }
+                        None => match rx.recv() {
+                            Ok(cmd) => Some(cmd),
+                            Err(_) => break,
+                        },
+                    };
+
+                    let Some(cmd) = cmd else {
+                        // The pending tap never became a double-tap: perform
+                        // the deferred PTT stop.
+                        if gesture.on_deadline(Instant::now()) == Some(Gesture::PendingExpired) {
+                            if let Some((binding_id, hotkey_string)) = gesture_binding.take() {
+                                if matches!(&stage, Stage::Recording(id) if id == &binding_id) {
+                                    stop(&app, &mut stage, &binding_id, &hotkey_string);
+                                }
+                            }
+                        }
+                        continue;
+                    };
+
                     match cmd {
                         Command::Input {
                             binding_id,
@@ -58,7 +94,7 @@ impl TranscriptionCoordinator {
                             is_pressed,
                             push_to_talk,
                         } => {
-                            // Debounce rapid-fire press events (key repeat / double-tap).
+                            // Debounce rapid-fire press events (key repeat).
                             // Releases always pass through for push-to-talk.
                             if is_pressed {
                                 let now = Instant::now();
@@ -70,12 +106,58 @@ impl TranscriptionCoordinator {
                             }
 
                             if push_to_talk {
-                                if is_pressed && matches!(stage, Stage::Idle) {
-                                    start(&app, &mut stage, &binding_id, &hotkey_string);
-                                } else if !is_pressed
-                                    && matches!(&stage, Stage::Recording(id) if id == &binding_id)
-                                {
-                                    stop(&app, &mut stage, &binding_id, &hotkey_string);
+                                // Only the binding that owns the current
+                                // gesture may feed the detector; a second
+                                // binding while busy is ignored, as before.
+                                let owns_gesture = gesture_binding
+                                    .as_ref()
+                                    .is_none_or(|(id, _)| *id == binding_id);
+                                if !owns_gesture {
+                                    debug!(
+                                        "Ignoring '{binding_id}': another binding owns the capture"
+                                    );
+                                    continue;
+                                }
+
+                                let now = Instant::now();
+                                let g = if is_pressed {
+                                    gesture.on_press(now)
+                                } else {
+                                    gesture.on_release(now)
+                                };
+                                match g {
+                                    Gesture::HoldStart => {
+                                        if matches!(stage, Stage::Idle) {
+                                            start(&app, &mut stage, &binding_id, &hotkey_string);
+                                        }
+                                        if matches!(stage, Stage::Recording(_)) {
+                                            gesture_binding =
+                                                Some((binding_id.clone(), hotkey_string.clone()));
+                                        } else {
+                                            // Busy or failed start: the press
+                                            // must not leave a hold armed.
+                                            gesture.reset();
+                                        }
+                                    }
+                                    Gesture::HoldEnd | Gesture::LatchedPress => {
+                                        gesture_binding = None;
+                                        if matches!(&stage, Stage::Recording(id) if id == &binding_id)
+                                        {
+                                            stop(&app, &mut stage, &binding_id, &hotkey_string);
+                                        }
+                                    }
+                                    Gesture::DoubleTap => {
+                                        // Latched: capture continues with no key
+                                        // held — the overlay must say so.
+                                        if matches!(&stage, Stage::Recording(id) if id == &binding_id)
+                                        {
+                                            crate::overlay::show_continuous_overlay(&app);
+                                        }
+                                    }
+                                    Gesture::TapPending => {
+                                        // Keep recording; deadline armed above.
+                                    }
+                                    Gesture::PendingExpired | Gesture::Ignored => {}
                                 }
                             } else if is_pressed {
                                 match &stage {
@@ -100,9 +182,13 @@ impl TranscriptionCoordinator {
                             {
                                 stage = Stage::Idle;
                             }
+                            gesture.reset();
+                            gesture_binding = None;
                         }
                         Command::ProcessingFinished => {
                             stage = Stage::Idle;
+                            gesture.reset();
+                            gesture_binding = None;
                         }
                     }
                 }

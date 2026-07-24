@@ -1,6 +1,7 @@
 export type OverlayState =
   | "recording"
   | "streaming"
+  | "continuous"
   | "transcribing"
   | "processing"
   | "copied";

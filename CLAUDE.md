@@ -103,3 +103,15 @@ bun run tauri dev
     en background (candidato Nemotron Streaming vs Turbo, probar en es);
     desacoplar `onboarding_completed` de la descarga; pantalla manual como
     fallback.
+11. **Confianza del overlay + grabación continua (2026-07-24, validado en
+    vivo)**: (a) sensibilidad a susurros — la causa vivía en el BACKEND
+    (`visualizer.rs` `DB_MIN` -55→-68; un susurro cae a ~-58 dB y llegaba
+    como 0); curva frontend en `src/overlay/waveform.ts` (sqrt,
+    presentación); pulso del punto vía VAD real (`SpeechStateTracker`,
+    evento `speech-active` solo en transiciones) — ruido no-voz no pulsa.
+    (b) doble-tap de PTT latchea grabación continua: `TapGestureDetector`
+    puro en `shortcut/tap_gesture.rs` (450 ms tap / 550 ms ventana —
+    250/350 exigían timing de máquina, hay test del perfil humano);
+    coordinator con `recv_timeout` para el stop diferido; overlay estado
+    `continuous` (badge ∞, `overlay.continuous` en 21 locales). El detector
+    es la base reutilizable si algún día se planea Command Mode.

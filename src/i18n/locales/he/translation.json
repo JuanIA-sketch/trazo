@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "מתמלל...",
     "processing": "מעבד...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "האזנה רציפה"
   },
   "whatsNew": {
     "title": "חדש ב-Trazo v{{version}}"

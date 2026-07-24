@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Транскрибиране...",
     "processing": "Обработка...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Непрекъснато слушане"
   },
   "whatsNew": {
     "title": "Ново в Trazo v{{version}}"

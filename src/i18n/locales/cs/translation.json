@@ -631,7 +631,8 @@
   "overlay": {
     "transcribing": "Přepisuji...",
     "processing": "Zpracovávám...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Nepřetržité poslouchání"
   },
   "whatsNew": {
     "title": "Novinky v Trazo v{{version}}"

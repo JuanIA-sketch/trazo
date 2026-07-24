@@ -421,6 +421,12 @@ pub fn show_streaming_overlay(app_handle: &AppHandle) {
     show_overlay_state(app_handle, "streaming");
 }
 
+/// Shows the continuous-capture overlay: recording latched via double-tap,
+/// mic open with no key held — the pill must make that state unmistakable.
+pub fn show_continuous_overlay(app_handle: &AppHandle) {
+    show_overlay_state(app_handle, "continuous");
+}
+
 /// Shows the transcribing overlay window
 pub fn show_transcribing_overlay(app_handle: &AppHandle) {
     show_overlay_state(app_handle, "transcribing");

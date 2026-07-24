@@ -634,6 +634,7 @@
   "overlay": {
     "transcribing": "Transcribing...",
     "processing": "Processing...",
-    "copied": "Copied — press Ctrl+V to paste"
+    "copied": "Copied — press Ctrl+V to paste",
+    "continuous": "Continuous listening"
   }
 }

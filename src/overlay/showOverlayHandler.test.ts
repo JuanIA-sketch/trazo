@@ -140,6 +140,17 @@ describe("handleShowOverlay", () => {
     expect(recorded.streamingSessionStarted).toBe(true);
   });
 
+  test("continuous latch keeps text and session: it continues the same capture", () => {
+    const { deps, recorded } = makeDeps();
+
+    handleShowOverlay("continuous", deps);
+
+    expect(recorded.visible).toBe(true);
+    expect(recorded.state).toBe("continuous");
+    expect(recorded.streamTextCleared).toBe(false);
+    expect(recorded.streamingSessionStarted).toBe(false);
+  });
+
   test("keeps live text for non-capture states like transcribing", () => {
     const { deps, recorded } = makeDeps();
 

@@ -11,6 +11,7 @@
 
 mod handler;
 pub mod handy_keys;
+pub mod tap_gesture;
 mod tauri_impl;
 
 use log::{error, info, warn};

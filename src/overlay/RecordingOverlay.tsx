@@ -13,6 +13,7 @@ import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 import { handleShowOverlay, type OverlayState } from "./showOverlayHandler";
 import { barHeightPx } from "./waveform";
+import coronaUrl from "./corona.png";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
@@ -158,6 +159,13 @@ const RecordingOverlay: React.FC = () => {
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   // ---- Shared building blocks (one visual language for every overlay form) ----
+
+  // Trazo crown emblem, pinned to the pill's top-left corner. Decorative only,
+  // so it is hidden from assistive tech and never takes pointer events. It
+  // lives on `.sholder` (outside `.scard`) because the card is overflow:hidden
+  // for the text morph, which would clip the overhang.
+  const crown = <img className="scrown" src={coronaUrl} alt="" aria-hidden />;
+
   const waveform = (
     <div className="swave">
       {levels.map((v, i) => (
@@ -180,8 +188,8 @@ const RecordingOverlay: React.FC = () => {
       <svg className="tmark-stroke" viewBox="0 0 16 7" fill="none">
         <defs>
           <linearGradient id="tmark-grad" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stopColor="#7B2FBE" />
-            <stop offset="1" stopColor="#F97316" />
+            <stop offset="0" stopColor="#2563EB" />
+            <stop offset="1" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
         <path
@@ -284,39 +292,39 @@ const RecordingOverlay: React.FC = () => {
 
     return (
       <div dir={direction} className={`ov-stage ${position}`}>
-        <div
-          key={session}
-          className={`scard ${open ? "open" : ""} ${collapsed ? "working" : ""} ${
-            isVisible ? "" : "leaving"
-          }`}
-        >
-          <div className="stext">
-            <div className="stext-clip">
-              <div
-                className={`stext-cap ${overflowing ? "overflowing" : ""}`}
-                ref={capRef}
-                onScroll={handleStreamScroll}
-              >
-                <p>
-                  <span className="committed">
-                    {streamText.committed ? streamText.committed + " " : ""}
-                  </span>
-                  <span className="tentative">{streamText.tentative}</span>
-                  {/* Drop the blinking caret once finalizing — it's no longer
-                      capturing, and a static spinner conveys the work. */}
-                  {!working && <span className="scaret" />}
-                </p>
+        <div key={session} className={`sholder ${isVisible ? "" : "leaving"}`}>
+          {crown}
+          <div
+            className={`scard ${open ? "open" : ""} ${collapsed ? "working" : ""}`}
+          >
+            <div className="stext">
+              <div className="stext-clip">
+                <div
+                  className={`stext-cap ${overflowing ? "overflowing" : ""}`}
+                  ref={capRef}
+                  onScroll={handleStreamScroll}
+                >
+                  <p>
+                    <span className="committed">
+                      {streamText.committed ? streamText.committed + " " : ""}
+                    </span>
+                    <span className="tentative">{streamText.tentative}</span>
+                    {/* Drop the blinking caret once finalizing — it's no longer
+                        capturing, and a static spinner conveys the work. */}
+                    {!working && <span className="scaret" />}
+                  </p>
+                </div>
               </div>
             </div>
+            {working
+              ? workingRow(
+                  workKind === "polishing"
+                    ? t("overlay.processing")
+                    : t("overlay.transcribing"),
+                  true,
+                )
+              : listeningRow(open, true)}
           </div>
-          {working
-            ? workingRow(
-                workKind === "polishing"
-                  ? t("overlay.processing")
-                  : t("overlay.transcribing"),
-                true,
-              )
-            : listeningRow(open, true)}
         </div>
       </div>
     );
@@ -339,16 +347,19 @@ const RecordingOverlay: React.FC = () => {
       dir={direction}
       className={`ov-stage ${position} ov-fade ${isVisible ? "show" : ""}`}
     >
-      <div
-        className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""} ${
-          continuous ? "continuous" : ""
-        }`}
-      >
-        {copied
-          ? copiedRow
-          : working
-            ? workingRow(workLabel, true)
-            : listeningRow(false, true, continuous)}
+      <div className="sholder compact">
+        {crown}
+        <div
+          className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""} ${
+            continuous ? "continuous" : ""
+          }`}
+        >
+          {copied
+            ? copiedRow
+            : working
+              ? workingRow(workLabel, true)
+              : listeningRow(false, true, continuous)}
+        </div>
       </div>
     </div>
   );

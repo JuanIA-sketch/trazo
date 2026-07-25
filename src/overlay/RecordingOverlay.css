@@ -2,30 +2,37 @@
 
 :root {
   --s-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  /* The pill is a fixed brand object: solid black in BOTH system themes, so
-     every color below is pinned for on-black legibility (no light/dark flip
-     inside the overlay; the app itself is untouched). */
-  --s-surface: #000000;
-  /* Brand gradient (Trazo purple → orange). The raw brand purple #7B2FBE is
-     too dim alone on black, so standalone accents (caret, check, hover) use
-     the lifted purple; the gradient keeps the true brand hexes. */
-  --t-purple: #7b2fbe;
-  --t-orange: #f97316;
-  --t-grad: linear-gradient(135deg, var(--t-purple), var(--t-orange));
-  --s-accent: #a855f7;
+  /* The pill is a fixed brand object: the Trazo night navy in BOTH system
+     themes, so every color below is pinned for on-navy legibility (no
+     light/dark flip inside the overlay; the app itself is untouched). */
+  --s-surface: linear-gradient(180deg, #020617, #0b1220);
+  /* Brand gradient (Trazo electric blue → signal cyan). Standalone accents
+     (caret, check, hover) use the cyan, which carries furthest on navy. */
+  --t-blue: #2563eb;
+  --t-cyan: #22d3ee;
+  --t-grad: linear-gradient(135deg, var(--t-blue), var(--t-cyan));
+  --s-accent: #22d3ee;
   --s-accent-soft: color-mix(in srgb, var(--s-accent) 20%, transparent);
-  /* Split glow: purple bleeding left, orange right — the pill's halo. */
+  /* Split glow: deep blue bleeding left, cyan right — the pill's halo. */
   --t-glow:
-    -10px 3px 26px -9px rgba(123, 47, 190, 0.6),
-    10px 3px 26px -9px rgba(249, 115, 22, 0.45);
+    -10px 3px 26px -9px rgba(37, 99, 235, 0.6),
+    10px 3px 26px -9px rgba(34, 211, 238, 0.45);
   /* Subtle glass: a top inner highlight over the solid black. */
   --t-glass: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  /* Neutrals, pinned for the always-black surface. */
-  --s-ink: rgba(255, 255, 255, 0.92);
-  --s-muted: #a3a09a;
-  --s-faint: #8e8a90;
-  --s-wave: rgba(255, 255, 255, 0.45);
-  --s-hair: rgba(255, 255, 255, 0.08);
+  /* Neutrals, pinned for the always-navy surface: near-white primary text over
+     the brand's slate secondaries. */
+  --s-ink: #f8fafc;
+  --s-muted: #94a3b8;
+  --s-faint: #64748b;
+  --s-wave: rgba(248, 250, 252, 0.45);
+  --s-hair: rgba(148, 163, 184, 0.14);
+
+  /* Crown emblem pinned to the pill's top-left corner. It overhangs the card,
+     so overlay.rs reserves this much headroom above the card and slack on the
+     left — keep the three in sync. */
+  --ov-crown-w: 30px;
+  --ov-crown-up: 13px; /* how far it rises above the card's top edge */
+  --ov-crown-left: 9px; /* how far it juts past the card's left edge */
 
   /* Card geometry — single source of truth for the visible overlay sizes. The
      native overlay window (overlay.rs) is sized from these: it must be at least
@@ -62,6 +69,55 @@
 }
 .ov-stage.top {
   align-items: flex-start; /* top placement: flush to the top edge */
+  /* Room for the crown, which rises above the card — at the top of the screen
+     there is no slack above the card, so the stage supplies it. */
+  padding-top: var(--ov-crown-up);
+}
+
+/* Crown holder — wraps the card so the emblem can overhang it (the card itself
+   is overflow:hidden for the text morph, which would clip the crown). The
+   pop/leave animation lives here so the crown and card move as one piece. */
+.sholder {
+  position: relative;
+  display: flex;
+  flex: none;
+  transform-origin: bottom center;
+  animation: scard-pop 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+.ov-stage.top .sholder {
+  transform-origin: top center;
+}
+.sholder.compact {
+  animation: none; /* the compact pill fades via .ov-fade instead of popping */
+}
+.sholder.leaving {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 240ms ease,
+    transform 300ms ease;
+}
+
+/* The emblem itself: pinned to the card's top-left corner, tilted, with the
+   cyan glow from the Trazo design. Purely decorative — never interactive. */
+.scrown {
+  position: absolute;
+  top: calc(-1 * var(--ov-crown-up));
+  left: calc(-1 * var(--ov-crown-left));
+  width: var(--ov-crown-w);
+  height: auto;
+  transform: rotate(-12deg);
+  filter: drop-shadow(0 0 9px rgba(34, 211, 238, 0.55));
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+/* RTL: mirror the emblem to the other corner so it never covers the text. */
+[dir="rtl"] .scrown {
+  left: auto;
+  right: calc(-1 * var(--ov-crown-left));
+  transform: rotate(12deg);
 }
 
 /* Compact pill: fade the whole container in/out (the pill itself never pops or
@@ -82,7 +138,6 @@
 .ov-stage.top .scard {
   /* column-reverse stacks the control pill above the text region. */
   flex-direction: column-reverse;
-  transform-origin: top center;
 }
 .ov-stage.top .stext-cap {
   /* Mirror of the bottom overlay (top: 12 / bottom: 0): the first line sits flush
@@ -119,18 +174,18 @@
   display: flex;
   flex-direction: column;
   flex: none; /* hold our own width; never let the stage flex shrink the card */
-  transform-origin: bottom center;
+  color: var(--s-ink);
   background:
-    linear-gradient(var(--s-surface), var(--s-surface)) padding-box,
+    var(--s-surface) padding-box,
     var(--t-grad) border-box;
   border: 1.3px solid transparent;
   box-shadow: var(--t-glow), var(--t-glass);
-  /* pop-in plays on mount; morph (width/radius) is a transition */
-  animation: scard-pop 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* morph (width/radius) is a transition; the pop-in lives on .sholder so the
+     crown travels with the card */
   transition:
     width 460ms cubic-bezier(0.22, 1, 0.36, 1),
     border-radius 460ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, width, opacity;
+  will-change: width;
 }
 @keyframes scard-pop {
   from {
@@ -142,13 +197,6 @@
     opacity: 1;
     transform: none;
   }
-}
-.scard.leaving {
-  opacity: 0;
-  transform: scale(0.96);
-  transition:
-    opacity 240ms ease,
-    transform 300ms ease;
 }
 .scard.open {
   width: var(--ov-open-w);
@@ -165,7 +213,6 @@
    grow). The resting pill hugs the waveform; the working pill is roomy enough to
    center the longest label — the .swork-label ellipsis is only a safety net past it. */
 .scard.compact {
-  animation: none;
   width: var(--ov-rest-w);
 }
 .scard.compact.cworking {
@@ -294,10 +341,10 @@
 @keyframes tmark-speak {
   0%,
   100% {
-    filter: brightness(1.05) drop-shadow(0 0 1.5px rgba(168, 85, 247, 0.35));
+    filter: brightness(1.05) drop-shadow(0 0 1.5px rgba(37, 99, 235, 0.35));
   }
   50% {
-    filter: brightness(1.55) drop-shadow(0 0 6px rgba(249, 115, 22, 0.55));
+    filter: brightness(1.55) drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
   }
 }
 /* Working (transcribing / polishing): the flick redraws itself in a loop —
@@ -328,8 +375,8 @@
   }
   50% {
     box-shadow:
-      -12px 3px 34px -7px rgba(123, 47, 190, 0.85),
-      12px 3px 34px -7px rgba(249, 115, 22, 0.7),
+      -12px 3px 34px -7px rgba(37, 99, 235, 0.85),
+      12px 3px 34px -7px rgba(34, 211, 238, 0.75),
       var(--t-glass);
   }
 }
@@ -354,8 +401,8 @@
   .scard.compact.continuous {
     animation: none;
     box-shadow:
-      -12px 3px 34px -7px rgba(123, 47, 190, 0.85),
-      12px 3px 34px -7px rgba(249, 115, 22, 0.7),
+      -12px 3px 34px -7px rgba(37, 99, 235, 0.85),
+      12px 3px 34px -7px rgba(34, 211, 238, 0.75),
       var(--t-glass);
   }
 }

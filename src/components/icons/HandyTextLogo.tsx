@@ -1,7 +1,7 @@
 import React from "react";
 
 // Placeholder del wordmark mientras no hay logo final: el nombre "Trazo" en
-// el morado de marca (--color-logo-primary: #7B2FBE claro / #A855F7 oscuro).
+// el azul de marca (--color-logo-primary: #2563EB claro / #3B82F6 oscuro).
 // Mantiene nombre, props y viewBox del logo original para ser drop-in; el
 // logo definitivo reemplazará solo el contenido del SVG.
 const BRAND_NAME = "Trazo";

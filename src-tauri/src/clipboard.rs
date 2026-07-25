@@ -624,6 +624,28 @@ fn should_send_auto_submit(auto_submit: bool, paste_method: PasteMethod) -> bool
     auto_submit && paste_method != PasteMethod::None
 }
 
+/// Whether the post-paste step should write the transcript to the clipboard
+/// after the paste itself SUCCEEDED.
+///
+/// The rule: never copy in parallel to a successful insertion. Methods that
+/// deliver the text themselves (Direct types it, ExternalScript hands it to a
+/// script) leave the clipboard alone, so a dictation can no longer be
+/// re-pasted by accident in another window later. Clipboard-transport methods
+/// (Ctrl+V and friends) are already handled inside `paste_via_clipboard`,
+/// which keeps or restores the transcript per `ClipboardHandling` — a second
+/// write here would only duplicate that decision.
+///
+/// `PasteMethod::None` is the one case that still copies: nothing was
+/// inserted anywhere, so the clipboard is the only delivery channel.
+/// Failures never reach this function; they hit the safety net in `paste`,
+/// which always re-copies the transcript.
+fn should_copy_after_successful_paste(
+    handling: ClipboardHandling,
+    paste_method: PasteMethod,
+) -> bool {
+    handling == ClipboardHandling::CopyToClipboard && paste_method == PasteMethod::None
+}
+
 /// Whether the transcript is guaranteed to be on the clipboard after a paste
 /// attempt — drives the post-dictation "copied" notice. Always true with
 /// `CopyToClipboard`; with `DontModify` only a FAILED paste leaves the text
@@ -705,8 +727,10 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
         send_return_key(&mut enigo, settings.auto_submit_key)?;
     }
 
-    // After pasting, optionally copy to clipboard based on settings
-    if settings.clipboard_handling == ClipboardHandling::CopyToClipboard {
+    // The paste succeeded. Only copy when the method itself delivered nothing
+    // (PasteMethod::None) — never in parallel to a successful insertion, which
+    // would leave a stale dictation on the clipboard.
+    if should_copy_after_successful_paste(settings.clipboard_handling, paste_method) {
         let clipboard = app_handle.clipboard();
         clipboard
             .write_text(&text)
@@ -729,6 +753,75 @@ mod tests {
     #[test]
     fn auto_submit_skips_none_paste_method() {
         assert!(!should_send_auto_submit(true, PasteMethod::None));
+    }
+
+    /// Regression 2026-07-24 (reported by Charly): after a successful paste the
+    /// transcript was written to the clipboard for EVERY method, including the
+    /// ones that had already inserted the text into the focused field. That
+    /// left a stale dictation on the clipboard which got re-pasted by accident
+    /// in another window later.
+    mod copy_after_paste {
+        use super::*;
+
+        #[test]
+        fn direct_typing_never_copies_in_parallel() {
+            // Direct types into the focused field; the clipboard is untouched
+            // by the paste, and must stay that way.
+            assert!(!should_copy_after_successful_paste(
+                ClipboardHandling::CopyToClipboard,
+                PasteMethod::Direct
+            ));
+        }
+
+        #[test]
+        fn external_script_never_copies_in_parallel() {
+            assert!(!should_copy_after_successful_paste(
+                ClipboardHandling::CopyToClipboard,
+                PasteMethod::ExternalScript
+            ));
+        }
+
+        #[test]
+        fn clipboard_methods_do_not_write_twice() {
+            // paste_via_clipboard already applied ClipboardHandling (it keeps
+            // the transcript under CopyToClipboard); repeating it here would
+            // duplicate that decision.
+            for method in [
+                PasteMethod::CtrlV,
+                PasteMethod::CtrlShiftV,
+                PasteMethod::ShiftInsert,
+            ] {
+                assert!(
+                    !should_copy_after_successful_paste(ClipboardHandling::CopyToClipboard, method),
+                    "{method:?} must not double-write the clipboard"
+                );
+            }
+        }
+
+        #[test]
+        fn no_paste_method_still_delivers_through_the_clipboard() {
+            // Nothing was inserted anywhere, so the clipboard is the only way
+            // the user gets their dictation.
+            assert!(should_copy_after_successful_paste(
+                ClipboardHandling::CopyToClipboard,
+                PasteMethod::None
+            ));
+        }
+
+        #[test]
+        fn dont_modify_never_leaves_the_transcript_behind() {
+            for method in [
+                PasteMethod::Direct,
+                PasteMethod::CtrlV,
+                PasteMethod::None,
+                PasteMethod::ExternalScript,
+            ] {
+                assert!(
+                    !should_copy_after_successful_paste(ClipboardHandling::DontModify, method),
+                    "{method:?} must respect DontModify"
+                );
+            }
+        }
     }
 
     #[test]

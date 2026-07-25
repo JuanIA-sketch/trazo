@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "치환 규칙",
+        "description": "받아쓰기가 끝날 때마다 약어를 전체 텍스트로 확장합니다. 짧은 형태를 말하면 긴 형태가 입력됩니다. 두 열 CSV(약어,치환)를 가져오면 한 번에 여러 개를 추가할 수 있습니다.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "약어",
+        "toLabel": "치환 텍스트",
+        "add": "추가",
+        "import": "CSV 가져오기",
+        "remove": "규칙 {{from}} 제거",
+        "duplicate": "\"{{from}}\"에 대한 규칙이 이미 있습니다",
+        "imported": "가져옴: {{added}}개 추가, {{updated}}개 업데이트, {{skipped}}개 건너뜀",
+        "importEmpty": "해당 파일에서 유효한 규칙을 찾지 못했습니다",
+        "importFailed": "파일을 읽을 수 없습니다"
       }
     },
     "postProcessing": {

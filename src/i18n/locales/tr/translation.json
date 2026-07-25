@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Değiştirme kuralları",
+        "description": "Her dikteden sonra bir kısaltmayı tam metne genişletir. Kısa biçimi söylersiniz, uzun olan yazılır. Bir seferde çok sayıda eklemek için iki sütunlu CSV (kısaltma,değiştirme) içe aktarın.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Kısaltma",
+        "toLabel": "Değiştirme metni",
+        "add": "Ekle",
+        "import": "CSV içe aktar",
+        "remove": "{{from}} kuralını kaldır",
+        "duplicate": "\"{{from}}\" için zaten bir kural var",
+        "imported": "İçe aktarıldı: {{added}} eklendi, {{updated}} güncellendi, {{skipped}} atlandı",
+        "importEmpty": "Bu dosyada geçerli kural bulunamadı",
+        "importFailed": "Bu dosya okunamadı"
       }
     },
     "postProcessing": {

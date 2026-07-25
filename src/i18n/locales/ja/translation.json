@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "音声区間検出 (VAD)",
         "description": "録音から無音部分を除去します。ストリーミング対応モデルはより長い音声検出区間を使用します。VAD を無効にすると音声をそのまま録音します。"
+      },
+      "customReplacements": {
+        "title": "置換ルール",
+        "description": "口述のたびに略語をフルテキストへ展開します。短い形を話すと長い形が入力されます。2列のCSV（略語,置換）を読み込めば一度に多数追加できます。",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "略語",
+        "toLabel": "置換テキスト",
+        "add": "追加",
+        "import": "CSVを読み込む",
+        "remove": "ルール {{from}} を削除",
+        "duplicate": "「{{from}}」のルールは既にあります",
+        "imported": "読み込み完了: {{added}} 件追加、{{updated}} 件更新、{{skipped}} 件スキップ",
+        "importEmpty": "そのファイルに有効なルールがありません",
+        "importFailed": "ファイルを読み込めませんでした"
       }
     },
     "postProcessing": {

@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Spraakactiviteitsdetectie (VAD)",
         "description": "Filter stilte uit opnames. Streaming-modellen gebruiken een langere VAD-uitloop; het uitschakelen van VAD neemt de ruwe audio op."
+      },
+      "customReplacements": {
+        "title": "Vervangingsregels",
+        "description": "Vouwt een afkorting na elke dictaat uit tot volledige tekst. Je zegt de korte vorm, de lange wordt geschreven. Importeer een CSV met twee kolommen (afkorting,vervanging) om er veel tegelijk toe te voegen.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Afkorting",
+        "toLabel": "Vervangende tekst",
+        "add": "Toevoegen",
+        "import": "CSV importeren",
+        "remove": "Regel {{from}} verwijderen",
+        "duplicate": "Er bestaat al een regel voor \"{{from}}\"",
+        "imported": "Geïmporteerd: {{added}} toegevoegd, {{updated}} bijgewerkt, {{skipped}} overgeslagen",
+        "importEmpty": "Geen geldige regels gevonden in dat bestand",
+        "importFailed": "Kon dat bestand niet lezen"
       }
     },
     "postProcessing": {

@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "取代規則",
+        "description": "每次聽寫後把縮寫展開為完整文字。你說簡寫，寫出的是全稱。匯入兩欄 CSV（縮寫,取代）可一次新增多筆。",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "縮寫",
+        "toLabel": "取代文字",
+        "add": "新增",
+        "import": "匯入 CSV",
+        "remove": "移除規則 {{from}}",
+        "duplicate": "「{{from}}」已有規則",
+        "imported": "已匯入：新增 {{added}} 筆，更新 {{updated}} 筆，略過 {{skipped}} 筆",
+        "importEmpty": "該檔案中沒有有效規則",
+        "importFailed": "無法讀取該檔案"
       }
     },
     "postProcessing": {

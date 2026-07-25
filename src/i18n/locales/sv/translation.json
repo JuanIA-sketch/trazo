@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Ersättningsregler",
+        "description": "Expanderar en förkortning till fullständig text efter varje diktering. Du säger den korta formen, den långa skrivs. Importera en CSV med två kolumner (förkortning,ersättning) för att lägga till många på en gång.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Förkortning",
+        "toLabel": "Ersättningstext",
+        "add": "Lägg till",
+        "import": "Importera CSV",
+        "remove": "Ta bort regeln {{from}}",
+        "duplicate": "Det finns redan en regel för ”{{from}}”",
+        "imported": "Importerat: {{added}} tillagda, {{updated}} uppdaterade, {{skipped}} överhoppade",
+        "importEmpty": "Inga giltiga regler hittades i filen",
+        "importFailed": "Kunde inte läsa filen"
       }
     },
     "postProcessing": {

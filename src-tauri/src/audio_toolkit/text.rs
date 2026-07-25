@@ -99,6 +99,80 @@ fn find_best_match<'a>(
 ///
 /// # Returns
 /// The corrected text with custom words applied
+/// Expands user-defined replacement rules (abbreviation → full text) in a
+/// transcript.
+///
+/// Unlike [`apply_custom_words`], which fuzzy-corrects mis-heard words to a
+/// canonical spelling, these are EXACT rules the user authored: "pq" becomes
+/// "porque". Matching is case-insensitive and bounded to whole words, so a
+/// rule never fires inside a longer word ("pqrs" is left alone). Longer
+/// patterns are tried first, letting a multi-word rule win over a shorter one
+/// that would otherwise shadow it.
+///
+/// The replacement text is inserted exactly as authored.
+pub fn apply_custom_replacements(text: &str, rules: &[(String, String)]) -> String {
+    // Longest pattern first so a multi-word rule is not shadowed by a shorter
+    // one that matches its prefix. Blank patterns would match everywhere.
+    let mut active: Vec<(String, &str)> = rules
+        .iter()
+        .filter(|(from, _)| !from.trim().is_empty())
+        .map(|(from, to)| (from.to_lowercase(), to.as_str()))
+        .collect();
+    active.sort_by(|a, b| b.0.chars().count().cmp(&a.0.chars().count()));
+
+    if active.is_empty() {
+        return text.to_string();
+    }
+
+    let lower = text.to_lowercase();
+    // Byte offsets differ between `text` and `lower` for some Unicode cases, so
+    // walk char boundaries of the original and compare against a lowercased
+    // slice built from the same char positions.
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
+    let lower_chars: Vec<char> = lower.chars().collect();
+    // Guard against exotic casing that changes char count; fall back to a
+    // case-sensitive scan rather than mis-slicing.
+    let comparable = lower_chars.len() == chars.len();
+
+    let is_word_char = |c: char| c.is_alphanumeric();
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0usize;
+
+    // Single left-to-right pass: once a rule fires, the cursor jumps past the
+    // inserted text, so an expansion is never re-scanned by another rule.
+    'outer: while i < chars.len() {
+        let boundary_before = i == 0 || !is_word_char(chars[i - 1].1);
+        if boundary_before {
+            for (pattern, replacement) in &active {
+                let plen = pattern.chars().count();
+                if i + plen > chars.len() {
+                    continue;
+                }
+                let matches = if comparable {
+                    lower_chars[i..i + plen].iter().copied().eq(pattern.chars())
+                } else {
+                    chars[i..i + plen].iter().map(|(_, c)| *c).eq(pattern.chars())
+                };
+                if !matches {
+                    continue;
+                }
+                let after = i + plen;
+                let boundary_after = after == chars.len() || !is_word_char(chars[after].1);
+                if !boundary_after {
+                    continue;
+                }
+                out.push_str(replacement);
+                i = after;
+                continue 'outer;
+            }
+        }
+        out.push(chars[i].1);
+        i += 1;
+    }
+
+    out
+}
+
 pub fn apply_custom_words(text: &str, custom_words: &[String], threshold: f64) -> String {
     if custom_words.is_empty() {
         return text.to_string();
@@ -359,6 +433,83 @@ mod tests {
         let custom_words = vec![];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "hello world");
+    }
+
+    /// Custom replacement rules: exact, user-authored expansions applied to the
+    /// finished transcript (dictionary feature, 2026-07-24).
+    mod custom_replacements {
+        use super::*;
+
+        fn rules(pairs: &[(&str, &str)]) -> Vec<(String, String)> {
+            pairs
+                .iter()
+                .map(|(f, t)| (f.to_string(), t.to_string()))
+                .collect()
+        }
+
+        #[test]
+        fn expands_a_simple_abbreviation() {
+            let out = apply_custom_replacements(
+                "no vino pq llovía",
+                &rules(&[("pq", "porque")]),
+            );
+            assert_eq!(out, "no vino porque llovía");
+        }
+
+        #[test]
+        fn matching_is_case_insensitive() {
+            let out = apply_custom_replacements("PQ sí", &rules(&[("pq", "porque")]));
+            assert_eq!(out, "porque sí");
+        }
+
+        #[test]
+        fn never_fires_inside_a_longer_word() {
+            let out = apply_custom_replacements("pqrs y pq", &rules(&[("pq", "porque")]));
+            assert_eq!(out, "pqrs y porque");
+        }
+
+        #[test]
+        fn keeps_surrounding_punctuation() {
+            let out = apply_custom_replacements("¿pq?", &rules(&[("pq", "porque")]));
+            assert_eq!(out, "¿porque?");
+        }
+
+        #[test]
+        fn longer_rules_win_over_shorter_ones() {
+            // "vs" alone would shadow the two-word rule if order didn't matter.
+            let out = apply_custom_replacements(
+                "abro vs code ahora",
+                &rules(&[("vs", "versus"), ("vs code", "Visual Studio Code")]),
+            );
+            assert_eq!(out, "abro Visual Studio Code ahora");
+        }
+
+        #[test]
+        fn replacement_text_is_inserted_verbatim() {
+            let out = apply_custom_replacements("firma tks", &rules(&[("tks", "Thanks, Charly")]));
+            assert_eq!(out, "firma Thanks, Charly");
+        }
+
+        #[test]
+        fn no_rules_leaves_the_text_untouched() {
+            assert_eq!(apply_custom_replacements("hola mundo", &[]), "hola mundo");
+        }
+
+        #[test]
+        fn rules_with_an_empty_pattern_are_ignored() {
+            let out = apply_custom_replacements("hola", &rules(&[("", "X"), ("  ", "Y")]));
+            assert_eq!(out, "hola");
+        }
+
+        #[test]
+        fn an_expansion_is_not_re_expanded_by_a_later_rule() {
+            // "pq" → "porque" must not then have its "que" expanded again.
+            let out = apply_custom_replacements(
+                "pq",
+                &rules(&[("pq", "porque"), ("que", "QUE")]),
+            );
+            assert_eq!(out, "porque");
+        }
     }
 
     #[test]

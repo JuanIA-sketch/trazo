@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Quy tắc thay thế",
+        "description": "Mở rộng một chữ viết tắt thành văn bản đầy đủ sau mỗi lần đọc chính tả. Bạn nói dạng ngắn, dạng dài được viết ra. Nhập tệp CSV hai cột (viết tắt,thay thế) để thêm nhiều cùng lúc.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Viết tắt",
+        "toLabel": "Văn bản thay thế",
+        "add": "Thêm",
+        "import": "Nhập CSV",
+        "remove": "Xóa quy tắc {{from}}",
+        "duplicate": "Đã có quy tắc cho \"{{from}}\"",
+        "imported": "Đã nhập: {{added}} thêm mới, {{updated}} cập nhật, {{skipped}} bỏ qua",
+        "importEmpty": "Không tìm thấy quy tắc hợp lệ trong tệp đó",
+        "importFailed": "Không thể đọc tệp đó"
       }
     },
     "postProcessing": {

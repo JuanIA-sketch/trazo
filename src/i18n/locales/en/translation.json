@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Replacement rules",
+        "description": "Expand an abbreviation into full text after each dictation. Say the short form, get the long one. Import a two-column CSV (abbreviation,expansion) to add many at once.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Abbreviation",
+        "toLabel": "Replacement text",
+        "add": "Add",
+        "import": "Import CSV",
+        "remove": "Remove rule {{from}}",
+        "duplicate": "There is already a rule for \"{{from}}\"",
+        "imported": "Imported: {{added}} added, {{updated}} updated, {{skipped}} skipped",
+        "importEmpty": "No valid rules found in that file",
+        "importFailed": "Could not read that file"
       }
     },
     "postProcessing": {

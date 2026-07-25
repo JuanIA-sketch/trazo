@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "כללי החלפה",
+        "description": "מרחיב קיצור לטקסט מלא אחרי כל הכתבה. אתה אומר את הצורה הקצרה ונכתבת הארוכה. ייבא קובץ CSV בשתי עמודות (קיצור,החלפה) כדי להוסיף הרבה בבת אחת.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "קיצור",
+        "toLabel": "טקסט ההחלפה",
+        "add": "הוסף",
+        "import": "ייבוא CSV",
+        "remove": "הסרת הכלל {{from}}",
+        "duplicate": "כבר קיים כלל עבור \"{{from}}\"",
+        "imported": "יובאו: {{added}} נוספו, {{updated}} עודכנו, {{skipped}} דולגו",
+        "importEmpty": "לא נמצאו כללים תקינים בקובץ",
+        "importFailed": "לא ניתן לקרוא את הקובץ"
       }
     },
     "postProcessing": {

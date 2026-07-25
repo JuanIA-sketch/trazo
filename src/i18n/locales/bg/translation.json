@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Правила за замяна",
+        "description": "Разгръща съкращение до пълен текст след всяка диктовка. Казвате късата форма, изписва се дългата. Импортирайте CSV с две колони (съкращение,замяна), за да добавите много наведнъж.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Съкращение",
+        "toLabel": "Текст за замяна",
+        "add": "Добави",
+        "import": "Импортиране на CSV",
+        "remove": "Премахни правилото {{from}}",
+        "duplicate": "Вече има правило за „{{from}}“",
+        "imported": "Импортирани: {{added}} добавени, {{updated}} обновени, {{skipped}} пропуснати",
+        "importEmpty": "Във файла не са намерени валидни правила",
+        "importFailed": "Файлът не можа да бъде прочетен"
       }
     },
     "postProcessing": {

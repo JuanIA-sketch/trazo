@@ -1,4 +1,6 @@
-use crate::audio_toolkit::{apply_custom_words, filter_transcription_output};
+use crate::audio_toolkit::{
+    apply_custom_replacements, apply_custom_words, filter_transcription_output,
+};
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::model::{EngineType, ModelManager};
 use crate::settings::{
@@ -1731,8 +1733,22 @@ fn post_process_transcription_text(
         raw
     };
 
+    // Dictionary expansions run AFTER the fuzzy correction (so a mis-heard
+    // abbreviation is first snapped to its canonical spelling, then expanded)
+    // and BEFORE filler filtering, which then cleans up the expanded text.
+    let expanded = if settings.custom_replacements.is_empty() {
+        corrected
+    } else {
+        let rules: Vec<(String, String)> = settings
+            .custom_replacements
+            .iter()
+            .map(|r| (r.from.clone(), r.to.clone()))
+            .collect();
+        apply_custom_replacements(&corrected, &rules)
+    };
+
     filter_transcription_output(
-        &corrected,
+        &expanded,
         &settings.app_language,
         &settings.custom_filler_words,
     )

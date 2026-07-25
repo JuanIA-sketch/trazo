@@ -361,6 +361,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "قواعد الاستبدال",
+        "description": "توسّع الاختصار إلى نص كامل بعد كل إملاء. تقول الشكل المختصر فيُكتب الشكل الكامل. استورد ملف CSV بعمودين (اختصار,استبدال) لإضافة الكثير دفعة واحدة.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "الاختصار",
+        "toLabel": "نص الاستبدال",
+        "add": "إضافة",
+        "import": "استيراد CSV",
+        "remove": "إزالة القاعدة {{from}}",
+        "duplicate": "توجد بالفعل قاعدة لـ \"{{from}}\"",
+        "imported": "تم الاستيراد: {{added}} مضافة، {{updated}} محدّثة، {{skipped}} متجاهلة",
+        "importEmpty": "لم يتم العثور على قواعد صالحة في هذا الملف",
+        "importFailed": "تعذّر قراءة هذا الملف"
       }
     },
     "postProcessing": {

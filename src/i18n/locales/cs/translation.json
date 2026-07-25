@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Pravidla nahrazení",
+        "description": "Rozvine zkratku na celý text po každém diktování. Řeknete krátkou formu, zapíše se dlouhá. Naimportujte dvousloupcové CSV (zkratka,nahrazení) a přidejte jich mnoho najednou.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Zkratka",
+        "toLabel": "Text nahrazení",
+        "add": "Přidat",
+        "import": "Importovat CSV",
+        "remove": "Odebrat pravidlo {{from}}",
+        "duplicate": "Pravidlo pro „{{from}}“ už existuje",
+        "imported": "Naimportováno: {{added}} přidáno, {{updated}} aktualizováno, {{skipped}} přeskočeno",
+        "importEmpty": "V souboru nebyla nalezena platná pravidla",
+        "importFailed": "Soubor se nepodařilo přečíst"
       }
     },
     "postProcessing": {

@@ -86,6 +86,15 @@ pub struct ShortcutBinding {
     pub current_binding: String,
 }
 
+/// One dictionary expansion rule: `from` (what you say, e.g. "pq") becomes
+/// `to` (what gets written, e.g. "porque"). Matching is case-insensitive and
+/// whole-word; see [`crate::audio_toolkit::text::apply_custom_replacements`].
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
+pub struct CustomReplacement {
+    pub from: String,
+    pub to: String,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Type)]
 pub struct LLMPrompt {
     pub id: String,
@@ -374,6 +383,11 @@ pub struct AppSettings {
     pub log_level: LogLevel,
     #[serde(default)]
     pub custom_words: Vec<String>,
+    /// User-authored expansion rules (abbreviation → full text) applied to the
+    /// finished transcript. Empty by default, so existing stores need no
+    /// migration.
+    #[serde(default)]
+    pub custom_replacements: Vec<CustomReplacement>,
     #[serde(default)]
     pub model_unload_timeout: ModelUnloadTimeout,
     #[serde(default = "default_word_correction_threshold")]
@@ -883,6 +897,7 @@ pub fn get_default_settings() -> AppSettings {
         debug_mode: false,
         log_level: default_log_level(),
         custom_words: Vec::new(),
+        custom_replacements: Vec::new(),
         model_unload_timeout: ModelUnloadTimeout::default(),
         word_correction_threshold: default_word_correction_threshold(),
         history_limit: default_history_limit(),

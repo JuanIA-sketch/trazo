@@ -382,6 +382,21 @@
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
+      },
+      "customReplacements": {
+        "title": "Regole di sostituzione",
+        "description": "Espande un'abbreviazione nel testo completo dopo ogni dettatura. Dici la forma breve, viene scritta quella lunga. Importa un CSV a due colonne (abbreviazione,sostituzione) per aggiungerne molte insieme.",
+        "fromPlaceholder": "pq",
+        "toPlaceholder": "porque",
+        "fromLabel": "Abbreviazione",
+        "toLabel": "Testo sostitutivo",
+        "add": "Aggiungi",
+        "import": "Importa CSV",
+        "remove": "Rimuovi la regola {{from}}",
+        "duplicate": "Esiste già una regola per \"{{from}}\"",
+        "imported": "Importate: {{added}} aggiunte, {{updated}} aggiornate, {{skipped}} ignorate",
+        "importEmpty": "Nessuna regola valida trovata nel file",
+        "importFailed": "Impossibile leggere il file"
       }
     },
     "postProcessing": {

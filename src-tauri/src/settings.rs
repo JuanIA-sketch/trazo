@@ -465,7 +465,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 4;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 5;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -542,8 +542,17 @@ fn default_auto_submit() -> bool {
     false
 }
 
+/// The history limit shipped before 2026-07-26. Kept so the schema v5
+/// migration can tell an untouched default from a number the user chose.
+pub const LEGACY_HISTORY_LIMIT: usize = 5;
+
+/// Kept deliberately generous: recordings are small (a 30 s dictation is well
+/// under 1 MB at 16 kHz mono), and a limit of five silently deleted three
+/// separate evaluation corpora in July 2026 — once while the files were being
+/// copied out. Twenty comfortably holds a 10-15 recording test batch for a
+/// few tens of megabytes.
 fn default_history_limit() -> usize {
-    5
+    20
 }
 
 fn default_recording_retention_period() -> RecordingRetentionPeriod {
@@ -1131,6 +1140,24 @@ fn apply_settings_migrations(
         updated = true;
     }
 
+    if stored_schema_version < 5 {
+        // Raise the history limit for anyone still on the old default of five.
+        // That default deleted recordings faster than they could be reviewed
+        // (three evaluation corpora lost in July 2026), and with
+        // `RecordingRetentionPeriod::PreserveLimit` it takes the WAV files with
+        // it, so the audio is gone for good.
+        //
+        // Only the exact legacy value is touched: any other number is a choice
+        // the user made in settings and must survive. Someone who deliberately
+        // picked five is moved too — unavoidable, since the store keeps no
+        // record of who chose it, and it is one click to set back.
+        if settings.history_limit == LEGACY_HISTORY_LIMIT {
+            settings.history_limit = default_history_limit();
+        }
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
     // One-time overlay migration (only while the new key is absent): the retired
     // overlay_position `none` meant "hide the overlay" → OverlayStyle::None; any
     // other position had it visible → Live. The position enum no longer has a
@@ -1383,6 +1410,63 @@ mod tests {
             settings.settings_schema_version,
             CURRENT_SETTINGS_SCHEMA_VERSION
         );
+    }
+
+    /// Five entries is not enough to hold a test corpus: three separate
+    /// 8-15 dictation corpora were auto-deleted mid-evaluation in July 2026,
+    /// one of them while its recordings were being copied out.
+    #[test]
+    fn default_history_limit_holds_a_test_corpus() {
+        assert!(
+            get_default_settings().history_limit >= 15,
+            "the default must survive a 10-15 recording corpus, got {}",
+            get_default_settings().history_limit
+        );
+    }
+
+    #[test]
+    fn history_limit_migration_raises_the_untouched_legacy_default() {
+        let mut settings = get_default_settings();
+        settings.history_limit = LEGACY_HISTORY_LIMIT;
+        settings.settings_schema_version = 4;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 4,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "history_limit": LEGACY_HISTORY_LIMIT,
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(settings.history_limit, default_history_limit());
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn history_limit_migration_keeps_a_deliberate_choice() {
+        for chosen in [3usize, 50, 200] {
+            let mut settings = get_default_settings();
+            settings.history_limit = chosen;
+            settings.settings_schema_version = 4;
+
+            let raw = serde_json::json!({
+                "settings_schema_version": 4,
+                "onboarding_completed": true,
+                "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+                "overlay_style": "live",
+                "history_limit": chosen,
+            });
+
+            apply_settings_migrations(&mut settings, &raw);
+            assert_eq!(
+                settings.history_limit, chosen,
+                "a history limit the user picked must survive the migration"
+            );
+        }
     }
 
     #[test]

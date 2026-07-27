@@ -1191,6 +1191,90 @@ impl TranscriptionManager {
         .emit(&self.app_handle);
     }
 
+    /// Transcribe a finished recording, falling back to a segment-by-segment
+    /// decode when the plain one appears to have given up early.
+    ///
+    /// Whisper sometimes ends a transcript at a long silence and discards
+    /// everything after it — on one real 29.4 s dictation it returned 9 words
+    /// out of 68, and decoding each speech run separately recovered them.
+    ///
+    /// But segmenting is NOT free, and measuring it over a five-dictation
+    /// corpus (2026-07-26) showed it losing content on three of them: cutting
+    /// at silences clips words that straddle a boundary and strips the context
+    /// each run needs ("la función de" came back as "la flor de", a whole
+    /// clause vanished from another). Making it the default traded a rare
+    /// catastrophic failure for a common small one.
+    ///
+    /// So the plain decode runs first and is kept unless it looks truncated —
+    /// which [`looks_truncated`](crate::audio_toolkit::looks_truncated)
+    /// measures against how much speech the audio actually holds. Normal
+    /// dictations keep their accuracy and their speed; only a decode that
+    /// visibly bailed pays for the retry.
+    pub fn transcribe_recording(&self, audio: Vec<f32>) -> Result<String> {
+        let rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE;
+
+        let whole = self.transcribe(audio.clone())?;
+
+        let speech = crate::audio_toolkit::speech_seconds(&audio, rate);
+        let words = whole.split_whitespace().count();
+        if !crate::audio_toolkit::looks_truncated(words, speech) {
+            return Ok(whole);
+        }
+
+        let segments = crate::audio_toolkit::speech_segments(&audio, rate);
+        if segments.len() <= 1 {
+            return Ok(whole);
+        }
+
+        let rate = rate as f32;
+        warn!(
+            "Transcript looks truncated ({} words over {:.1}s of speech); retrying as {} speech runs ({})",
+            words,
+            speech,
+            segments.len(),
+            segments
+                .iter()
+                .map(|r| format!("{:.1}s", r.len() as f32 / rate))
+                .collect::<Vec<_>>()
+                .join(" + ")
+        );
+
+        let mut parts: Vec<String> = Vec::new();
+        let mut last_error: Option<anyhow::Error> = None;
+        for range in segments {
+            match self.transcribe(audio[range].to_vec()) {
+                Ok(text) => {
+                    let text = text.trim();
+                    if !text.is_empty() {
+                        parts.push(text.to_string());
+                    }
+                }
+                // One bad run must not cost the user the whole dictation; keep
+                // what the other runs produced and only surface the error if
+                // nothing survived.
+                Err(err) => {
+                    error!("Segment transcription failed: {err}");
+                    last_error = Some(err);
+                }
+            }
+        }
+
+        // The retry is a rescue attempt, not an authority: if it came back with
+        // no more than the plain decode had, the plain one stays. It reads
+        // better, since it kept the context the split throws away.
+        let rescued = parts.join(" ");
+        if rescued.split_whitespace().count() > words {
+            Ok(rescued)
+        } else {
+            if let Some(err) = last_error {
+                debug!(
+                    "Segmented retry added nothing (last error: {err}); keeping the plain decode"
+                );
+            }
+            Ok(whole)
+        }
+    }
+
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANDY_FORCE_TRANSCRIPTION_FAILURE").is_ok() {

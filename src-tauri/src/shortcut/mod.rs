@@ -635,10 +635,16 @@ pub fn change_autostart_setting(app: AppHandle, enabled: bool) -> Result<(), Str
 
     // Apply the autostart setting immediately
     let autostart_manager = app.autolaunch();
-    if enabled {
-        let _ = autostart_manager.enable();
+    let outcome = if enabled {
+        autostart_manager.enable()
     } else {
-        let _ = autostart_manager.disable();
+        autostart_manager.disable()
+    };
+    if let Some(msg) = crate::rebrand_migration::autostart_failure_message(
+        enabled,
+        outcome.as_ref().err().map(|e| e.to_string()).as_deref(),
+    ) {
+        log::warn!("{msg}");
     }
 
     // Notify frontend

@@ -13,6 +13,7 @@ mod llm_client;
 mod managers;
 mod overlay;
 pub mod portable;
+mod rebrand_migration;
 mod settings;
 mod shortcut;
 mod signal_handle;
@@ -316,12 +317,20 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     let autostart_manager = app_handle.autolaunch();
     let settings = settings::get_settings(app_handle);
 
-    if settings.autostart_enabled {
-        // Enable autostart if user has opted in
-        let _ = autostart_manager.enable();
+    // The result is reported rather than discarded: a failed registration used
+    // to leave the toggle reading "on" in Settings while the OS knew nothing
+    // about it, which is indistinguishable from the feature simply not working.
+    let enabled = settings.autostart_enabled;
+    let outcome = if enabled {
+        autostart_manager.enable()
     } else {
-        // Disable autostart if user has opted out
-        let _ = autostart_manager.disable();
+        autostart_manager.disable()
+    };
+    if let Some(msg) = rebrand_migration::autostart_failure_message(
+        enabled,
+        outcome.as_ref().err().map(|e| e.to_string()).as_deref(),
+    ) {
+        log::warn!("{msg}");
     }
 
     // Create the recording overlay window (hidden by default)
@@ -775,6 +784,11 @@ pub fn run(cli_args: CliArgs) {
         .manage(cli_args.clone())
         .setup(move |app| {
             specta_builder.mount_events(app);
+
+            // Before anything reads the settings store: the app-data directory
+            // is derived from `identifier`, so a rebrand points a returning user
+            // at an empty directory unless their data is brought across first.
+            rebrand_migration::run(app.handle());
 
             // Headless one-shot path (`--transcribe-file` / `--list-devices` /
             // `--list-models`): initialize only what transcription needs — the

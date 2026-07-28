@@ -942,10 +942,18 @@ mod post_process_profile_tests {
     /// ever logging it. Returns `None` when unavailable (test will skip).
     fn user_openai_key() -> Option<String> {
         let appdata = std::env::var("APPDATA").ok()?;
-        let path = std::path::Path::new(&appdata)
-            .join("com.pais.handy")
-            .join("settings_store.json");
-        let raw = std::fs::read_to_string(path).ok()?;
+        // Try the current identifier first, then the pre-rebrand one, so the
+        // test keeps finding a key on a machine that has not been migrated.
+        let raw = ["com.trazo.app", crate::rebrand_migration::LEGACY_IDENTIFIER]
+            .iter()
+            .find_map(|id| {
+                std::fs::read_to_string(
+                    std::path::Path::new(&appdata)
+                        .join(id)
+                        .join("settings_store.json"),
+                )
+                .ok()
+            })?;
         let json: serde_json::Value = serde_json::from_str(&raw).ok()?;
         let key = json
             .get("settings")?

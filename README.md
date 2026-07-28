@@ -45,6 +45,54 @@ The process is entirely local:
 4. Configure your preferred keyboard shortcuts in Settings
 5. Start transcribing!
 
+### Opening an unsigned build
+
+Trazo's test builds are **not code-signed**, because signing certificates cost
+money we have not spent yet. The installers work; the operating system just does
+not know who produced them. This section is what to do about that.
+
+#### macOS
+
+macOS refuses to open the app on first launch, with "Trazo can't be opened
+because Apple cannot check it for malicious software." Nothing is wrong with the
+download — Apple simply has not notarized it, which requires a paid Apple
+Developer account.
+
+Either of these works:
+
+- **Right-click the app in Applications → Open**, then confirm. macOS remembers
+  the choice, so this is a one-time step. (Double-clicking will not offer the
+  option — it has to be the right-click menu.)
+- Or, if the app is already installed and still refuses to launch:
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Trazo.app
+  ```
+
+**Known consequence of unsigned builds:** macOS ties Accessibility and
+Microphone permissions to the app's code signature, which changes with every
+unsigned build. Expect to grant those permissions again after each update, in
+System Settings → Privacy & Security. A signed release will fix this; an
+unsigned one cannot.
+
+#### Windows
+
+SmartScreen shows "Windows protected your PC". Click **More info → Run anyway**.
+
+#### Linux
+
+The `.deb` and AppImage are built with Vulkan acceleration but do **not** declare
+the Vulkan runtime as a package dependency. Without it Trazo still runs, falling
+back to CPU transcription — noticeably slower, and silent about why. If you want
+GPU transcription:
+
+```bash
+sudo apt install mesa-vulkan-drivers   # Debian/Ubuntu
+```
+
+Global shortcuts use X11. On a pure Wayland session they will not fire; log into
+an X11/Xorg session if your desktop offers one.
+
 ### Development Setup
 
 For detailed build instructions including platform-specific requirements, see [BUILD.md](BUILD.md).

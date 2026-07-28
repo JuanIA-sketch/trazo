@@ -284,6 +284,19 @@ impl Drop for StreamWorkerGuard {
     }
 }
 
+/// Runs a model load while holding `guard`.
+///
+/// Exists as its own function so the panic path is testable: `initiate_model_load`
+/// spawns a detached thread, and if the load panics there is nothing to observe
+/// except a permanently stuck `is_loading` flag.
+fn load_holding_guard(guard: LoadingGuard, work: impl FnOnce()) {
+    // The guard is bound (not dropped early) so its Drop runs on the way out of
+    // this function — including while unwinding from a panic inside `work`.
+    // Clearing the flag as a final statement instead is what left it stuck.
+    let _guard = guard;
+    work();
+}
+
 #[derive(Clone)]
 pub struct TranscriptionManager {
     engine: Arc<Mutex<Option<LoadedEngine>>>,
@@ -757,31 +770,36 @@ impl TranscriptionManager {
 
     /// Kicks off the model loading in a background thread if it's not already loaded
     pub fn initiate_model_load(&self) {
-        let mut is_loading = self.is_loading.lock().unwrap();
-        if *is_loading {
-            return;
-        }
-
         let reload_pending = self.reload_model_on_next_use.load(Ordering::Acquire);
+
+        // Claim the loading flag through the RAII guard rather than setting it
+        // by hand. The guard is then moved into the worker thread, so the flag
+        // is released even if the load panics — otherwise `transcribe()` and the
+        // streaming worker, which both wait on `loading_condvar` with no
+        // timeout, block forever and no dictation completes until a restart.
+        let Some(guard) = self.try_start_loading() else {
+            return;
+        };
+
+        // Checked after claiming the flag: dropping `guard` here releases it and
+        // wakes any waiter, so an early return costs nothing.
         if !reload_pending && self.is_model_loaded() {
             return;
         }
 
-        *is_loading = true;
         let self_clone = self.clone();
         thread::spawn(move || {
-            if reload_pending {
-                self_clone
-                    .reload_model_on_next_use
-                    .store(false, Ordering::Release);
-            }
-            let settings = get_settings(&self_clone.app_handle);
-            if let Err(e) = self_clone.load_model(&settings.selected_model) {
-                error!("Failed to load model: {}", e);
-            }
-            let mut is_loading = self_clone.is_loading.lock().unwrap();
-            *is_loading = false;
-            self_clone.loading_condvar.notify_all();
+            load_holding_guard(guard, || {
+                if reload_pending {
+                    self_clone
+                        .reload_model_on_next_use
+                        .store(false, Ordering::Release);
+                }
+                let settings = get_settings(&self_clone.app_handle);
+                if let Err(e) = self_clone.load_model(&settings.selected_model) {
+                    error!("Failed to load model: {}", e);
+                }
+            });
         });
     }
 
@@ -2153,6 +2171,80 @@ pub fn get_available_accelerators() -> AvailableAccelerators {
 
 #[cfg(test)]
 mod tests {
+
+    /// Companion to the panic case: the ordinary path must release the flag too.
+    /// Guards against "fixing" the hang in a way that only handles panics.
+    #[test]
+    fn a_successful_model_load_releases_the_loading_flag() {
+        use std::sync::{Arc, Condvar, Mutex};
+
+        let is_loading = Arc::new(Mutex::new(true));
+        let condvar = Arc::new(Condvar::new());
+        let guard = LoadingGuard {
+            is_loading: Arc::clone(&is_loading),
+            loading_condvar: Arc::clone(&condvar),
+        };
+
+        let ran = Arc::new(Mutex::new(false));
+        let ran_inner = Arc::clone(&ran);
+        load_holding_guard(guard, move || *ran_inner.lock().unwrap() = true);
+
+        assert!(*ran.lock().unwrap(), "the load work must actually run");
+        assert!(
+            !*is_loading.lock().unwrap(),
+            "the flag must be clear afterwards"
+        );
+    }
+
+    /// Bug reported 2026-07-28: after "Model idle for 306s, unloading", no
+    /// recording ever completes again until the app restarts.
+    ///
+    /// `initiate_model_load` used to set `is_loading = true`, spawn a detached
+    /// thread, and clear the flag on the last line of that thread. A panic
+    /// anywhere in the load skips the clear, and both waiters
+    /// (`transcribe()` and the streaming worker) block on
+    /// `loading_condvar.wait()` with no timeout — so every later dictation
+    /// hangs exactly where it would transcribe.
+    ///
+    /// The idle unload is what makes the app take that path again: while a
+    /// model is loaded, `initiate_model_load` returns early and never touches
+    /// the flag.
+    #[test]
+    fn a_panicking_model_load_still_releases_the_loading_flag() {
+        use std::sync::{Arc, Condvar, Mutex};
+        use std::time::Duration;
+
+        let is_loading = Arc::new(Mutex::new(true));
+        let condvar = Arc::new(Condvar::new());
+        let guard = LoadingGuard {
+            is_loading: Arc::clone(&is_loading),
+            loading_condvar: Arc::clone(&condvar),
+        };
+
+        let handle = std::thread::spawn(move || {
+            load_holding_guard(guard, || panic!("model load blew up"));
+        });
+        assert!(handle.join().is_err(), "the load was supposed to panic");
+
+        // What a later dictation does: wait for the load to finish. It must not
+        // wait forever.
+        let (flag, wait) = condvar
+            .wait_timeout_while(
+                is_loading.lock().unwrap(),
+                Duration::from_secs(5),
+                |loading| *loading,
+            )
+            .unwrap();
+
+        assert!(
+            !wait.timed_out(),
+            "a dictation after a failed load waited forever — this is the hang"
+        );
+        assert!(
+            !*flag,
+            "the loading flag must be clear after a panicking load"
+        );
+    }
     use super::*;
 
     fn languages(codes: &[&str]) -> Vec<String> {

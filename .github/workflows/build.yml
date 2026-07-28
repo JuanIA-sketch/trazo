@@ -489,7 +489,50 @@ jobs:
           sudo cp -vL "$LIBDIR"/libtranscribe.so* "$LIBDIR"/libggml*.so* /usr/local/lib/ 2>/dev/null || true
           sudo ldconfig
 
-      - name: Build with Tauri
+      # Unsigned diagnostic builds only. Two pieces of bundle config exist
+      # purely to serve signing, and both hard-fail when the credentials they
+      # assume are absent:
+      #
+      #   * bundle.windows.signCommand shells out to trusted-signing-cli, which
+      #     is only installed on the signed path — hence "program not found".
+      #     Installing it unconditionally would not help: it authenticates
+      #     against an Azure account an unsigned run has no credentials for.
+      #   * bundle.createUpdaterArtifacts makes Tauri produce and sign updater
+      #     artifacts, which needs TAURI_SIGNING_PRIVATE_KEY.
+      #
+      # Patching the checked-out config is what lets an unsigned run reach the
+      # end. It cannot affect a release: the step is skipped whenever
+      # sign-binaries is true.
+      - name: Strip signing-only bundle config (unsigned builds only)
+        if: ${{ !inputs.sign-binaries }}
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "src-tauri/tauri.conf.json";
+            const c = JSON.parse(fs.readFileSync(p, "utf8"));
+            c.bundle = c.bundle || {};
+            if (c.bundle.windows) delete c.bundle.windows.signCommand;
+            c.bundle.createUpdaterArtifacts = false;
+            fs.writeFileSync(p, JSON.stringify(c, null, 2) + "
+");
+            console.log("unsigned build: removed signCommand, disabled updater artifacts");
+          '
+
+      # NOTE: two build steps, mutually exclusive.
+      #
+      # The signed one below is the original step, unchanged down to the env
+      # expressions (`inputs.sign-binaries && secrets.X || ''` evaluates to
+      # secrets.X whenever this step runs at all). Releases therefore execute
+      # exactly the same thing they did before this split.
+      #
+      # The unsigned one exists because passing an EMPTY string is not the same
+      # as passing nothing: tauri-action treats a defined-but-empty
+      # APPLE_CERTIFICATE as "a certificate was supplied" and tries to import
+      # it, which is why unsigned macOS runs died in the keychain. Omitting the
+      # variables entirely is the only way to get the unsigned code path.
+      - name: Build with Tauri (signed)
+        if: ${{ inputs.sign-binaries }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -505,6 +548,18 @@ jobs:
           AZURE_TENANT_ID: ${{ inputs.sign-binaries && secrets.AZURE_TENANT_ID || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+        with:
+          tagName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
+          releaseName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
+          releaseId: ${{ inputs.release-id }}
+          assetNamePattern: ${{ steps.patch-release-name.outputs.platform }}
+          args: ${{ inputs.build-args }}
+
+      - name: Build with Tauri (unsigned)
+        if: ${{ !inputs.sign-binaries }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
           releaseName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}

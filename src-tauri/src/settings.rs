@@ -476,7 +476,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 5;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 6;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -529,8 +529,18 @@ fn default_overlay_style() -> OverlayStyle {
     return OverlayStyle::Live;
 }
 
+/// Off by default since 2026-07-28.
+///
+/// On a multi-channel Realtek capture device the VAD dropped almost the whole
+/// dictation *during capture*: a 13 s recording landed on disk as 1.05-2.16 s.
+/// The trade is lopsided — with the VAD off a dictation carries some extra
+/// silence, which the model handles; with it on, this device loses ~90% of what
+/// was said, silently.
+///
+/// Revisit once `speech_gate_truncates_multichannel_capture` is understood; the
+/// setting is still exposed, so anyone it works for can switch it back on.
 fn default_vad_enabled() -> bool {
-    true
+    false
 }
 
 fn default_debug_mode() -> bool {
@@ -1189,6 +1199,27 @@ fn apply_settings_migrations(
         updated = true;
     }
 
+    if stored_schema_version < 6 {
+        // Turn the VAD off on stores that predate 2026-07-28. On a
+        // multi-channel Realtek capture device it dropped nearly the whole
+        // dictation while recording — 13 s of speech reached disk as 1.05-2.16 s
+        // — and the loss is silent: the user sees a normal recording and gets a
+        // one-line transcript.
+        //
+        // Unlike the history-limit migration this cannot tell a deliberate
+        // choice from the old default, because the old default WAS `true`. That
+        // is accepted: the downside of turning it off for someone it worked for
+        // is some extra silence in the audio, which the model handles, against
+        // losing ~90% of every dictation for someone it did not. The setting
+        // stays in the UI, so re-enabling is one click and survives this
+        // migration (it only runs once).
+        if settings.vad_enabled {
+            settings.vad_enabled = false;
+        }
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
     // One-time overlay migration (only while the new key is absent): the retired
     // overlay_position `none` meant "hide the overlay" → OverlayStyle::None; any
     // other position had it visible → Live. The position enum no longer has a
@@ -1457,6 +1488,70 @@ mod tests {
     /// Adding the microphone gain must not change what an existing user hears:
     /// a store written before this setting existed has to come back at unity,
     /// not at some "helpful" boost.
+    /// Reported 2026-07-28 on a multi-channel Realtek device ("Varios
+    /// micrófonos (2- Realtek Audio)", 48 kHz, 2 channels, Windows 11): with
+    /// the VAD on, a 13 s dictation reached the model as 1.05-2.16 s of audio.
+    /// The recordings on disk are already short, so frames are being dropped
+    /// during capture, not during decode.
+    ///
+    /// Until the root cause is understood, losing the VAD's silence trimming is
+    /// far cheaper than losing 90% of every dictation, so the shipped default
+    /// is off.
+    /// The default change alone protects nobody who already installed Trazo:
+    /// their store holds `vad_enabled: true` and serde never touches a field
+    /// that is present. The migration is the part that actually reaches the
+    /// machines currently losing dictations.
+    #[test]
+    fn vad_migration_turns_off_a_stored_enabled_vad() {
+        let mut settings = get_default_settings();
+        settings.vad_enabled = true;
+        settings.settings_schema_version = 5;
+
+        let stored = serde_json::json!({ "settings_schema_version": 5, "vad_enabled": true });
+        let updated = apply_settings_migrations(&mut settings, &stored);
+
+        assert!(
+            updated,
+            "the migration must report that it changed something"
+        );
+        assert!(
+            !settings.vad_enabled,
+            "a store carrying the old enabled-by-default VAD must be turned off"
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    /// Runs once. Someone who deliberately switches the VAD back on after the
+    /// migration must keep it on across restarts.
+    #[test]
+    fn vad_migration_does_not_run_twice() {
+        let mut settings = get_default_settings();
+        settings.vad_enabled = true;
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+
+        let stored = serde_json::json!({
+            "settings_schema_version": CURRENT_SETTINGS_SCHEMA_VERSION,
+            "vad_enabled": true
+        });
+        apply_settings_migrations(&mut settings, &stored);
+
+        assert!(
+            settings.vad_enabled,
+            "a deliberate re-enable after the migration must survive"
+        );
+    }
+
+    #[test]
+    fn vad_is_off_by_default_until_the_capture_truncation_is_understood() {
+        assert!(
+            !get_default_settings().vad_enabled,
+            "the VAD default must stay off while it can silently eat a dictation"
+        );
+    }
+
     #[test]
     fn microphone_gain_defaults_to_unity() {
         assert_eq!(

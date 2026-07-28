@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volume",
         "description": "Regola il volume del feedback audio"
+      },
+      "microphoneGain": {
+        "title": "Livello del microfono",
+        "description": "Aumenta o riduci il segnale del microfono da Trazo. Amplifica voce e rumore di fondo allo stesso modo, quindi non recupera una dettatura troncata."
       }
     },
     "advanced": {

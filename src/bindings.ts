@@ -948,7 +948,18 @@ export type AppSettings = {
  * start at the current version; existing stores missing this key are
  * treated as version 0 and migrated forward.
  */
-settings_schema_version?: number; bindings: Partial<{ [key in string]: ShortcutBinding }>; push_to_talk: boolean; audio_feedback: boolean; audio_feedback_volume?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; show_whats_new_on_update?: boolean; 
+settings_schema_version?: number; bindings: Partial<{ [key in string]: ShortcutBinding }>; push_to_talk: boolean; audio_feedback: boolean; audio_feedback_volume?: number; 
+/**
+ * Software gain applied to captured microphone samples, as a linear
+ * multiplier. Lets a user with a quiet microphone raise their level from
+ * inside Trazo instead of the OS sound panel.
+ * 
+ * This is a convenience control, NOT a fix for the long-dictation
+ * truncation: gain raises speech and room noise by the same factor, so
+ * the VAD sees an identical signal. Measured 2026-07-26 — see
+ * `audio_toolkit::input_gain`.
+ */
+microphone_gain?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; show_whats_new_on_update?: boolean; 
 /**
  * The app version whose What's New the user has already seen. Fresh installs
  * default to the current version (nothing is "new" to them). Existing users

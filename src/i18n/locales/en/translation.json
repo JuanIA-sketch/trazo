@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volume",
         "description": "Adjust the volume of audio feedback sounds"
+      },
+      "microphoneGain": {
+        "title": "Microphone Level",
+        "description": "Boost or reduce your microphone signal inside Trazo. Raises speech and background noise equally, so it will not rescue a dictation that comes back cut short."
       }
     },
     "advanced": {

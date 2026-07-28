@@ -250,6 +250,10 @@
       "volume": {
         "title": "Głośność",
         "description": "Dostosuj głośność dźwięków informacyjnych"
+      },
+      "microphoneGain": {
+        "title": "Poziom mikrofonu",
+        "description": "Zwiększ lub zmniejsz sygnał mikrofonu w Trazo. Wzmacnia mowę i szum tła jednakowo, więc nie uratuje uciętego dyktowania."
       }
     },
     "advanced": {

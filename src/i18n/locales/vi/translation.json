@@ -250,6 +250,10 @@
       "volume": {
         "title": "Âm lượng",
         "description": "Điều chỉnh âm lượng của âm thanh phản hồi"
+      },
+      "microphoneGain": {
+        "title": "Mức micrô",
+        "description": "Tăng hoặc giảm tín hiệu micrô ngay trong Trazo. Khuếch đại giọng nói và tiếng ồn nền như nhau, nên không cứu được một đoạn đọc bị cắt ngắn."
       }
     },
     "advanced": {

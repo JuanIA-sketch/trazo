@@ -250,6 +250,10 @@
       "volume": {
         "title": "Hlasitost",
         "description": "Upravte hlasitost zvukové odezvy"
+      },
+      "microphoneGain": {
+        "title": "Úroveň mikrofonu",
+        "description": "Zesilte nebo zeslabte signál mikrofonu přímo v Trazo. Zesiluje řeč i šum na pozadí stejně, takže nezachrání zkrácený diktát."
       }
     },
     "advanced": {

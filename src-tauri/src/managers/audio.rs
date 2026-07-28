@@ -472,6 +472,9 @@ impl AudioRecordingManager {
         let open_started = Instant::now();
         let mut recorder_opt = self.recorder.lock().unwrap();
         if let Some(rec) = recorder_opt.as_mut() {
+            // Re-read every open so a slider change between dictations lands
+            // without rebuilding the recorder.
+            rec.set_input_gain(crate::settings::effective_microphone_gain(&settings));
             if let Err(first_err) = rec.open(selected_device.clone()) {
                 // A cached device or config may have gone stale (unplugged,
                 // rate/format changed). Re-resolve from a fresh enumeration and

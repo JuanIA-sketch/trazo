@@ -88,6 +88,9 @@ pub struct AudioRecorder {
     /// cleared whenever an open fails so a stale rate/format self-heals on the
     /// caller's retry.
     config_cache: Arc<Mutex<Option<(String, cpal::SupportedStreamConfig)>>>,
+    /// Shared with the capture callback so a slider move reaches a dictation
+    /// already in progress instead of waiting for the next stream open.
+    input_gain: super::input_gain::SharedGain,
 }
 
 impl AudioRecorder {
@@ -101,6 +104,7 @@ impl AudioRecorder {
             speech_cb: None,
             audio_cb: None,
             config_cache: Arc::new(Mutex::new(None)),
+            input_gain: super::input_gain::SharedGain::default(),
         })
     }
 
@@ -119,6 +123,12 @@ impl AudioRecorder {
             streaming_hangover_frames,
         });
         self
+    }
+
+    /// Set the software gain applied to captured samples. Safe to call while
+    /// recording: the running capture reads the new value on its next buffer.
+    pub fn set_input_gain(&self, gain: f32) {
+        self.input_gain.set(gain);
     }
 
     pub fn with_level_callback<F>(mut self, cb: F) -> Self
@@ -170,6 +180,7 @@ impl AudioRecorder {
         };
 
         let thread_device = device.clone();
+        let gain_for_stream = self.input_gain.clone();
         let vad = self.vad.clone();
         // Move the optional level callback into the worker thread
         let level_cb = self.level_cb.clone();
@@ -217,6 +228,7 @@ impl AudioRecorder {
                         sample_tx,
                         channels,
                         stop_flag_for_stream,
+                        gain_for_stream.clone(),
                     )
                     .map_err(|e| format!("Failed to build input stream: {e}"))?,
                     cpal::SampleFormat::I8 => AudioRecorder::build_stream::<i8>(
@@ -225,6 +237,7 @@ impl AudioRecorder {
                         sample_tx,
                         channels,
                         stop_flag_for_stream,
+                        gain_for_stream.clone(),
                     )
                     .map_err(|e| format!("Failed to build input stream: {e}"))?,
                     cpal::SampleFormat::I16 => AudioRecorder::build_stream::<i16>(
@@ -233,6 +246,7 @@ impl AudioRecorder {
                         sample_tx,
                         channels,
                         stop_flag_for_stream,
+                        gain_for_stream.clone(),
                     )
                     .map_err(|e| format!("Failed to build input stream: {e}"))?,
                     cpal::SampleFormat::I32 => AudioRecorder::build_stream::<i32>(
@@ -241,6 +255,7 @@ impl AudioRecorder {
                         sample_tx,
                         channels,
                         stop_flag_for_stream,
+                        gain_for_stream.clone(),
                     )
                     .map_err(|e| format!("Failed to build input stream: {e}"))?,
                     cpal::SampleFormat::F32 => AudioRecorder::build_stream::<f32>(
@@ -249,6 +264,7 @@ impl AudioRecorder {
                         sample_tx,
                         channels,
                         stop_flag_for_stream,
+                        gain_for_stream.clone(),
                     )
                     .map_err(|e| format!("Failed to build input stream: {e}"))?,
                     sample_format => {
@@ -366,6 +382,7 @@ impl AudioRecorder {
         sample_tx: mpsc::Sender<AudioChunk>,
         channels: usize,
         stop_flag: Arc<AtomicBool>,
+        input_gain: super::input_gain::SharedGain,
     ) -> Result<cpal::Stream, cpal::BuildStreamError>
     where
         T: Sample + SizedSample + Send + 'static,
@@ -401,6 +418,11 @@ impl AudioRecorder {
                     output_buffer.push(mono_sample);
                 }
             }
+
+            // Applied here, before anything downstream exists: the visualiser,
+            // the VAD and the transcript all see the same signal the user is
+            // adjusting with the slider.
+            super::input_gain::apply_input_gain(&mut output_buffer, input_gain.get());
 
             if sample_tx
                 .send(AudioChunk::Samples(output_buffer.clone()))

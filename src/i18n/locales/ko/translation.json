@@ -232,6 +232,10 @@
       "volume": {
         "title": "볼륨",
         "description": "오디오 피드백 사운드의 볼륨 조절"
+      },
+      "microphoneGain": {
+        "title": "마이크 레벨",
+        "description": "Trazo 안에서 마이크 신호를 키우거나 줄입니다. 음성과 배경 소음을 똑같이 키우므로 잘린 받아쓰기를 되살리지는 못합니다."
       }
     },
     "models": {

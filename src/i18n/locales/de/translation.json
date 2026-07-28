@@ -250,6 +250,10 @@
       "volume": {
         "title": "Lautstärke",
         "description": "Lautstärke der Audio-Feedback-Töne anpassen"
+      },
+      "microphoneGain": {
+        "title": "Mikrofonpegel",
+        "description": "Verstärke oder senke dein Mikrofonsignal in Trazo. Hebt Sprache und Hintergrundgeräusche gleichermaßen an und rettet daher kein abgeschnittenes Diktat."
       }
     },
     "advanced": {

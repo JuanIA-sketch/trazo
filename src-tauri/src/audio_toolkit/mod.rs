@@ -5,9 +5,10 @@ pub mod utils;
 pub mod vad;
 
 pub use audio::{
-    is_microphone_access_denied, is_no_input_device_error, list_input_devices, list_output_devices,
-    looks_truncated, read_wav_samples, save_wav_file, speech_seconds, speech_segments,
-    verify_wav_file, AudioRecorder, CpalDeviceInfo, VadPolicy,
+    apply_input_gain, is_microphone_access_denied, is_no_input_device_error, list_input_devices,
+    list_output_devices, looks_truncated, read_wav_samples, save_wav_file, speech_seconds,
+    speech_segments, verify_wav_file, AudioRecorder, CpalDeviceInfo, VadPolicy, MAX_GAIN, MIN_GAIN,
+    UNITY_GAIN,
 };
 pub use text::{apply_custom_replacements, apply_custom_words, filter_transcription_output};
 pub use utils::get_cpal_host;

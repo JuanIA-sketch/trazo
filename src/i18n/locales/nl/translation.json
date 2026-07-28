@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volume",
         "description": "Pas het volume van de geluidsfeedback aan"
+      },
+      "microphoneGain": {
+        "title": "Microfoonniveau",
+        "description": "Versterk of verlaag je microfoonsignaal in Trazo. Versterkt spraak en achtergrondgeluid even sterk en redt dus geen afgekapt dictaat."
       }
     },
     "advanced": {

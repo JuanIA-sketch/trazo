@@ -250,6 +250,10 @@
       "volume": {
         "title": "音量",
         "description": "調整聲音回饋的音量"
+      },
+      "microphoneGain": {
+        "title": "麥克風電平",
+        "description": "在 Trazo 內提升或降低麥克風訊號。語音與背景雜訊會被同等放大，因此無法挽回被截斷的聽寫。"
       }
     },
     "advanced": {

@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volume",
         "description": "Ajuster le volume du signal sonore"
+      },
+      "microphoneGain": {
+        "title": "Niveau du microphone",
+        "description": "Augmentez ou réduisez le signal de votre microphone depuis Trazo. Amplifie la voix et le bruit de fond de la même façon, sans récupérer une dictée tronquée."
       }
     },
     "advanced": {

@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volym",
         "description": "Justera volymen för ljudåterkopplingsljud"
+      },
+      "microphoneGain": {
+        "title": "Mikrofonnivå",
+        "description": "Höj eller sänk mikrofonsignalen inifrån Trazo. Förstärker tal och bakgrundsljud lika mycket och räddar därför inte en avkortad diktering."
       }
     },
     "advanced": {

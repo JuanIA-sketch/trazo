@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volumen",
         "description": "Ajusta el volumen de los sonidos de retroalimentación de audio"
+      },
+      "microphoneGain": {
+        "title": "Nivel del micrófono",
+        "description": "Sube o baja la señal de tu micrófono desde Trazo. Amplifica voz y ruido de fondo por igual, así que no recupera un dictado que salga cortado."
       }
     },
     "advanced": {

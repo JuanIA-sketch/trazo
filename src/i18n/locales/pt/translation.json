@@ -250,6 +250,10 @@
       "volume": {
         "title": "Volume",
         "description": "Ajustar o volume dos sons de feedback de áudio"
+      },
+      "microphoneGain": {
+        "title": "Nível do microfone",
+        "description": "Aumente ou reduza o sinal do microfone dentro do Trazo. Amplifica fala e ruído de fundo igualmente, portanto não recupera um ditado cortado."
       }
     },
     "advanced": {

@@ -343,6 +343,17 @@ pub struct AppSettings {
     pub audio_feedback: bool,
     #[serde(default = "default_audio_feedback_volume")]
     pub audio_feedback_volume: f32,
+
+    /// Software gain applied to captured microphone samples, as a linear
+    /// multiplier. Lets a user with a quiet microphone raise their level from
+    /// inside Trazo instead of the OS sound panel.
+    ///
+    /// This is a convenience control, NOT a fix for the long-dictation
+    /// truncation: gain raises speech and room noise by the same factor, so
+    /// the VAD sees an identical signal. Measured 2026-07-26 — see
+    /// `audio_toolkit::input_gain`.
+    #[serde(default = "default_microphone_gain")]
+    pub microphone_gain: f32,
     #[serde(default = "default_sound_theme")]
     pub sound_theme: SoundTheme,
     #[serde(default = "default_start_hidden")]
@@ -557,6 +568,25 @@ fn default_history_limit() -> usize {
 
 fn default_recording_retention_period() -> RecordingRetentionPeriod {
     RecordingRetentionPeriod::PreserveLimit
+}
+
+/// Unity: a fresh install must sound exactly like it did before this setting
+/// existed.
+fn default_microphone_gain() -> f32 {
+    crate::audio_toolkit::UNITY_GAIN
+}
+
+/// Keep a stored gain inside the range the slider offers. The UI cannot
+/// produce anything else, but a hand-edited store can, and a zero would be
+/// indistinguishable from a dead microphone.
+fn sanitize_microphone_gain(gain: f32) -> f32 {
+    if !gain.is_finite() {
+        return default_microphone_gain();
+    }
+    gain.clamp(
+        crate::audio_toolkit::MIN_GAIN,
+        crate::audio_toolkit::MAX_GAIN,
+    )
 }
 
 fn default_audio_feedback_volume() -> f32 {
@@ -888,6 +918,7 @@ pub fn get_default_settings() -> AppSettings {
         push_to_talk: true,
         audio_feedback: false,
         audio_feedback_volume: default_audio_feedback_volume(),
+        microphone_gain: default_microphone_gain(),
         sound_theme: default_sound_theme(),
         start_hidden: default_start_hidden(),
         autostart_enabled: default_autostart_enabled(),
@@ -1201,6 +1232,14 @@ pub fn get_stored_binding(app: &AppHandle, id: &str) -> ShortcutBinding {
     binding
 }
 
+/// The microphone gain to actually apply, clamped into the usable range.
+///
+/// Goes through [`sanitize_microphone_gain`] rather than reading the field
+/// directly, because the store is a plain JSON file a user can edit.
+pub fn effective_microphone_gain(settings: &AppSettings) -> f32 {
+    sanitize_microphone_gain(settings.microphone_gain)
+}
+
 pub fn get_history_limit(app: &AppHandle) -> usize {
     let settings = get_settings(app);
     settings.history_limit
@@ -1415,6 +1454,40 @@ mod tests {
     /// Five entries is not enough to hold a test corpus: three separate
     /// 8-15 dictation corpora were auto-deleted mid-evaluation in July 2026,
     /// one of them while its recordings were being copied out.
+    /// Adding the microphone gain must not change what an existing user hears:
+    /// a store written before this setting existed has to come back at unity,
+    /// not at some "helpful" boost.
+    #[test]
+    fn microphone_gain_defaults_to_unity() {
+        assert_eq!(
+            get_default_settings().microphone_gain,
+            crate::audio_toolkit::UNITY_GAIN,
+            "a fresh install must not silently amplify the microphone"
+        );
+    }
+
+    /// The slider cannot produce these, but a hand-edited store can, and a
+    /// zero would look exactly like a dead microphone.
+    #[test]
+    fn microphone_gain_outside_the_offered_range_is_clamped() {
+        for (stored, expected) in [
+            (0.0f32, crate::audio_toolkit::MIN_GAIN),
+            (99.0, crate::audio_toolkit::MAX_GAIN),
+            (-3.0, crate::audio_toolkit::MIN_GAIN),
+        ] {
+            assert_eq!(
+                sanitize_microphone_gain(stored),
+                expected,
+                "stored gain {stored} must be clamped into the usable range"
+            );
+        }
+    }
+
+    #[test]
+    fn microphone_gain_inside_the_range_is_left_alone() {
+        assert_eq!(sanitize_microphone_gain(2.5), 2.5);
+    }
+
     #[test]
     fn default_history_limit_holds_a_test_corpus() {
         assert!(

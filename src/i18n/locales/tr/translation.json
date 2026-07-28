@@ -250,6 +250,10 @@
       "volume": {
         "title": "Ses Seviyesi",
         "description": "Sesli geri bildirimlerin ses seviyesini ayarlayın"
+      },
+      "microphoneGain": {
+        "title": "Mikrofon Seviyesi",
+        "description": "Mikrofon sinyalini Trazo içinden yükseltin veya azaltın. Konuşmayı ve arka plan gürültüsünü eşit oranda artırır, bu yüzden kesilen bir dikteyi kurtarmaz."
       }
     },
     "advanced": {

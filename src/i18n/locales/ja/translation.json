@@ -250,6 +250,10 @@
       "volume": {
         "title": "音量",
         "description": "オーディオフィードバックの音量を調整"
+      },
+      "microphoneGain": {
+        "title": "マイクレベル",
+        "description": "Trazo 内でマイクの信号を上げ下げします。音声と背景ノイズを同じだけ増幅するため、途中で切れた音声入力の回復にはなりません。"
       }
     },
     "advanced": {

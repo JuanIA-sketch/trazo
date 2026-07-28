@@ -250,6 +250,10 @@
       "volume": {
         "title": "音量",
         "description": "调整音频反馈的音量"
+      },
+      "microphoneGain": {
+        "title": "麦克风电平",
+        "description": "在 Trazo 内提升或降低麦克风信号。语音和背景噪声会被同等放大，因此无法挽回被截断的听写。"
       }
     },
     "advanced": {

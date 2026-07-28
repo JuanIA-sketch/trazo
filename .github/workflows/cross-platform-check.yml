@@ -1,0 +1,63 @@
+name: "Cross-Platform Build Check"
+
+# Unsigned build of all three desktop platforms, on demand.
+#
+# Why this exists separately from main-build.yml: that workflow passes
+# `sign-binaries: true`, so every job stops at a signing step long before it
+# tells us anything about the code. On macOS it dies in seconds importing an
+# empty APPLE_CERTIFICATE, which means a broken macOS *build* would look
+# identical to a missing certificate. On Linux it gets all the way through
+# compiling and bundling and then fails signing the updater artifact.
+#
+# This workflow answers a different question: does Trazo actually compile and
+# bundle on Windows, macOS and Linux? It leaves `sign-binaries` at its default
+# of false, so no certificate or updater key is touched. The installers it
+# produces are unsigned — fine for handing to a tester, not for release.
+#
+# Releases keep going through release.yml, which does sign.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      # Never cancel the other platforms because one failed: the whole point is
+      # to see every platform's status in a single run.
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon first — it is what any Mac tester will actually have.
+          - platform: "macos-26"
+            args: "--target aarch64-apple-darwin"
+            target: "aarch64-apple-darwin"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+            target: "x86_64-apple-darwin"
+          # 22.04 for the .deb: built against the oldest glibc we support, so
+          # the package installs on newer distros too. 24.04 for AppImage/RPM.
+          - platform: "ubuntu-22.04"
+            args: "--bundles deb"
+            target: "x86_64-unknown-linux-gnu"
+          - platform: "ubuntu-24.04"
+            args: "--bundles appimage,rpm"
+            target: "x86_64-unknown-linux-gnu"
+          - platform: "windows-latest"
+            args: ""
+            target: "x86_64-pc-windows-msvc"
+
+    uses: ./.github/workflows/build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target: ${{ matrix.target }}
+      build-args: ${{ matrix.args }}
+      asset-prefix: "trazo-unsigned"
+      upload-artifacts: true
+      # Left at the default (false) on purpose — see the note at the top.
+    secrets: inherit

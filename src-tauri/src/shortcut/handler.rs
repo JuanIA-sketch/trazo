@@ -5,6 +5,7 @@
 
 use log::warn;
 use std::sync::Arc;
+use std::time::Instant;
 use tauri::{AppHandle, Manager};
 
 use crate::actions::ACTION_MAP;
@@ -32,12 +33,24 @@ pub fn handle_shortcut_event(
     hotkey_string: &str,
     is_pressed: bool,
 ) {
+    // Stamp the event before anything that can block (settings lock, state
+    // lookup). The coordinator times push-to-talk gestures against this, and
+    // it can be busy inside `TranscribeAction::start` for hundreds of
+    // milliseconds when the event finally reaches it.
+    let at = Instant::now();
+
     let settings = get_settings(app);
 
     // Transcribe bindings are handled by the coordinator.
     if is_transcribe_binding(binding_id) {
         if let Some(coordinator) = app.try_state::<TranscriptionCoordinator>() {
-            coordinator.send_input(binding_id, hotkey_string, is_pressed, settings.push_to_talk);
+            coordinator.send_input(
+                binding_id,
+                hotkey_string,
+                is_pressed,
+                settings.push_to_talk,
+                at,
+            );
         } else {
             warn!("TranscriptionCoordinator is not initialized");
         }

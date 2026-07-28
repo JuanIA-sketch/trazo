@@ -17,6 +17,10 @@ enum Command {
         hotkey_string: String,
         is_pressed: bool,
         push_to_talk: bool,
+        /// When the key event actually happened, captured in the shortcut
+        /// layer. Carried through the channel because this thread can be
+        /// blocked inside `start()` when the event is finally dequeued.
+        at: Instant,
     },
     Cancel {
         recording_was_active: bool,
@@ -93,16 +97,24 @@ impl TranscriptionCoordinator {
                             hotkey_string,
                             is_pressed,
                             push_to_talk,
+                            at,
                         } => {
                             // Debounce rapid-fire press events (key repeat).
                             // Releases always pass through for push-to-talk.
                             if is_pressed {
-                                let now = Instant::now();
-                                if last_press.is_some_and(|t| now.duration_since(t) < DEBOUNCE) {
+                                // Same reason as `classify_input`: compare the
+                                // instants the presses happened at, not the
+                                // instants this thread got to them. Two presses
+                                // that queued up during a blocking `start()`
+                                // are dequeued back-to-back, and would
+                                // otherwise be debounced away as key repeat.
+                                if last_press
+                                    .is_some_and(|t| at.saturating_duration_since(t) < DEBOUNCE)
+                                {
                                     debug!("Debounced press for '{binding_id}'");
                                     continue;
                                 }
-                                last_press = Some(now);
+                                last_press = Some(at);
                             }
 
                             if push_to_talk {
@@ -119,12 +131,7 @@ impl TranscriptionCoordinator {
                                     continue;
                                 }
 
-                                let now = Instant::now();
-                                let g = if is_pressed {
-                                    gesture.on_press(now)
-                                } else {
-                                    gesture.on_release(now)
-                                };
+                                let g = classify_input(&mut gesture, is_pressed, at);
                                 match g {
                                     Gesture::HoldStart => {
                                         if matches!(stage, Stage::Idle) {
@@ -204,12 +211,17 @@ impl TranscriptionCoordinator {
 
     /// Send a keyboard/signal input event for a transcribe binding.
     /// For signal-based toggles, use `is_pressed: true` and `push_to_talk: false`.
+    ///
+    /// `at` must be captured as close to the real key event as possible — the
+    /// coordinator thread may be busy starting a capture when this lands, and
+    /// re-reading the clock there would misjudge the gesture's timing.
     pub fn send_input(
         &self,
         binding_id: &str,
         hotkey_string: &str,
         is_pressed: bool,
         push_to_talk: bool,
+        at: Instant,
     ) {
         if self
             .tx
@@ -218,6 +230,7 @@ impl TranscriptionCoordinator {
                 hotkey_string: hotkey_string.to_string(),
                 is_pressed,
                 push_to_talk,
+                at,
             })
             .is_err()
         {
@@ -244,6 +257,23 @@ impl TranscriptionCoordinator {
     }
 }
 
+/// Feed one push-to-talk input into the tap detector.
+///
+/// `at` is when the key event actually happened, captured in the shortcut
+/// layer. It must NOT be re-read from the clock here: [`start`] runs
+/// `TranscribeAction::start` synchronously on the coordinator thread and can
+/// block it for hundreds of milliseconds (measured 298-774 ms), during which
+/// further key events queue up. Timing a gesture against the dequeue instant
+/// inflates every hold by that delay, which turns a tap into a `HoldEnd` and
+/// stops the capture the user just started.
+fn classify_input(gesture: &mut TapGestureDetector, is_pressed: bool, at: Instant) -> Gesture {
+    if is_pressed {
+        gesture.on_press(at)
+    } else {
+        gesture.on_release(at)
+    }
+}
+
 fn start(app: &AppHandle, stage: &mut Stage, binding_id: &str, hotkey_string: &str) {
     let Some(action) = ACTION_MAP.get(binding_id) else {
         warn!("No action in ACTION_MAP for '{binding_id}'");
@@ -267,4 +297,69 @@ fn stop(app: &AppHandle, stage: &mut Stage, binding_id: &str, hotkey_string: &st
     };
     action.stop(app, binding_id, hotkey_string);
     *stage = Stage::Processing;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Regresión 2026-07-25 — bug "la tecla Alt corta el dictado" (§3.1 del
+    /// handoff). `start()` ejecuta `TranscribeAction::start` de forma SÍNCRONA
+    /// sobre el hilo del coordinador: abre el micrófono, cambia el icono del
+    /// tray y muestra el overlay. Medido en `handy.log`, eso tarda 298–774 ms,
+    /// y mientras tanto los eventos de teclado se acumulan en el canal.
+    ///
+    /// El 2026-07-25 a las 14:36:33 el arranque bloqueó 774,57 ms con el
+    /// doble-tap de Charly ya encolado. Al desencolar el release, medir el
+    /// hold contra el reloj de ESE instante convertía un tap de ~150 ms en un
+    /// hold de 774 ms → `HoldEnd` → parada inmediata → `sample count: 0`,
+    /// dictado entero perdido. Fue el único arranque del día que superó
+    /// `TAP_MS` (600 ms) y el único dictado que murió: 4 de 4.
+    ///
+    /// El `sleep` reproduce ese bloqueo. Es la única forma de exponer el
+    /// sesgo, porque el fallo es exactamente "el reloj avanzó entre el evento
+    /// y su procesamiento".
+    #[test]
+    fn a_tap_dequeued_after_a_blocking_start_is_still_a_tap() {
+        let mut gesture = TapGestureDetector::new();
+        let pressed_at = Instant::now();
+        let released_at = pressed_at + Duration::from_millis(150);
+
+        assert_eq!(
+            classify_input(&mut gesture, true, pressed_at),
+            Gesture::HoldStart
+        );
+
+        // El coordinador queda atrapado dentro de `start()` mientras el
+        // release espera su turno en el canal.
+        thread::sleep(Duration::from_millis(700));
+
+        assert_eq!(
+            classify_input(&mut gesture, false, released_at),
+            Gesture::TapPending,
+            "un tap de 150 ms debe seguir siendo un tap aunque se desencole \
+             700 ms tarde; medirlo contra el reloj de desencolado lo vuelve \
+             HoldEnd y mata el dictado"
+        );
+    }
+
+    /// La otra mitad del contrato: el arreglo no puede lograrse ignorando el
+    /// tiempo. Un hold REAL de 800 ms procesado sin demora debe seguir siendo
+    /// `HoldEnd`, o el PTT por mantener dejaría de parar al soltar.
+    #[test]
+    fn a_real_long_hold_is_still_a_hold_when_dequeued_immediately() {
+        let mut gesture = TapGestureDetector::new();
+        let pressed_at = Instant::now();
+
+        assert_eq!(
+            classify_input(&mut gesture, true, pressed_at),
+            Gesture::HoldStart
+        );
+        assert_eq!(
+            classify_input(&mut gesture, false, pressed_at + Duration::from_millis(800)),
+            Gesture::HoldEnd,
+            "el hold debe leerse del timestamp del evento, no del reloj del \
+             coordinador"
+        );
+    }
 }

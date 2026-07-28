@@ -658,6 +658,37 @@ pub fn transcript_lands_on_clipboard(handling: ClipboardHandling, paste_succeede
     }
 }
 
+/// The text most recently inserted into another application, so the next
+/// dictation can tell whether it is continuing where the last one stopped.
+///
+/// Only set after an insertion actually succeeded. `PasteMethod::None` never
+/// records anything: it inserts nowhere, it only leaves the transcript on the
+/// clipboard for the user to place by hand.
+static LAST_INSERTION: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// Whether a separating space is needed before inserting `next`.
+///
+/// Dictating twice into the same field used to run the two transcripts
+/// together ("hola" + "mundo" = "holamundo"), because each insertion is
+/// independent and nothing carried over from the previous one.
+///
+/// What the previous dictation ended with is knowable; what the *field*
+/// contains is not — no cross-platform way exists to read the character before
+/// the cursor. So the decision is made from our own last insertion, which is
+/// exactly the "after a previous dictation" case that goes wrong.
+///
+/// This also composes with `append_trailing_space`: when that setting is on the
+/// previous text already ends in a space, so no second one is added.
+pub fn needs_separating_space(previous: Option<&str>, next: &str) -> bool {
+    let Some(previous) = previous else {
+        return false;
+    };
+    if previous.is_empty() || next.is_empty() {
+        return false;
+    }
+    !previous.ends_with(char::is_whitespace) && !next.starts_with(char::is_whitespace)
+}
+
 pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
     let settings = get_settings(&app_handle);
     let paste_method = settings.paste_method;
@@ -666,6 +697,21 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
     // Append trailing space if setting is enabled
     let text = if settings.append_trailing_space {
         format!("{} ", text)
+    } else {
+        text
+    };
+
+    // Separate this dictation from the previous one so two in a row don't run
+    // together. `PasteMethod::None` inserts nowhere, so it neither reads nor
+    // writes the insertion history.
+    let inserts_text = paste_method != PasteMethod::None;
+    let text = if inserts_text {
+        let previous = LAST_INSERTION.lock().ok().and_then(|p| p.clone());
+        if needs_separating_space(previous.as_deref(), &text) {
+            format!(" {}", text)
+        } else {
+            text
+        }
     } else {
         text
     };
@@ -719,10 +765,26 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
         // clipboard before surfacing the error (the paste-error toast tells the
         // user it is there).
         let _ = app_handle.clipboard().write_text(&text);
+        // Nothing landed in the target application, so the next dictation has
+        // nothing to separate itself from.
+        if let Ok(mut last) = LAST_INSERTION.lock() {
+            *last = None;
+        }
         return Err(e);
     }
 
-    if should_send_auto_submit(settings.auto_submit, paste_method) {
+    // Auto-submit sends the field off, so the next dictation starts in a fresh
+    // one and must not be separated from what was just submitted.
+    let submitted = should_send_auto_submit(settings.auto_submit, paste_method);
+    if let Ok(mut last) = LAST_INSERTION.lock() {
+        *last = if inserts_text && !submitted {
+            Some(text.clone())
+        } else {
+            None
+        };
+    }
+
+    if submitted {
         std::thread::sleep(Duration::from_millis(50));
         send_return_key(&mut enigo, settings.auto_submit_key)?;
     }
@@ -743,6 +805,49 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Reported 2026-07-26: dictating twice into the same field ran the two
+    /// transcripts together with no space between them.
+    #[test]
+    fn consecutive_dictations_get_a_separating_space() {
+        assert!(needs_separating_space(Some("hola"), "mundo"));
+    }
+
+    #[test]
+    fn the_first_dictation_gets_no_leading_space() {
+        assert!(
+            !needs_separating_space(None, "hola"),
+            "nothing was inserted before, so there is nothing to separate from"
+        );
+    }
+
+    #[test]
+    fn a_previous_dictation_ending_in_space_adds_no_second_one() {
+        // This is also what makes it compose with `append_trailing_space`.
+        assert!(!needs_separating_space(Some("hola "), "mundo"));
+        assert!(!needs_separating_space(Some("hola\n"), "mundo"));
+    }
+
+    #[test]
+    fn text_that_already_starts_with_space_is_left_alone() {
+        assert!(!needs_separating_space(Some("hola"), " mundo"));
+    }
+
+    #[test]
+    fn empty_text_on_either_side_needs_no_separator() {
+        assert!(!needs_separating_space(Some(""), "mundo"));
+        assert!(!needs_separating_space(Some("hola"), ""));
+    }
+
+    #[test]
+    fn punctuation_still_gets_a_space_after_it() {
+        // A sentence ending in "." is exactly where the next dictation must not
+        // be glued on: "...funcionando.Ahora bien".
+        assert!(needs_separating_space(
+            Some("ya está funcionando."),
+            "Ahora"
+        ));
+    }
 
     #[test]
     fn auto_submit_requires_setting_enabled() {

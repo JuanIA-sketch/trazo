@@ -153,10 +153,12 @@ Flags can be combined for autostart scenarios:
 handy --start-hidden --no-tray
 ```
 
-> **macOS tip:** When Handy is installed as an app bundle, invoke the binary directly:
+> **macOS tip:** When Trazo is installed as an app bundle, invoke the binary directly.
+> Note the lowercase executable name — the bundle is `Trazo.app`, but the binary
+> inside it is still `handy`:
 >
 > ```bash
-> /Applications/Handy.app/Contents/MacOS/Handy --toggle-transcription
+> /Applications/Trazo.app/Contents/MacOS/handy --toggle-transcription
 > ```
 
 ## Known Issues & Current Limitations

@@ -514,8 +514,7 @@ jobs:
             c.bundle = c.bundle || {};
             if (c.bundle.windows) delete c.bundle.windows.signCommand;
             c.bundle.createUpdaterArtifacts = false;
-            fs.writeFileSync(p, JSON.stringify(c, null, 2) + "
-");
+            fs.writeFileSync(p, JSON.stringify(c, null, 2));
             console.log("unsigned build: removed signCommand, disabled updater artifacts");
           '
 

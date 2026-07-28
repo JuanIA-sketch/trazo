@@ -1,6 +1,6 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-27 · **Rama:** `main` · **HEAD:** `a24974b`
+**Última actualización:** 2026-07-28 · **Rama:** `main` · **HEAD:** `019207e`+
 **Entrega del hackathon:** 31 de julio de 2026
 
 Documento de continuidad entre sesiones de Claude Code. Léelo antes de tocar
@@ -8,100 +8,106 @@ nada. Complementa a `CLAUDE.md` (convenciones del fork) y a
 `docs/superpowers/specs/` (diseños detallados); aquí está el _estado_ y el
 _porqué_, no las convenciones.
 
-> **⚠️ DOS COSAS DISTINTAS SIN SINCRONIZAR (auditado 2026-07-27):**
+> **⚠️ ESTADO AL CERRAR LA SESIÓN DEL 2026-07-28**
 >
-> 1. **11 commits locales sin pushear** a `origin/main`. `origin/main` no tiene
->    nada que `main` no tenga (0 detrás), así que un `push` sería fast-forward.
-> 2. **El trabajo del 2026-07-26 sigue sin commitear** — `HEAD` sigue en
->    `a24974b`. Vive solo en el árbol de trabajo (§1.2).
+> 1. **El grupo (b) sigue sin commitear**, igual que desde el 26/07: espera la
+>    validación en vivo de Charly (§1.2.1, §4.2).
+> 2. **El rebrand quedó commiteado en `019207e`** y pusheado, con la migración
+>    de datos y los fixes de autostart (§7.1). Charly respaldó su carpeta de
+>    datos antes; falta confirmar en vivo que la migración funcionó.
+> 3. **`batch_vs_loop.rs` sigue sin trackear** a propósito: experimento
+>    rechazado (§4.1).
 >
-> Consecuencia práctica: **quien clone `origin/main` hoy NO recibe el doble-tap,
-> el overlay rediseñado, la onda sensible al susurro, ni nada del 26/07.**
+> Todo lo demás de la sesión está commiteado y pusheado.
 
 ---
 
 ## 1. Estado actual
 
-`main` está **25 commits por delante y 58 por detrás** de `upstream/main`
-(cjpais/handy), y **11 commits por delante de `origin/main`** (JuanIA-sketch/trazo).
+`main` y `origin/main` están sincronizados al cerrar la sesión.
 
-Los 11 sin pushear, del más nuevo al más viejo: `a24974b`, `c4f85e3`,
-`bb48136`, `5f4552e`, `c2b04b6`, `b152e2f`, `15c7c43`, `5a2f371`, `7472764`,
-`95337a9`, `cb5dee7`.
+Respecto a `upstream/main` (cjpais/handy) sigue muy por detrás; ese frente no se
+tocó hoy y se revisa después del 31 de julio (§4.4).
 
 ### 1.1 Commits clave (orden cronológico inverso)
+
+Los 12 de hoy (2026-07-28), del más nuevo al más viejo:
+
+| Commit    | Qué es                                                             | Pusheado |
+| --------- | ------------------------------------------------------------------ | -------- |
+| `5f1975c` | README: cómo abrir las builds sin firmar (Gatekeeper, SmartScreen) | sí       |
+| `481b5b6` | Harness `vad_survival.rs` (diagnóstico del bug de Benja)           | sí       |
+| `2c97e4e` | Fix del cuelgue tras descarga de modelo (§7.3)                     | sí       |
+| `80f3cbe` | VAD off por defecto + migración v6 (§7.2)                          | sí       |
+| `ede3455` | Fix de un escape roto en el parche de config sin firma             | sí       |
+| `b7c50a2` | `build.yml` produce build sin firma sin fingir credenciales (§7.5) | sí       |
+| `653c056` | Control de ganancia de micrófono en Ajustes (§7.4)                 | sí       |
+| `bda3139` | Workflow de build cross-platform sin firma                         | sí       |
+| `fbdd2cb` | Handoff: rechazo de `run_batch` + conflicto de la rama de Benja    | sí       |
+| `99e0c01` | `history_limit` 5→20 + migración v5                                | sí       |
+| `8ad914f` | Reintento troceado cuando el decode entero sale truncado           | sí       |
+| `9663e76` | Puerta de silencio + segmentación (`silence_gate.rs`)              | sí       |
+
+Anteriores:
 
 | Commit    | Qué es                                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------ |
 | `a24974b` | Handoff de sesión (este archivo)                                                                             |
 | `c4f85e3` | Reglas de reemplazo del diccionario (abreviatura → texto) + importación CSV                                  |
 | `bb48136` | Toggle de limpieza con IA visible en Ajustes                                                                 |
-| `5f4552e` | Fix: no copiar al portapapeles en paralelo a una inserción exitosa                                            |
-| `c2b04b6` | Identidad azul de Trazo (paleta, emblema corona, iconos)                                                      |
+| `5f4552e` | Fix: no copiar al portapapeles en paralelo a una inserción exitosa                                           |
+| `c2b04b6` | Identidad azul de Trazo (paleta, emblema corona, iconos)                                                     |
 | `b152e2f` | **Punto de restauración** del stack de dictado validado + default por hardware + auto-descarga en onboarding |
 | `15c7c43` | Watchdog `StreamHealth` + coalescer                                                                          |
 | `5a2f371` | Fijar idioma en modelos con códigos regionales (`es` → `es-ES`)                                              |
 | `7472764` | Rediseño del overlay como objeto de marca                                                                    |
 | `95337a9` | Doble-tap de PTT → grabación continua (badge ∞)                                                              |
-| `cb5dee7` | Onda sensible a susurros + pulso por VAD real                                                                 |
-| `8477b61` | Fix del secuestro de teclado (crate `handy-keys` vendorizada)                                                 |
-| `13b039c` | Red de seguridad del portapapeles                                                                             |
-| `e836a0b` | Perfiles de dictado en español                                                                                |
+| `cb5dee7` | Onda sensible a susurros + pulso por VAD real                                                                |
+| `8477b61` | Fix del secuestro de teclado (crate `handy-keys` vendorizada)                                                |
+| `13b039c` | Red de seguridad del portapapeles                                                                            |
+| `e836a0b` | Perfiles de dictado en español                                                                               |
 
-### 1.2 Sin commitear — trabajo real de hoy
+### 1.2 Sin commitear (al cerrar el 2026-07-28)
 
-Esta vez **sí hay cambios reales** (ayer todo era ruido CRLF). Archivos nuevos
-sin trackear más once modificados:
+| Archivo                                      | Δ         | Grupo | Qué                                               |
+| -------------------------------------------- | --------- | ----- | ------------------------------------------------- |
+| `src-tauri/src/rebrand_migration.rs`         | **nuevo** | c     | Migración de datos + limpieza de autostart        |
+| `src-tauri/tauri.conf.json`                  | +11 −5    | c     | `productName: Trazo`, `identifier: com.trazo.app` |
+| `src-tauri/src/lib.rs`                       | +19 −5    | c     | Llama a la migración; autostart con warning       |
+| `src-tauri/src/shortcut/mod.rs`              | +9 −3     | c     | Autostart con warning                             |
+| `src-tauri/src/actions.rs`                   | +12 −4    | c     | Identifier nuevo con fallback al viejo            |
+| `src-tauri/src/clipboard.rs`                 | +106 −1   | **b** | Espacio separador entre dictados (§2.4)           |
+| `src-tauri/src/transcription_coordinator.rs` | +104 −9   | **b** | Reloj del gesto PTT (§2.1)                        |
+| `src-tauri/src/shortcut/handler.rs`          | +14 −1    | **b** | Sella el timestamp del evento de teclado          |
+| `src-tauri/src/signal_handle.rs`             | +3 −1     | **b** | Firma de `send_input` con timestamp               |
+| `src-tauri/examples/batch_vs_loop.rs`        | **nuevo** | —     | Experimento rechazado (§4.1)                      |
 
-> **Ojo con `git status` en esta máquina.** Marca ~80 archivos como modificados,
-> pero **solo 12 tienen contenido distinto**. Los otros ~68 (casi todo
-> `src/components/settings/*.tsx`) son fantasmas de CRLF: `git status` los
-> marca, `git diff` no produce ni una línea. Lista real:
+> **Ojo con `git status` en esta máquina.** Marca ~80 archivos, pero solo los de
+> arriba tienen contenido distinto. El resto son fantasmas de CRLF: `git status`
+> los marca y `git diff` no produce ni una línea. Usar siempre:
 >
 > ```bash
 > git diff --numstat   # solo salen los que de verdad cambiaron
 > ```
 >
-> No los añadas al commit: meterían un reencoding de línea completo en el diff
-> y harían ilegible cualquier review.
+> **Nunca `git add -A`.** Metería los fantasmas y los experimentos rechazados.
 
-| Archivo                                          | Δ         | Qué                                                       |
-| ------------------------------------------------ | --------- | --------------------------------------------------------- |
-| `src-tauri/src/audio_toolkit/audio/silence_gate.rs` | **nuevo** | Puerta de silencio + segmentación + detección de truncado |
-| `src-tauri/src/transcription_coordinator.rs`     | +104 −9   | Fix del reloj del gesto PTT (§2.1)                        |
-| `src-tauri/src/clipboard.rs`                     | +106 −1   | Espacio separador entre dictados (§2.4)                   |
-| `src-tauri/src/settings.rs`                      | +86 −2    | `history_limit` 5→20 + migración v5 (§2.5)                |
-| `src-tauri/src/managers/transcription.rs`        | +84 −0    | `transcribe_recording` (§2.3)                             |
-| `src-tauri/src/shortcut/handler.rs`              | +14 −1    | Sella el timestamp del evento de teclado                  |
-| `src-tauri/src/commands/history.rs`              | +5 −4     | Usa `transcribe_recording`                                |
-| `src-tauri/src/audio_toolkit/mod.rs`             | +2 −1     | Reexporta las funciones nuevas                            |
-| `src-tauri/src/audio_toolkit/audio/mod.rs`       | +2 −0     | Idem                                                       |
-| `src-tauri/src/signal_handle.rs`                 | +3 −1     | Firma de `send_input` con timestamp                        |
-| `src-tauri/src/actions.rs`                       | +1 −1     | Usa `transcribe_recording`                                |
-| `src-tauri/examples/batch_vs_loop.rs`            | **nuevo** | Harness del experimento **rechazado** de §4.1             |
-| `SESSION_HANDOFF.md`                             | +…        | Este archivo                                              |
+### 1.2.1 Los tres grupos
 
-**Estado de verificación (2026-07-27, revalidado):** `cargo test --lib` →
-**212 passed, 0 failed, 1 ignored**. `bun test src/` → **38 passed, 0 failed**.
-`bun run check:translations` → **20 idiomas completos**. `cargo clippy
---lib --tests` → 0 advertencias en el código nuevo (26/07). `cargo fmt --check`
-→ limpio (26/07).
+| Grupo | Qué                                       | Estado                                          |
+| ----- | ----------------------------------------- | ----------------------------------------------- |
+| **a** | Probado y en verde                        | **Todo commiteado hoy.** Ya no queda nada aquí. |
+| **b** | Pendiente de validación en vivo de Charly | Sin commitear desde el 26/07 (§4.2)             |
+| **c** | Rebrand + migración + autostart           | **Commiteado en `019207e`** y pusheado          |
 
-### 1.2.1 Los cambios se separan en tres grupos
+Al cerrar la sesión solo queda el grupo **b** sin commitear, más
+`batch_vs_loop.rs` sin trackear.
 
-Importa para decidir qué se commitea y qué no:
-
-| Grupo | Qué                                                    | Archivos                                                                                                              |
-| ----- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| **a** | Probado y en verde, listo para commitear               | `silence_gate.rs`, `managers/transcription.rs`, `audio_toolkit/{mod,audio/mod}.rs`, `actions.rs`, `lib.rs`, `commands/history.rs`, `settings.rs` |
-| **b** | Pendiente de validación en vivo de Charly — NO commitear | `transcription_coordinator.rs`, `shortcut/handler.rs`, `signal_handle.rs` (reloj del gesto, §2.1); `clipboard.rs` (espacio separador, §2.4)      |
-| **c** | Experimental y descartado — NO commitear como feature  | `examples/batch_vs_loop.rs` (§4.1)                                                                                    |
-
-Los grupos **a** y **b** son disjuntos a nivel de compilación (verificado):
-el cambio de firma de `send_input` solo lo tocan `handler.rs` y
-`signal_handle.rs`, ambos del grupo b; y `transcribe_recording` solo lo llaman
-`actions.rs`, `lib.rs` y `commands/history.rs`, los tres del grupo a. Se puede
-commitear **a** sin **b** y el árbol sigue compilando.
+**Estado de verificación (2026-07-28, con el grupo c aplicado):**
+`cargo test --lib` → **237 passed, 0 failed, 1 ignored**. `bun test src/` → 38
+passed. `bun run lint` → limpio. `bun run build` → ✓. `check:translations` →
+20/20 idiomas. `cargo clippy` → nada nuevo en los archivos tocados.
+`cargo fmt --check` → limpio (salvo la deriva conocida de `text.rs`).
 
 ### 1.3 Ramas
 
@@ -132,14 +138,14 @@ merge-base(main, origin/feat/rebrand-azul-app) = 37814bc
 de lo que parecía.** Él tocó 55 archivos; `main` tocó esos mismos 55. Pero al
 comparar el contenido resultante, **52 de los 55 ya son byte-idénticos**:
 
-| Archivos                                   | Estado `main` vs su rama            |
-| ------------------------------------------ | ----------------------------------- |
-| 50 PNG/ICO/ICNS de iconos                  | ✅ **idénticos** — cero conflicto    |
-| `src/overlay/corona.png`                   | ✅ **idéntico**                      |
-| `src/styles/theme.css`                     | ✅ **idéntico** (mismo blob `f64ef68`) |
-| `src/overlay/RecordingOverlay.tsx`         | ❌ difiere                           |
-| `src/overlay/RecordingOverlay.css`         | ❌ difiere                           |
-| `src-tauri/src/overlay.rs`                 | ❌ difiere                           |
+| Archivos                           | Estado `main` vs su rama               |
+| ---------------------------------- | -------------------------------------- |
+| 50 PNG/ICO/ICNS de iconos          | ✅ **idénticos** — cero conflicto      |
+| `src/overlay/corona.png`           | ✅ **idéntico**                        |
+| `src/styles/theme.css`             | ✅ **idéntico** (mismo blob `f64ef68`) |
+| `src/overlay/RecordingOverlay.tsx` | ❌ difiere                             |
+| `src/overlay/RecordingOverlay.css` | ❌ difiere                             |
+| `src-tauri/src/overlay.rs`         | ❌ difiere                             |
 
 **`theme.css` es literalmente el mismo cambio, no dos cambios parecidos.** Los
 dos lados parten del blob `33fa5c2` y llegan al blob `f64ef68`: mismos hex,
@@ -154,7 +160,7 @@ Benjamin se reduce a **tres archivos, todos del overlay**.
 
 **Y ni siquiera esos tres son un choque de diseño simétrico.** El diff completo
 `main` → su rama son **−3640 líneas**: su rama no es un rebrand rival, es una
-**base vieja**. Yendo de `main` a su rama se *borran*, entre otras cosas:
+**base vieja**. Yendo de `main` a su rama se _borran_, entre otras cosas:
 
 ```
 -pub fn show_continuous_overlay(...)   // el badge ∞ del doble-tap
@@ -180,16 +186,16 @@ le faltan 11 commits. Lo sano es que **rebase sobre `main` ya pusheado**.
 
 ### 1.4 Configuración local de Charly (su máquina, no son defaults)
 
-| Ajuste                 | Valor                       | Nota                                                    |
-| ---------------------- | --------------------------- | ------------------------------------------------------- |
-| `selected_model`       | Whisper Turbo Q8            | Su GTX 1650 lo corre mejor que Nemotron                  |
-| `selected_language`    | `es`                        | Fijado a propósito, no `auto`                           |
-| `clipboard_handling`   | `dont_modify`               | **Solo su máquina**; el default sigue `copy_to_clipboard` |
-| `paste_method`         | `ctrl_v`                    |                                                         |
-| `bindings.transcribe`  | **`alt_left`**              | Modificador desnudo, PTT. Cambió desde Ctrl+Espacio     |
-| `push_to_talk`         | `true`                      | Usa doble-tap para latchear, casi nunca mantiene         |
-| `history_limit`        | **20** (era 5)              | Migrado por v5, confirmado en el store                   |
-| `post_process_enabled` | `true`                      | OpenAI + gpt-4o-mini, perfil `default_es_casual`        |
+| Ajuste                 | Valor            | Nota                                                      |
+| ---------------------- | ---------------- | --------------------------------------------------------- |
+| `selected_model`       | Whisper Turbo Q8 | Su GTX 1650 lo corre mejor que Nemotron                   |
+| `selected_language`    | `es`             | Fijado a propósito, no `auto`                             |
+| `clipboard_handling`   | `dont_modify`    | **Solo su máquina**; el default sigue `copy_to_clipboard` |
+| `paste_method`         | `ctrl_v`         |                                                           |
+| `bindings.transcribe`  | **`alt_left`**   | Modificador desnudo, PTT. Cambió desde Ctrl+Espacio       |
+| `push_to_talk`         | `true`           | Usa doble-tap para latchear, casi nunca mantiene          |
+| `history_limit`        | **20** (era 5)   | Migrado por v5, confirmado en el store                    |
+| `post_process_enabled` | `true`           | OpenAI + gpt-4o-mini, perfil `default_es_casual`          |
 
 ---
 
@@ -287,8 +293,8 @@ Dictar dos veces en el mismo campo pegaba los transcriptos ("holamundo").
 `static LAST_INSERTION` que guarda lo último insertado.
 
 Detalle de diseño: **no se puede leer el carácter anterior al cursor** en una
-app ajena, así que la decisión se toma sobre *nuestra propia inserción
-anterior* — que es exactamente el caso "tras un dictado anterior".
+app ajena, así que la decisión se toma sobre _nuestra propia inserción
+anterior_ — que es exactamente el caso "tras un dictado anterior".
 
 Compone solo con `append_trailing_space` sin caso especial (si esa opción está
 activa, el texto previo ya acaba en espacio y la función devuelve `false`).
@@ -298,7 +304,7 @@ Se limpia cuando el pegado falla o cuando el auto-submit envía el campo.
 ### 2.5 `history_limit` 5 → 20 + migración de esquema v5
 
 **El default de 5 borró tres corpus de evaluación en un solo día**, uno de
-ellos *mientras se copiaban los archivos*. Con
+ellos _mientras se copiaban los archivos_. Con
 `recording_retention_period = PreserveLimit` (el caso de Charly) se lleva
 también los WAV, así que el audio se pierde para siempre.
 
@@ -385,7 +391,36 @@ libera con `cargo clean` completo; borrar por partes rompe la caché.
 
 ---
 
+### 3.6 Causa raíz del truncado del VAD — ABIERTA
+
+Contenido con el default en `false` + migración v6 (`80f3cbe`), pero la causa
+real sigue sin identificarse. Bloqueado esperando el experimento de Benja.
+Detalle completo en §7.2.
+
+### 3.7 `unload_model()` ignora `active_engine_lease`
+
+Puede limpiar `current_model_id` y emitir "unloaded" mientras el worker de
+streaming todavía tiene el motor prestado fuera del mutex. Estado inconsistente
+real, detectado al diagnosticar §7.3, **no arreglado** y no es la causa de aquel
+cuelgue. Mirar al tocar esa zona.
+
 ## 4. Próximos pasos
+
+### 4.0 Inmediatos (orden sugerido al retomar)
+
+1. **Validar en vivo la migración del rebrand** (§7.1). Es lo primero porque
+   toca los datos de Charly: al primer arranque verificar que aparecen en
+   `%APPDATA%\com.trazo.app` y que la clave de OpenAI sigue ahí. Si algo
+   falla, el respaldo de `com.pais.handy` está intacto — la migración copia,
+   no mueve.
+2. **Revisar el matrix relanzado** con el nombre nuevo: los instaladores deben
+   llamarse `Trazo_0.9.0_*`. Si quedó en rojo, empezar por ahí.
+3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
+   dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
+   también con qué prueba concreta descartó el downmix.
+4. **Decidir sobre la contraseña del updater** (§7.6): recuperarla o generar
+   keypair nueva. Bloquea cualquier release firmado.
+5. **Validar en vivo el grupo b** (§4.2) y commitearlo.
 
 ### 4.1 ~~Experimento pendiente~~ → RECHAZADO con datos (2026-07-27)
 
@@ -435,7 +470,7 @@ Tercer experimento de optimización rechazado con datos, junto a la fusión de
 tramos (§2.6) y las ventanas grandes.
 
 **Límite honesto de la medición:** n=1 archivo, 2 tramos. El veredicto de
-*texto* es sólido (reproducible + control limpio). El de *velocidad* no se
+_texto_ es sólido (reproducible + control limpio). El de _velocidad_ no se
 generaliza: con 4-6 tramos batch podría ganar tiempo. Da igual — el criterio
 era el texto.
 
@@ -451,7 +486,7 @@ pruebe a mano.
 
 - **Fix del reloj del gesto / bug de Alt** (§2.1) — arranque en frío +
   doble-tap inmediato. En `handy.log`, buscar `TranscribeAction::start
-  completed in` > 600 ms y confirmar que **aun así latchea**.
+completed in` > 600 ms y confirmar que **aun así latchea**.
   Archivos: `transcription_coordinator.rs`, `shortcut/handler.rs`,
   `signal_handle.rs`.
 - **Espacio separador** (§2.4) — dictar dos veces seguidas en el mismo campo y
@@ -598,3 +633,230 @@ bun run tauri dev
   ambas pasaron al reintentar. Reintentar antes de sospechar una regresión.
 - **Convención del repo:** TDD siempre (test en rojo visto fallar primero) y
   **nunca commitear ni pushear sin confirmación explícita de Charly.**
+
+---
+
+## 7. Sesión 2026-07-28
+
+### 7.1 Rebrand + migración de datos + autostart — `019207e`
+
+Commiteado y pusheado. Charly respaldó su carpeta de datos antes de aprobarlo.
+
+- `productName`: `Handy` → **`Trazo`**
+- `identifier`: `com.pais.handy` → **`com.trazo.app`**
+
+**Por qué hizo falta una migración.** Tauri deriva el directorio de datos del
+`identifier`, así que cambiarlo apunta la app a un directorio vacío: ajustes,
+historial, grabaciones y **claves de API guardadas** parecen haberse esfumado.
+El módulo nuevo `rebrand_migration.rs` copia `com.pais.handy` → `com.trazo.app`
+en el primer arranque.
+
+Decisiones, cada una con test:
+
+- **Copia, no mueve.** Si la build nueva falla, la instalación anterior sigue
+  intacta y reinstalar la versión vieja encuentra sus datos.
+- **La condición es que exista `settings_store.json` en el dir viejo y NO en el
+  nuevo.** No sirve "el dir nuevo no existe": Tauri lo crea antes de que esto
+  corra, así que esa condición nunca se cumpliría.
+- **Nunca sobrescribe** ajustes ya escritos bajo el identifier nuevo.
+- **Fallo no fatal.** Si la copia falla, warning y la app arranca igual.
+  Arrancar en blanco se arregla a mano; no arrancar, no.
+- **Instalaciones portables se saltan la migración** (sus datos viven junto al
+  ejecutable, nunca tuvieron dir derivado del identifier).
+- Corre en `setup()` **antes de que nada lea el store**.
+
+**Dato tranquilizador medido:** los modelos NO viven bajo el identifier (están
+en `~/.cache/huggingface/hub`), así que el rebrand no obliga a re-descargar
+gigas. El dir de datos son ~7,8 MB.
+
+`actions.rs` (test de perfiles ES que lee la clave de OpenAI) prueba primero
+`com.trazo.app` y cae a `com.pais.handy`, para seguir funcionando en una máquina
+sin migrar.
+
+**Autostart, los dos problemas resueltos en el mismo trabajo:**
+
+- **(a) Fallo silencioso.** Los cuatro `let _ = autostart_manager.enable()`
+  descartaban el `Result`. Si el registro fallaba (política de grupo, permisos,
+  LaunchAgent no escribible), **el toggle quedaba en "activado" en la UI sin
+  nada registrado**. Ahora se loguea un warning; la decisión de qué loguear
+  salió a `autostart_failure_message()`, función pura con tests.
+- **(b) Registros huérfanos por el rebrand.** `tauri-plugin-autostart` registra
+  por nombre de app y ruta del ejecutable: tras el rename la entrada vieja
+  apunta a un binario inexistente y el SO reintenta un arranque condenado en
+  cada login. `cleanup_legacy_autostart()` borra LaunchAgents de macOS,
+  `.desktop` de XDG y la entrada `Run` del registro de Windows (vía `winreg`,
+  que ya era dependencia), probando tanto `Handy` como `com.pais.handy` porque
+  el nombre usado depende de la versión del plugin. Borrar algo inexistente es
+  no-op, así que ser generoso es seguro.
+
+**Pendiente de validación en vivo (es el caso de Charly):** al primer arranque
+tras commitear, sus datos deben aparecer en `%APPDATA%\com.trazo.app`.
+**Recomendado copiar `com.pais.handy` antes de probar**, aunque la migración no
+lo toca.
+
+**Efecto colateral:** los instaladores pasan a llamarse `Trazo_0.9.0_*`, lo que
+invalida los artefactos del matrix actual (§7.5).
+
+### 7.2 Bug crítico del VAD — contenido, causa raíz abierta
+
+**Reportado por Benja:** con `vad_enabled = true` (el default de entonces), un
+dictado de 13 s llegaba a disco como **1,05–2,16 s**. Micrófono
+"Varios micrófonos (2- Realtek Audio)", 48 kHz, 2 canales, Windows 11. Él ya
+había descartado micrófono, motor, idioma, sample rate/downmix y modelo.
+
+**Contención — `80f3cbe`, commiteado y pusheado.** Default `vad_enabled: false`
+**más migración de esquema v6**. La migración es la parte que importa: cambiar
+solo el default no protege a nadie que ya tenga Trazo instalado, porque serde
+nunca toca un campo que ya está en el store. A diferencia de la migración del
+`history_limit`, esta **no puede** distinguir una elección deliberada del viejo
+default, porque el viejo default ERA `true`. Aceptado: el costo de apagarlo a
+quien le funcionaba es algo de silencio extra, que el modelo maneja; el de
+dejarlo encendido a quien no, es su dictado.
+
+**Mecanismo confirmado en el código.** Con el VAD activo, `processed_samples`
+—que es a la vez lo que se guarda en disco y lo que va al modelo— acumula
+únicamente los frames etiquetados `Speech`. No existe ninguna parada automática
+por silencio: la pérdida es filtrado de frames.
+
+**Descartado con rigor:**
+
+- **No es desajuste de tamaño de frame.** `SileroVad` exige exactamente 480
+  muestras y falla, pero `handle_frame` hace
+  `.unwrap_or(VadFrame::Speech(samples))` — **falla-abierto**. Un desajuste
+  produciría _más_ audio, nunca menos.
+- **No es el nivel.** Hipótesis propia, refutada con medición propia: el harness
+  `vad_survival.rs` (commiteado en `481b5b6`) corre la cadena de producción
+  exacta sobre grabaciones reales atenuándolas. **A −24 dB todavía sobrevive el
+  100%.** Coherente con lo ya sabido: Silero dispara hasta con ruido de sala.
+
+**Hipótesis viva:** si Silero es tan permisivo, que rechace ~88% del audio de
+Benja significa que lo que le llega **no se parece a voz**. Lo más probable en
+un dispositivo agregado: el segundo canal lleva algo que no es habla (zumbido,
+referencia de AEC, un micro muerto) y el promedio queda dominado por eso.
+Whisper es robusto a eso; Silero está entrenado justo para rechazarlo. Explica
+las tres cosas: por qué con VAD off funciona, por qué falla con VAD on, y por
+qué solo pasa en ese dispositivo.
+
+**Experimento decisivo, PENDIENTE del resultado de Benja.** Que grabe sus 13 s
+con VAD off y los pase por:
+
+```bash
+cargo run --example vad_survival -- src-tauri/resources/models/silero_vad_v4.onnx <wav>
+```
+
+- **Supervivencia se desploma** → el VAD rechaza correctamente su señal; el
+  arreglo va en la captura/downmix.
+- **Supervivencia ~100%** → los veredictos son correctos y la pérdida está en el
+  camino en vivo (hilos/resampler/framing).
+
+**También se le pidió con qué prueba concreta descartó el downmix**, porque si
+fue "suena bien con el VAD apagado" eso NO descarta esta hipótesis: la mezcla
+puede ser perfectamente inteligible para Whisper y aun así ser rechazada por
+Silero. **Sin respuesta todavía.**
+
+### 7.3 Bug del cuelgue tras descarga de modelo — ARREGLADO (`2c97e4e`)
+
+**Síntoma:** tras `Model idle for 306s (limit: 300s), unloading`, ninguna
+grabación vuelve a completarse hasta reiniciar la app.
+
+**Causa raíz:** `initiate_model_load()` ponía `is_loading = true`, lanzaba un
+hilo suelto y limpiaba el flag **como última sentencia de ese hilo**. Cualquier
+pánico en el camino se salta la limpieza. Y hay dos esperas sobre el condvar
+**sin timeout** — `transcribe()` y el worker de streaming — así que toda
+grabación posterior se cuelga exactamente donde iría a transcribir.
+
+**Lo revelador:** justo al lado ya existía `try_start_loading()`, que devuelve un
+`LoadingGuard` con `Drop` que limpia el flag y despierta a los que esperan. Pero
+solo lo usaba `commands/models.rs`; el camino que corre en cada grabación hacía
+el flag a mano.
+
+**Por qué aparece tras la descarga:** con el modelo cargado,
+`initiate_model_load` retorna temprano y nunca toca el flag. La descarga es lo
+que devuelve a la app al camino frágil.
+
+**Fix:** usa `try_start_loading()` y **mueve el guard al hilo**, así el `Drop` lo
+libera incluso desenrollando un pánico. Se extrajo `load_holding_guard()` para
+que el camino de pánico sea testeable. 2 tests, rojo primero; el que falla
+reprodujo el síntoma literal ("a dictation after a failed load waited forever"),
+acotado con timeout en vez de colgar la suite.
+
+**No arreglado, anotado:** `unload_model()` ignora `active_engine_lease` y puede
+limpiar `current_model_id` mientras el worker de streaming aún tiene el motor
+prestado. Real, pero no es la causa de este cuelgue.
+
+### 7.4 Control de ganancia de micrófono (`653c056`)
+
+Slider en Ajustes → Sonido, 0.5×–4.0×, default **exactamente 1.0×** (una
+instalación existente suena igual). Aplicado en el callback de captura, antes de
+todo lo demás, para que onda, VAD y transcripción vean la misma señal.
+
+**Es usabilidad, NO un arreglo del truncado**, y así está escrito en el módulo,
+en el componente y en el texto que ve el usuario: la ganancia sube voz y ruido
+por igual. Medido el 26/07: +14,7 dB no cambió una palabra.
+
+`SharedGain` es un atómico, no un `f32`: el callback de cpal se queda con su
+closure durante toda la vida del stream, así que mover el slider tiene que
+llegar a un dictado en curso. 12 tests, rojo primero. Claves en las 21 locales.
+
+### 7.5 CI cross-platform — **VERDE en las 3 plataformas**
+
+**El problema no era el código.** `main-build.yml` corre con
+`sign-binaries: true` y todos los jobs morían por secrets, no por fuentes. En
+macOS moría a los ~20 s importando un `APPLE_CERTIFICATE` vacío, así que **una
+build de macOS rota y un certificado ausente se veían idénticos**.
+
+Workflow nuevo `cross-platform-check.yml` (`bda3139`) + arreglo de `build.yml`
+(`b7c50a2`, `ede3455`):
+
+- **Pasar un string vacío no es lo mismo que no pasar nada:** `tauri-action`
+  interpreta un `APPLE_CERTIFICATE` definido-pero-vacío como "hay certificado" e
+  intenta importarlo. El paso de build se dividió en dos mutuamente excluyentes;
+  el sin firma **omite** las variables.
+- **El paso firmado es el original, byte a byte** — verificado por diff
+  programático, no por lectura. Un release ejecuta lo mismo que siempre.
+- `bundle.windows.signCommand` (que apunta a la cuenta de Azure de cjpais) y
+  `createUpdaterArtifacts` se eliminan del config **solo** en builds sin firma.
+
+**Resultado — run 30320020966, 5/5 success:**
+
+| Plataforma           | Artefacto                                     |
+| -------------------- | --------------------------------------------- |
+| macOS ARM            | `trazo-unsigned-aarch64-apple-darwin` (39 MB) |
+| macOS Intel          | `trazo-unsigned-x86_64-apple-darwin` (44 MB)  |
+| Linux `.deb` (22.04) | 66 MB                                         |
+| Linux AppImage+RPM   | 189 MB                                        |
+| Windows x86_64       | 62 MB                                         |
+
+**⚠️ NO se volvió a correr con el nombre nuevo**, porque el rebrand sigue sin
+commitear. Los artefactos actuales dicen `Handy_0.9.0_*`. Hay que relanzarlo
+tras commitear el grupo c.
+
+### 7.6 Secrets del updater — clave arreglada, contraseña perdida
+
+- **El BOM está resuelto.** El archivo local nunca lo tuvo (empieza en
+  `64 57 35`); se introducía al subirlo. Resubido con
+  `gh secret set ... < archivo` desde Git Bash, sin PowerShell.
+- **La clave corresponde**: mismo ID `6596EF54BD66B296`, pública idéntica a la
+  de `tauri.conf.json`.
+- **El error cambió**, y eso confirma el arreglo: de `Invalid symbol 239` (BOM) a
+  `Wrong password for that key` — ahora la clave se decodifica y llega al
+  descifrado.
+- **La contraseña vacía NO sirve.** Verificado implementando el descifrado
+  minisign (scrypt + XOR + checksum blake2b) y validándolo contra una clave cuya
+  contraseña se conocía. Probadas `""`, `" "`, `"trazo"`, `"Trazo"`: ninguna.
+- **Decisión pendiente de Charly:** o recupera la contraseña (¿gestor de
+  contraseñas?), o hay que **generar keypair nueva**, lo que obliga a actualizar
+  el secret **y** el `pubkey` de `tauri.conf.json`, invalidando la verificación
+  de updates de cualquier build ya distribuida. **No se generó nada.**
+
+**Además, dos bloqueos ajenos al updater** para un release firmado completo: no
+hay `APPLE_CERTIFICATE` (sin cuenta Apple Developer, $99/año) y el `signCommand`
+de Windows apunta a infra de cjpais.
+
+### 7.7 README de builds sin firmar (`5f1975c`)
+
+Sección "Opening an unsigned build": macOS (click derecho → Abrir, `xattr`, y la
+advertencia de que los permisos de Accesibilidad/Micrófono se reconceden en cada
+actualización porque van atados a la firma), Windows (SmartScreen) y Linux
+(`mesa-vulkan-drivers` no declarado como dependencia → cae a CPU en silencio; y
+Wayland sin atajos globales).

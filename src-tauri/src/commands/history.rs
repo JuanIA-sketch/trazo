@@ -59,6 +59,21 @@ pub async fn delete_history_entry(
         .map_err(|e| e.to_string())
 }
 
+/// Traduce el bool persistido en el historial (`post_process_requested`) al
+/// modo de post-procesado que debe re-ejecutar un reintento.
+///
+/// Un reintento nunca puede formalizar: no hay perfil concreto guardado por
+/// entrada, solo el hecho de si hubo post-procesado. La única alternativa a
+/// `Off` es entonces `Selected` — repetir con el perfil global actual, igual
+/// que hacía el bool antes de esta tarea.
+fn retry_mode_for_history_entry(post_process_requested: bool) -> crate::formalize::PostProcessMode {
+    if post_process_requested {
+        crate::formalize::PostProcessMode::Selected
+    } else {
+        crate::formalize::PostProcessMode::Off
+    }
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn retry_history_entry_transcription(
@@ -94,14 +109,7 @@ pub async fn retry_history_entry_transcription(
         return Err("Recording contains no speech".to_string());
     }
 
-    // `entry.post_process_requested` es un bool persistido (no hay perfil
-    // concreto guardado por entrada), así que el reintento solo puede replicar
-    // "hubo post-procesado o no" con el perfil global actual, nunca formalizar.
-    let mode = if entry.post_process_requested {
-        crate::formalize::PostProcessMode::Selected
-    } else {
-        crate::formalize::PostProcessMode::Off
-    };
+    let mode = retry_mode_for_history_entry(entry.post_process_requested);
     let processed = process_transcription_output(&app, &transcription, mode).await;
     history_manager
         .update_transcription(
@@ -159,4 +167,23 @@ pub async fn update_recording_retention_period(
         .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::retry_mode_for_history_entry;
+    use crate::formalize::PostProcessMode;
+
+    #[test]
+    fn a_requested_entry_retries_with_the_global_selection() {
+        assert_eq!(
+            retry_mode_for_history_entry(true),
+            PostProcessMode::Selected
+        );
+    }
+
+    #[test]
+    fn a_non_requested_entry_retries_without_post_processing() {
+        assert_eq!(retry_mode_for_history_entry(false), PostProcessMode::Off);
+    }
 }

@@ -72,6 +72,24 @@ pub fn build_system_prompt_for_test(prompt_template: &str) -> String {
     build_system_prompt(prompt_template)
 }
 
+/// Sustituye las variables del formalizador en la plantilla y, con el
+/// resultado, arma el prompt de sistema del camino estructurado (que borra
+/// `${output}`).
+///
+/// Las dos operaciones viven en una sola función a propósito: el orden
+/// "variables primero, `${output}` después" es un invariante de esta
+/// función, no una convención repartida entre dos puntos sueltos de
+/// `post_process_transcription`. `post_process_transcription` llama
+/// exactamente a esta función para el camino estructurado, así que el test
+/// de abajo protege el orden real, no una copia de él.
+fn build_structured_system_prompt(
+    prompt_template: &str,
+    vars: &crate::formalize::PromptVars,
+) -> String {
+    let prompt = crate::formalize::render_prompt_variables(prompt_template, vars);
+    build_system_prompt(&prompt)
+}
+
 /// Returns `true` when a transcription has no meaningful content to
 /// post-process (empty or whitespace-only). Used to skip the post-processing
 /// LLM call when nothing was actually transcribed, which would otherwise make
@@ -115,7 +133,7 @@ async fn post_process_transcription(
 
     let selected_prompt_id = prompt_id.to_string();
 
-    let prompt = match settings
+    let raw_prompt = match settings
         .post_process_prompts
         .iter()
         .find(|prompt| prompt.id == selected_prompt_id)
@@ -132,18 +150,17 @@ async fn post_process_transcription(
 
     // Las tres variables del formalizador se sustituyen aquí, en el único punto
     // por el que pasan los dos caminos (estructurado y legacy), y siempre ANTES
-    // de que se toque ${output}: el estructurado borra ese marcador del prompt
-    // de sistema, así que sustituir después dejaría el prompt a medias.
-    // En un perfil que no las use, esto es un no-op.
-    let prompt = {
-        use chrono::Timelike;
-        let vars = crate::formalize::PromptVars {
-            greeting: crate::formalize::greeting_for_hour(chrono::Local::now().hour()).to_string(),
-            user_name: settings.user_full_name.clone(),
-            treatment: settings.formality_treatment.as_prompt_word().to_string(),
-        };
-        crate::formalize::render_prompt_variables(&prompt, &vars)
+    // de que se toque ${output}: el estructurado (build_structured_system_prompt)
+    // lo borra del prompt de sistema, así que sustituir después dejaría el
+    // prompt a medias. En un perfil que no las use, esto es un no-op. `vars` se
+    // reutiliza más abajo para el camino estructurado.
+    use chrono::Timelike;
+    let vars = crate::formalize::PromptVars {
+        greeting: crate::formalize::greeting_for_hour(chrono::Local::now().hour()).to_string(),
+        user_name: settings.user_full_name.clone(),
+        treatment: settings.formality_treatment.as_prompt_word().to_string(),
     };
+    let prompt = crate::formalize::render_prompt_variables(&raw_prompt, &vars);
 
     if prompt.trim().is_empty() {
         debug!("Post-processing skipped because the selected prompt is empty");
@@ -180,7 +197,7 @@ async fn post_process_transcription(
     if provider.supports_structured_output {
         debug!("Using structured outputs for provider '{}'", provider.id);
 
-        let system_prompt = build_system_prompt(&prompt);
+        let system_prompt = build_structured_system_prompt(&raw_prompt, &vars);
         let user_content = transcription.to_string();
 
         // Handle Apple Intelligence separately since it uses native Swift APIs
@@ -942,7 +959,7 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
 
 #[cfg(test)]
 mod tests {
-    use super::is_blank_transcription;
+    use super::{build_structured_system_prompt, is_blank_transcription};
 
     #[test]
     fn blank_transcription_is_detected() {
@@ -955,6 +972,32 @@ mod tests {
     fn non_blank_transcription_is_kept() {
         assert!(!is_blank_transcription("hello"));
         assert!(!is_blank_transcription("  hello  "));
+    }
+
+    #[test]
+    fn structured_system_prompt_survives_the_real_order() {
+        // A diferencia del test equivalente en formalize.rs (que fija el
+        // orden a mano llamando primero a render_prompt_variables y luego a
+        // build_system_prompt_for_test como dos pasos sueltos), este test
+        // llama a la MISMA función que post_process_transcription usa de
+        // verdad para el camino estructurado. Si alguien invierte el orden
+        // dentro de build_structured_system_prompt (borrar ${output} antes
+        // de sustituir variables), este test falla — se verificó a mano.
+        let vars = crate::formalize::PromptVars {
+            greeting: "Buenos días".to_string(),
+            user_name: "Charly".to_string(),
+            treatment: "usted".to_string(),
+        };
+
+        let system = build_structured_system_prompt(
+            "Saluda con ${saludo}, trata de ${tratamiento}, firma ${nombre_usuario}.\n\n${output}",
+            &vars,
+        );
+
+        assert!(system.contains("Buenos días"), "got {system}");
+        assert!(system.contains("usted"), "got {system}");
+        assert!(system.contains("Charly"), "got {system}");
+        assert!(!system.contains("${output}"), "got {system}");
     }
 }
 

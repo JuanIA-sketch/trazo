@@ -156,6 +156,40 @@ pub fn unregister_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Hallazgo 3+4 del formalizador de correo: bajo esta implementacion (la de
+    /// por defecto en Linux), `validate_shortcut` aceptaba `"ctrl_right"` porque
+    /// no lo reconoce como modificador, pero `"ctrl_right".parse::<Shortcut>()`
+    /// fallaba despues en silencio (solo un `warn!`), dejando el atajo visible
+    /// en Ajustes pero mudo. El nuevo default cross-platform es `"f9"`: una
+    /// sola tecla, no modificador, que el parser de Tauri reconoce de verdad.
+    #[test]
+    fn f9_the_new_formalize_default_validates_and_parses() {
+        assert!(validate_shortcut("f9").is_ok());
+        assert!(
+            "f9".parse::<Shortcut>().is_ok(),
+            "f9 debe ser un Shortcut valido para tauri_plugin_global_shortcut"
+        );
+    }
+
+    #[test]
+    fn ctrl_right_is_the_bug_this_default_avoids() {
+        // Documenta el defecto que motivo el cambio de default: se acepta en
+        // la validacion previa (no esta en la lista de modificadores
+        // reconocidos)...
+        assert!(validate_shortcut("ctrl_right").is_ok());
+        // ...pero el parser real de tauri_plugin_global_shortcut lo rechaza,
+        // así que registrarlo nunca habria funcionado. Si esta aserción
+        // empieza a fallar (el parser empieza a aceptarlo), la fuga de
+        // hallazgo 3+4(b) ya no aplicaria y el comentario de arriba deberia
+        // revisarse.
+        assert!("ctrl_right".parse::<Shortcut>().is_err());
+    }
+}
+
 /// Register the cancel shortcut (called when recording starts)
 pub fn register_cancel_shortcut(app: &AppHandle) {
     // Cancel shortcut is disabled on Linux due to instability with dynamic shortcut registration

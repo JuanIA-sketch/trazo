@@ -74,7 +74,12 @@ const DEFAULT_AUDIO_DEVICE: AudioDevice = {
   is_default: true,
 };
 
-const settingUpdaters: {
+// Exported so settingsStore.test.ts can assert every setting that has a
+// backend counterpart is actually wired here. A key missing from this table
+// makes updateSetting() fall through to the console.warn branch below: the
+// UI updates optimistically, but the change never reaches the Rust backend
+// and is lost on the next refresh/restart.
+export const settingUpdaters: {
   [K in keyof Settings]?: (value: Settings[K]) => Promise<unknown>;
 } = {
   always_on_microphone: (value) =>
@@ -140,6 +145,12 @@ const settingUpdaters: {
     commands.changePostProcessEnabledSetting(value as boolean),
   post_process_selected_prompt_id: (value) =>
     commands.setPostProcessSelectedPrompt(value as string),
+  user_full_name: (value) =>
+    commands.changeUserFullNameSetting(value as string),
+  formality_treatment: (value) =>
+    commands.changeFormalityTreatmentSetting(value as string),
+  formalize_prompt_id: (value) =>
+    commands.setFormalizePrompt(value as string),
   mute_while_recording: (value) =>
     commands.changeMuteWhileRecordingSetting(value as boolean),
   recording_volume: (value) =>

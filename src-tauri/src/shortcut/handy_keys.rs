@@ -592,4 +592,12 @@ mod tests {
         assert!(validate_shortcut("ctrl_left").is_ok());
         assert!(validate_shortcut("escape").is_ok());
     }
+
+    /// Hallazgo 3+4 del formalizador de correo: el nuevo default cross-platform
+    /// del atajo de formalizar es `"f9"` (ver settings.rs). Confirma que la
+    /// implementacion HandyKeys lo acepta igual que cualquier tecla sola.
+    #[test]
+    fn f9_the_new_formalize_default_is_accepted() {
+        assert!(validate_shortcut("f9").is_ok());
+    }
 }

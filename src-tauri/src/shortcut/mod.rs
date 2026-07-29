@@ -1059,11 +1059,22 @@ pub fn update_post_process_prompt(
     }
 }
 
-#[tauri::command]
-#[specta::specta]
-pub fn delete_post_process_prompt(app: AppHandle, id: String) -> Result<(), String> {
-    let mut settings = settings::get_settings(&app);
-
+/// Pure core of `delete_post_process_prompt`: removes the prompt and repairs
+/// every selection field that could be left pointing at the now-gone id.
+///
+/// Two independent selections can dangle here, and both must be repaired the
+/// same way (fall back to the first remaining prompt): the global
+/// `post_process_selected_prompt_id` (the day-to-day profile) and
+/// `formalize_prompt_id` (the formalize-email shortcut's own selection,
+/// deliberately independent per the design doc so it doesn't force a trip
+/// through Settings). Missing the second one left the formalize shortcut
+/// silently mute — it inserts the raw transcript, which is correct, but with
+/// no indication why — whenever the user deleted the email profile they had
+/// it pointed at.
+fn delete_post_process_prompt_from_settings(
+    settings: &mut settings::AppSettings,
+    id: &str,
+) -> Result<(), String> {
     // Don't allow deleting the last prompt
     if settings.post_process_prompts.len() <= 1 {
         return Err("Cannot delete the last prompt".to_string());
@@ -1078,11 +1089,25 @@ pub fn delete_post_process_prompt(app: AppHandle, id: String) -> Result<(), Stri
     }
 
     // If the deleted prompt was selected, select the first one or None
-    if settings.post_process_selected_prompt_id.as_ref() == Some(&id) {
+    if settings.post_process_selected_prompt_id.as_deref() == Some(id) {
         settings.post_process_selected_prompt_id =
             settings.post_process_prompts.first().map(|p| p.id.clone());
     }
 
+    // Same repair for the formalize shortcut's independent selection.
+    if settings.formalize_prompt_id.as_deref() == Some(id) {
+        settings.formalize_prompt_id =
+            settings.post_process_prompts.first().map(|p| p.id.clone());
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn delete_post_process_prompt(app: AppHandle, id: String) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    delete_post_process_prompt_from_settings(&mut settings, &id)?;
     settings::write_settings(&app, settings);
     Ok(())
 }
@@ -1143,6 +1168,70 @@ pub fn set_post_process_selected_prompt(app: AppHandle, id: String) -> Result<()
     }
 
     settings.post_process_selected_prompt_id = Some(id);
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+/// Nombre completo con el que firma el formalizador de correo. Vacio =
+/// sin firma (ver `default_es_email` en settings.rs, que decide segun esto).
+#[tauri::command]
+#[specta::specta]
+pub fn change_user_full_name_setting(app: AppHandle, name: String) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.user_full_name = name;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+/// Parse el tratamiento del formalizador de correo, igual que el resto de los
+/// parsers `change_*_setting` de este archivo: valor desconocido cae al
+/// default con un `warn!`, nunca un error duro.
+fn parse_formality_treatment(raw: &str) -> settings::FormalityTreatment {
+    match raw {
+        "tu" => settings::FormalityTreatment::Tu,
+        "usted" => settings::FormalityTreatment::Usted,
+        other => {
+            warn!("Invalid formality treatment '{}', defaulting to tu", other);
+            settings::FormalityTreatment::Tu
+        }
+    }
+}
+
+/// Tu o usted en los correos formalizados.
+#[tauri::command]
+#[specta::specta]
+pub fn change_formality_treatment_setting(
+    app: AppHandle,
+    treatment: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.formality_treatment = parse_formality_treatment(&treatment);
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+/// Pure core of `set_formalize_prompt`: validates the id exists among the
+/// post-process prompts before pointing the formalize shortcut at it, exactly
+/// like `set_post_process_selected_prompt` does for the global selection.
+fn set_formalize_prompt_in_settings(
+    settings: &mut settings::AppSettings,
+    id: String,
+) -> Result<(), String> {
+    if !settings.post_process_prompts.iter().any(|p| p.id == id) {
+        return Err(format!("Prompt with id '{}' not found", id));
+    }
+
+    settings.formalize_prompt_id = Some(id);
+    Ok(())
+}
+
+/// Perfil que ejecuta el atajo de formalizar. Independiente de
+/// `post_process_selected_prompt_id`, ver `formalize_prompt_id` en settings.rs.
+#[tauri::command]
+#[specta::specta]
+pub fn set_formalize_prompt(app: AppHandle, id: String) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    set_formalize_prompt_in_settings(&mut settings, id)?;
     settings::write_settings(&app, settings);
     Ok(())
 }
@@ -1304,5 +1393,112 @@ mod tests {
     fn unrelated_bindings_are_not_post_process_gated() {
         assert!(!is_post_process_gated_binding("transcribe"));
         assert!(!is_post_process_gated_binding("cancel"));
+    }
+
+    /// Hallazgo 2 de la revision final del formalizador de correo:
+    /// `delete_post_process_prompt` ya reparaba `post_process_selected_prompt_id`
+    /// (la seleccion global) cuando se borraba el perfil seleccionado, pero
+    /// desconocia `formalize_prompt_id` (la seleccion propia del atajo de
+    /// formalizar). Borrar el perfil de correo dejaba el atajo mudo -inserta
+    /// texto crudo, que es correcto- pero sin ninguna explicacion.
+    #[test]
+    fn deleting_the_formalize_prompt_repoints_formalize_prompt_id() {
+        let mut settings = settings::get_default_settings();
+        // El perfil de correo sembrado de fabrica es justo el que
+        // formalize_prompt_id señala por defecto.
+        let email_id = settings.formalize_prompt_id.clone().unwrap();
+
+        let result = delete_post_process_prompt_from_settings(&mut settings, &email_id);
+
+        assert!(result.is_ok());
+        assert!(
+            !settings.post_process_prompts.iter().any(|p| p.id == email_id),
+            "el perfil borrado no debe seguir en la lista"
+        );
+        assert_ne!(
+            settings.formalize_prompt_id.as_deref(),
+            Some(email_id.as_str()),
+            "formalize_prompt_id no puede seguir apuntando a un perfil borrado"
+        );
+        assert_eq!(
+            settings.formalize_prompt_id,
+            settings.post_process_prompts.first().map(|p| p.id.clone()),
+            "debe reapuntar al primer perfil restante, igual que la seleccion global"
+        );
+    }
+
+    #[test]
+    fn deleting_an_unrelated_prompt_leaves_formalize_prompt_id_alone() {
+        let mut settings = settings::get_default_settings();
+        let original_formalize_id = settings.formalize_prompt_id.clone();
+
+        let result = delete_post_process_prompt_from_settings(
+            &mut settings,
+            "default_improve_transcriptions",
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(settings.formalize_prompt_id, original_formalize_id);
+    }
+
+    // ========================================================================
+    // Hallazgo 1: los tres ajustes nuevos del formalizador (user_full_name,
+    // formality_treatment, formalize_prompt_id) no tenian comando Tauri, asi
+    // que `updateSetting` del store de zustand caia en la rama de
+    // `console.warn` y nunca llegaba al backend. `post_process_transcription`
+    // (actions.rs) lee estos tres campos de `AppSettings`, asi que sin los
+    // comandos todo el mundo dictaba de tu y sin firma sin importar lo que
+    // eligiera en Ajustes.
+    // ========================================================================
+
+    #[test]
+    fn set_formalize_prompt_rejects_an_unknown_id() {
+        let mut settings = settings::get_default_settings();
+        let original = settings.formalize_prompt_id.clone();
+
+        let result = set_formalize_prompt_in_settings(&mut settings, "does_not_exist".to_string());
+
+        assert!(result.is_err());
+        assert_eq!(
+            settings.formalize_prompt_id, original,
+            "un id invalido no debe tocar el ajuste existente"
+        );
+    }
+
+    #[test]
+    fn set_formalize_prompt_accepts_an_existing_id() {
+        let mut settings = settings::get_default_settings();
+
+        let result = set_formalize_prompt_in_settings(
+            &mut settings,
+            "default_es_commit".to_string(),
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(
+            settings.formalize_prompt_id.as_deref(),
+            Some("default_es_commit")
+        );
+    }
+
+    #[test]
+    fn formality_treatment_parses_tu_and_usted() {
+        assert_eq!(
+            parse_formality_treatment("tu"),
+            settings::FormalityTreatment::Tu
+        );
+        assert_eq!(
+            parse_formality_treatment("usted"),
+            settings::FormalityTreatment::Usted
+        );
+    }
+
+    #[test]
+    fn formality_treatment_defaults_to_tu_on_garbage_input() {
+        assert_eq!(
+            parse_formality_treatment("no_existe"),
+            settings::FormalityTreatment::Tu
+        );
+        assert_eq!(parse_formality_treatment(""), settings::FormalityTreatment::Tu);
     }
 }

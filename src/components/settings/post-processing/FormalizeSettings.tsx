@@ -20,7 +20,7 @@ export const FormalizeSettings: React.FC = () => {
         <input
           type="text"
           className="mt-1 w-full rounded-md border border-text/20 bg-transparent px-2 py-1"
-          value={settings.user_full_name}
+          value={settings.user_full_name ?? ""}
           placeholder={t("settings.postProcessing.formalize.namePlaceholder")}
           onChange={(e) => updateSetting("user_full_name", e.target.value)}
         />

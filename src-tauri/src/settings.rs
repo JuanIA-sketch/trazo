@@ -997,15 +997,17 @@ pub fn get_default_settings() -> AppSettings {
         },
     );
 
-    // Una sola tecla, nunca un acorde: en teclado español AltGr envía
-    // literalmente Ctrl+Alt. Los MacBook no tienen Ctrl derecho, de ahí el
-    // default distinto en macOS; Command derecho existe en todos y suelto no
-    // hace nada. `fn` queda descartado en macOS porque el sistema lo reserva
-    // para su propio dictado.
-    #[cfg(target_os = "macos")]
-    let default_formalize_shortcut = "cmd_right";
-    #[cfg(not(target_os = "macos"))]
-    let default_formalize_shortcut = "ctrl_right";
+    // Una sola tecla, nunca un acorde ni un modificador desnudo: un modificador
+    // (ctrl_right en Windows/Linux, cmd_right en macOS) se traga la propia
+    // PULSACION cuando el estado resultante coincide con el hotkey — Ctrl+C
+    // arranca una grabación y la app enfocada recibe una "c" literal, y en
+    // macOS es peor porque Command es el modificador de casi todos los atajos
+    // del sistema. Bajo la implementación Tauri (la de por defecto en Linux)
+    // "ctrl_right" además falla a la hora de parsear tras pasar la validación,
+    // dejando el atajo mudo en silencio. F9 es una sola tecla física en todos
+    // los teclados, no es modificador (nada que tragarse) y el parser de Tauri
+    // sí la reconoce: mismo default en las tres plataformas.
+    let default_formalize_shortcut = "f9";
 
     bindings.insert(
         "transcribe_and_formalize".to_string(),
@@ -1330,17 +1332,23 @@ fn apply_settings_migrations(
     }
 
     if stored_schema_version < 7 {
-        // Siembra el perfil de correo del formalizador. Mismo patrón que la v2
-        // con los perfiles ES: añadir solo lo ausente, para no pisar un prompt
-        // que el usuario haya editado. La selección global NO se toca: el atajo
-        // de formalizar tiene su propio `formalize_prompt_id`.
-        for prompt in default_post_process_prompts() {
-            if !settings
-                .post_process_prompts
-                .iter()
-                .any(|p| p.id == prompt.id)
+        // Siembra SOLO el perfil de correo, que es lo nuevo de este schema (a
+        // diferencia de la v2, que sembraba los tres perfiles ES a la vez y por
+        // eso recorria default_post_process_prompts() completo). Recorrer la
+        // lista entera aqui resucitaria cualquier perfil que el usuario haya
+        // borrado deliberadamente en v6 (p. ej. default_es_commit). No pisa un
+        // prompt que el usuario ya haya editado. La selección global NO se
+        // toca: el atajo de formalizar tiene su propio `formalize_prompt_id`.
+        if !settings
+            .post_process_prompts
+            .iter()
+            .any(|p| p.id == DEFAULT_EMAIL_PROMPT_ID)
+        {
+            if let Some(email_prompt) = default_post_process_prompts()
+                .into_iter()
+                .find(|p| p.id == DEFAULT_EMAIL_PROMPT_ID)
             {
-                settings.post_process_prompts.push(prompt);
+                settings.post_process_prompts.push(email_prompt);
             }
         }
         if settings.formalize_prompt_id.is_none() {
@@ -1460,6 +1468,27 @@ mod tests {
             !binding.contains("shift_right"),
             "shift_right se pisa con cada mayuscula, es {binding}"
         );
+    }
+
+    /// Ronda de arreglo final (hallazgo 3+4): un modificador desnudo (`ctrl_right`
+    /// en Windows/Linux, `cmd_right` en macOS) traga la propia PULSACION cuando el
+    /// estado resultante coincide con el hotkey (Ctrl+C dispara la grabacion y la
+    /// app enfocada recibe una "c" suelta), y bajo la implementacion Tauri (la de
+    /// por defecto en Linux) `"ctrl_right".parse::<Shortcut>()` directamente falla
+    /// tras pasar la validacion, dejando el atajo mudo en silencio. El test de
+    /// forma de arriba no distingue este default de un typo como "ctrl_l"; este
+    /// fija el literal para las tres plataformas.
+    #[test]
+    fn the_formalize_default_shortcut_is_f9_on_every_platform() {
+        let settings = get_default_settings();
+        let binding = &settings.bindings["transcribe_and_formalize"];
+
+        assert_eq!(
+            binding.default_binding, "f9",
+            "el default debe ser f9 en toda plataforma, es {}",
+            binding.default_binding
+        );
+        assert_eq!(binding.current_binding, "f9");
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -2111,6 +2140,44 @@ mod tests {
         );
     }
 
+    /// Hallazgo 5: a diferencia de la v2 (que siembra los TRES perfiles ES a
+    /// la vez, asi que recorrer default_post_process_prompts() completo es lo
+    /// correcto ahi), la v7 solo tiene que sembrar el perfil de correo nuevo.
+    /// Recorrer la lista entera resucita cualquier perfil que el usuario haya
+    /// borrado deliberadamente en v6 (aqui, default_es_commit).
+    #[test]
+    fn v7_migration_does_not_resurrect_a_deleted_default_profile() {
+        let mut settings = get_default_settings();
+        settings.settings_schema_version = 6;
+        settings
+            .post_process_prompts
+            .retain(|p| p.id != "default_es_commit" && p.id != DEFAULT_EMAIL_PROMPT_ID);
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 6,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+
+        assert!(
+            !settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == "default_es_commit"),
+            "un perfil borrado por el usuario en v6 no debe reaparecer en v7"
+        );
+        assert!(
+            settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == DEFAULT_EMAIL_PROMPT_ID),
+            "la v7 si debe sembrar el perfil de correo, que es lo nuevo de este schema"
+        );
+    }
+
     #[test]
     fn v7_migration_leaves_the_global_selection_alone() {
         // El atajo de formalizar tiene su propio ajuste; la seleccion global
@@ -2131,6 +2198,33 @@ mod tests {
         assert_eq!(
             settings.post_process_selected_prompt_id.as_deref(),
             Some("default_es_casual")
+        );
+    }
+
+    /// Hallazgo 6: hasta que exista un comando para fijar `formalize_prompt_id`
+    /// (ver `shortcut::set_formalize_prompt`), nadie podia llegar a v7 con ese
+    /// campo ya en `Some(custom)`. Ahora que el comando existe, la migracion
+    /// nunca debe pisar una eleccion explicita del usuario, igual que ya hace
+    /// con `post_process_selected_prompt_id`.
+    #[test]
+    fn v7_migration_does_not_override_an_already_set_formalize_prompt_id() {
+        let mut settings = get_default_settings();
+        settings.settings_schema_version = 6;
+        settings.formalize_prompt_id = Some("my_custom_email_profile".to_string());
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 6,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+
+        assert_eq!(
+            settings.formalize_prompt_id.as_deref(),
+            Some("my_custom_email_profile"),
+            "un formalize_prompt_id ya elegido por el usuario nunca se pisa"
         );
     }
 }

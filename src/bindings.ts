@@ -272,6 +272,41 @@ async setPostProcessSelectedPrompt(id: string) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Nombre completo con el que firma el formalizador de correo. Vacio =
+ * sin firma (ver `default_es_email` en settings.rs, que decide segun esto).
+ */
+async changeUserFullNameSetting(name: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_user_full_name_setting", { name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Tu o usted en los correos formalizados.
+ */
+async changeFormalityTreatmentSetting(treatment: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_formality_treatment_setting", { treatment }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Perfil que ejecuta el atajo de formalizar. Independiente de
+ * `post_process_selected_prompt_id`, ver `formalize_prompt_id` en settings.rs.
+ */
+async setFormalizePrompt(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_formalize_prompt", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async updateCustomWords(words: string[]) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_custom_words", { words }) };

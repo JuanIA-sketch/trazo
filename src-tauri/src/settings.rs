@@ -858,10 +858,10 @@ REGLAS:
 - Conserva el significado exacto. Sí puedes reorganizar el contenido para darle forma de correo.
 - Los términos técnicos en inglés se mantienen tal cual: commit, pull request, merge, deploy, rollback, webhook, endpoint, workflow, prompt, API, token, backend, frontend, repo, branch, pipeline.
 
-Dos ejemplos completos, uno por cada valor posible de «${nombre_usuario}» — usa el que de verdad
-corresponda al valor mostrado arriba entre «», NO copies siempre el mismo:
+Dos ejemplos completos, uno con firma y otro sin firma — usa el que de verdad corresponda al
+valor que viste arriba entre «», NO copies siempre el mismo:
 
-EJEMPLO A (cuando «${nombre_usuario}» SÍ tiene contenido, p. ej. «Charly»):
+EJEMPLO CON FIRMA:
 
 Buenas tardes, Ana:
 
@@ -870,7 +870,7 @@ Te confirmo que el despliegue quedó completado sin problemas.
 Quedo atento,
 Charly
 
-EJEMPLO B (cuando «${nombre_usuario}» está vacío, «»):
+EJEMPLO SIN FIRMA:
 
 Buenas tardes, Ana:
 
@@ -879,7 +879,8 @@ Te confirmo que el despliegue quedó completado sin problemas.
 Quedo atento.
 
 RECUERDA antes de responder: el valor real de la firma en ESTE dictado es «${nombre_usuario}».
-Comprueba si eso está vacío o no, y sigue el ejemplo (A o B) que de verdad le corresponde.
+Comprueba si eso está vacío o no, y sigue el ejemplo (CON FIRMA o SIN FIRMA) que de verdad le
+corresponda.
 
 Transcripción:
 ${output}"#

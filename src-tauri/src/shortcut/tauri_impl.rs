@@ -26,9 +26,7 @@ pub fn init_shortcuts(app: &AppHandle) {
         // Ambos atajos de post-proceso quedan sin registrar cuando la función
         // está apagada: registrar una tecla que no hace nada es peor que no
         // tenerla.
-        if (id == "transcribe_with_post_process" || id == "transcribe_and_formalize")
-            && !user_settings.post_process_enabled
-        {
+        if super::is_post_process_gated_binding(&id) && !user_settings.post_process_enabled {
             continue;
         }
         let binding = user_settings

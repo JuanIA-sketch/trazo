@@ -43,7 +43,7 @@ pub struct TranscriptionCoordinator {
 }
 
 pub fn is_transcribe_binding(id: &str) -> bool {
-    id == "transcribe" || id == "transcribe_with_post_process"
+    id == "transcribe" || id == "transcribe_with_post_process" || id == "transcribe_and_formalize"
 }
 
 impl TranscriptionCoordinator {
@@ -361,5 +361,25 @@ mod tests {
             "el hold debe leerse del timestamp del evento, no del reloj del \
              coordinador"
         );
+    }
+
+    /// Ronda de arreglo 1 sobre Task 4 (formalizador de correo): el plan solo
+    /// listaba dos sitios para la puerta de `post_process_enabled` y no
+    /// mencionaba que `is_transcribe_binding` también decide el enrutado al
+    /// coordinador (`shortcut/handler.rs`). Sin este id, `transcribe_and_formalize`
+    /// caía en el camino genérico (press/release directos, sin `Stage`,
+    /// sin debounce, sin doble-tap-a-continuo) — roto para un usuario que
+    /// dicta exclusivamente con doble-tap.
+    #[test]
+    fn is_transcribe_binding_recognizes_all_three_transcription_shortcuts() {
+        assert!(is_transcribe_binding("transcribe"));
+        assert!(is_transcribe_binding("transcribe_with_post_process"));
+        assert!(is_transcribe_binding("transcribe_and_formalize"));
+    }
+
+    #[test]
+    fn is_transcribe_binding_rejects_non_transcription_shortcuts() {
+        assert!(!is_transcribe_binding("cancel"));
+        assert!(!is_transcribe_binding("test"));
     }
 }

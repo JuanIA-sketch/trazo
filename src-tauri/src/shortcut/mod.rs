@@ -396,9 +396,7 @@ fn register_all_shortcuts_for_implementation(
         // Ambos atajos de post-proceso quedan sin registrar cuando la función
         // está apagada: registrar una tecla que no hace nada es peor que no
         // tenerla.
-        if (id == "transcribe_with_post_process" || id == "transcribe_and_formalize")
-            && !current_settings.post_process_enabled
-        {
+        if is_post_process_gated_binding(id) && !current_settings.post_process_enabled {
             continue;
         }
 
@@ -889,6 +887,15 @@ pub fn change_auto_submit_key_setting(app: AppHandle, key: String) -> Result<(),
     Ok(())
 }
 
+/// Ids de atajo cuyo registro depende de `post_process_enabled`: viven o
+/// mueren juntos. Única fuente de verdad para la puerta de arranque (aquí en
+/// `register_all_shortcuts_for_implementation`, y las gemelas en
+/// `handy_keys::init_shortcuts` y `tauri_impl::init_shortcuts`) y para el
+/// cambio en caliente desde Settings (`change_post_process_enabled_setting`).
+fn is_post_process_gated_binding(id: &str) -> bool {
+    id == "transcribe_with_post_process" || id == "transcribe_and_formalize"
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn change_post_process_enabled_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
@@ -896,12 +903,13 @@ pub fn change_post_process_enabled_setting(app: AppHandle, enabled: bool) -> Res
     settings.post_process_enabled = enabled;
     settings::write_settings(&app, settings.clone());
 
-    // Register or unregister the post-processing shortcut
-    if let Some(binding) = settings
-        .bindings
-        .get("transcribe_with_post_process")
-        .cloned()
-    {
+    // Ambos atajos de post-proceso viven o mueren juntos con el flag: uno
+    // que se queda sin registrar al encenderlo, o uno vivo que sigue
+    // llamando al LLM tras apagarlo, son ambos peor que hoy.
+    for (id, binding) in settings.bindings.clone() {
+        if !is_post_process_gated_binding(&id) {
+            continue;
+        }
         if enabled {
             let _ = register_shortcut(&app, binding);
         } else {
@@ -1274,4 +1282,27 @@ pub async fn get_available_accelerators() -> crate::managers::transcription::Ava
 #[specta::specta]
 pub fn get_active_compute_info() -> Option<crate::managers::transcription::ActiveComputeInfo> {
     crate::managers::transcription::get_active_compute_info()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Ronda de arreglo 1 sobre Task 4 (formalizador de correo): el cuarto
+    /// camino de registro (`change_post_process_enabled_setting`, invocado en
+    /// vivo desde el toggle "Enable post-processing" de Settings) solo
+    /// conocía `transcribe_with_post_process`. Encender post-proceso en
+    /// caliente dejaba `transcribe_and_formalize` muerto hasta reiniciar;
+    /// apagarlo lo dejaba registrado llamando al LLM igual.
+    #[test]
+    fn both_post_process_shortcuts_are_gated_together() {
+        assert!(is_post_process_gated_binding("transcribe_with_post_process"));
+        assert!(is_post_process_gated_binding("transcribe_and_formalize"));
+    }
+
+    #[test]
+    fn unrelated_bindings_are_not_post_process_gated() {
+        assert!(!is_post_process_gated_binding("transcribe"));
+        assert!(!is_post_process_gated_binding("cancel"));
+    }
 }

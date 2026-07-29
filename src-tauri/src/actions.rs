@@ -48,7 +48,7 @@ pub trait ShortcutAction: Send + Sync {
 
 // Transcribe Action
 struct TranscribeAction {
-    post_process: bool,
+    mode: crate::formalize::PostProcessMode,
 }
 
 /// Field name for structured output JSON schema
@@ -65,6 +65,13 @@ fn build_system_prompt(prompt_template: &str) -> String {
     prompt_template.replace("${output}", "").trim().to_string()
 }
 
+/// Expuesto solo para tests: fija el orden "variables primero, `${output}`
+/// después", que es lo que hace que el camino estructurado no pierda el saludo.
+#[cfg(test)]
+pub fn build_system_prompt_for_test(prompt_template: &str) -> String {
+    build_system_prompt(prompt_template)
+}
+
 /// Returns `true` when a transcription has no meaningful content to
 /// post-process (empty or whitespace-only). Used to skip the post-processing
 /// LLM call when nothing was actually transcribed, which would otherwise make
@@ -74,7 +81,11 @@ fn is_blank_transcription(transcription: &str) -> bool {
     transcription.trim().is_empty()
 }
 
-async fn post_process_transcription(settings: &AppSettings, transcription: &str) -> Option<String> {
+async fn post_process_transcription(
+    settings: &AppSettings,
+    transcription: &str,
+    prompt_id: &str,
+) -> Option<String> {
     if is_blank_transcription(transcription) {
         debug!("Post-processing skipped because the transcription is empty");
         return None;
@@ -102,13 +113,7 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
         return None;
     }
 
-    let selected_prompt_id = match &settings.post_process_selected_prompt_id {
-        Some(id) => id.clone(),
-        None => {
-            debug!("Post-processing skipped because no prompt is selected");
-            return None;
-        }
-    };
+    let selected_prompt_id = prompt_id.to_string();
 
     let prompt = match settings
         .post_process_prompts
@@ -123,6 +128,21 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
             );
             return None;
         }
+    };
+
+    // Las tres variables del formalizador se sustituyen aquí, en el único punto
+    // por el que pasan los dos caminos (estructurado y legacy), y siempre ANTES
+    // de que se toque ${output}: el estructurado borra ese marcador del prompt
+    // de sistema, así que sustituir después dejaría el prompt a medias.
+    // En un perfil que no las use, esto es un no-op.
+    let prompt = {
+        use chrono::Timelike;
+        let vars = crate::formalize::PromptVars {
+            greeting: crate::formalize::greeting_for_hour(chrono::Local::now().hour()).to_string(),
+            user_name: settings.user_full_name.clone(),
+            treatment: settings.formality_treatment.as_prompt_word().to_string(),
+        };
+        crate::formalize::render_prompt_variables(&prompt, &vars)
     };
 
     if prompt.trim().is_empty() {
@@ -390,7 +410,7 @@ fn resolve_effective_language(app: &AppHandle, settings: &AppSettings) -> String
 pub(crate) async fn process_transcription_output(
     app: &AppHandle,
     transcription: &str,
-    post_process: bool,
+    mode: crate::formalize::PostProcessMode,
 ) -> ProcessedTranscription {
     let settings = get_settings(app);
     let mut final_text = transcription.to_string();
@@ -407,19 +427,28 @@ pub(crate) async fn process_transcription_output(
         final_text = converted_text;
     }
 
-    if post_process {
-        if let Some(processed_text) = post_process_transcription(&settings, &final_text).await {
+    let prompt_id = crate::formalize::prompt_id_for_mode(
+        mode,
+        settings.post_process_selected_prompt_id.as_deref(),
+        settings.formalize_prompt_id.as_deref(),
+    );
+
+    if let Some(prompt_id) = prompt_id {
+        if let Some(processed_text) =
+            post_process_transcription(&settings, &final_text, &prompt_id).await
+        {
             post_processed_text = Some(processed_text.clone());
             final_text = processed_text;
 
-            if let Some(prompt_id) = &settings.post_process_selected_prompt_id {
-                if let Some(prompt) = settings
-                    .post_process_prompts
-                    .iter()
-                    .find(|prompt| &prompt.id == prompt_id)
-                {
-                    post_process_prompt = Some(prompt.prompt.clone());
-                }
+            // El metadato del historial debe guardar el prompt que DE VERDAD se
+            // ejecutó, no la selección global: si no, un correo formalizado
+            // aparecería en el historial atribuido al perfil casual.
+            if let Some(prompt) = settings
+                .post_process_prompts
+                .iter()
+                .find(|prompt| prompt.id == prompt_id)
+            {
+                post_process_prompt = Some(prompt.prompt.clone());
             }
         }
     } else if final_text != transcription {
@@ -619,7 +648,7 @@ impl ShortcutAction for TranscribeAction {
         play_feedback_sound(app, SoundType::Stop);
 
         let binding_id = binding_id.to_string(); // Clone binding_id for the async task
-        let post_process = self.post_process;
+        let mode = self.mode;
         let cancel_generation = rm.cancel_generation();
 
         tauri::async_runtime::spawn(async move {
@@ -718,7 +747,7 @@ impl ShortcutAction for TranscribeAction {
                                 transcription
                             );
 
-                            if post_process {
+                            if mode != crate::formalize::PostProcessMode::Off {
                                 if style == OverlayStyle::Live {
                                     tm.emit_stream_working(StreamWorkKind::Polishing);
                                 } else {
@@ -726,8 +755,7 @@ impl ShortcutAction for TranscribeAction {
                                 }
                             }
                             let processed =
-                                process_transcription_output(&ah, &transcription, post_process)
-                                    .await;
+                                process_transcription_output(&ah, &transcription, mode).await;
 
                             if rm.was_cancelled_since(cancel_generation) {
                                 debug!("Transcription operation cancelled before paste");
@@ -741,7 +769,7 @@ impl ShortcutAction for TranscribeAction {
                                 if let Err(err) = hm.save_entry(
                                     file_name,
                                     transcription,
-                                    post_process,
+                                    mode != crate::formalize::PostProcessMode::Off,
                                     processed.post_processed_text.clone(),
                                     processed.post_process_prompt.clone(),
                                 ) {
@@ -822,7 +850,7 @@ impl ShortcutAction for TranscribeAction {
                                 if let Err(save_err) = hm.save_entry(
                                     file_name,
                                     String::new(),
-                                    post_process,
+                                    mode != crate::formalize::PostProcessMode::Off,
                                     None,
                                     None,
                                 ) {
@@ -892,12 +920,14 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
     map.insert(
         "transcribe".to_string(),
         Arc::new(TranscribeAction {
-            post_process: false,
+            mode: crate::formalize::PostProcessMode::Off,
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "transcribe_with_post_process".to_string(),
-        Arc::new(TranscribeAction { post_process: true }) as Arc<dyn ShortcutAction>,
+        Arc::new(TranscribeAction {
+            mode: crate::formalize::PostProcessMode::Selected,
+        }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "cancel".to_string(),
@@ -991,8 +1021,9 @@ mod post_process_profile_tests {
             eprintln!("SKIPPED: no OpenAI API key in the local settings store");
             return None;
         };
-        let output =
-            tauri::async_runtime::block_on(post_process_transcription(&settings, transcript));
+        let output = tauri::async_runtime::block_on(post_process_transcription(
+            &settings, transcript, profile_id,
+        ));
         Some(output.unwrap_or_else(|| {
             panic!(
                 "post_process_transcription returned None for profile '{}' — \

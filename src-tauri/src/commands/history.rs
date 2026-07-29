@@ -94,8 +94,15 @@ pub async fn retry_history_entry_transcription(
         return Err("Recording contains no speech".to_string());
     }
 
-    let processed =
-        process_transcription_output(&app, &transcription, entry.post_process_requested).await;
+    // `entry.post_process_requested` es un bool persistido (no hay perfil
+    // concreto guardado por entrada), así que el reintento solo puede replicar
+    // "hubo post-procesado o no" con el perfil global actual, nunca formalizar.
+    let mode = if entry.post_process_requested {
+        crate::formalize::PostProcessMode::Selected
+    } else {
+        crate::formalize::PostProcessMode::Off
+    };
+    let processed = process_transcription_output(&app, &transcription, mode).await;
     history_manager
         .update_transcription(
             id,

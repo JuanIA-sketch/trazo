@@ -972,7 +972,20 @@ whats_new_last_seen_version?: string; selected_model?: string; onboarding_comple
  * finished transcript. Empty by default, so existing stores need no
  * migration.
  */
-custom_replacements?: CustomReplacement[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; 
+custom_replacements?: CustomReplacement[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; 
+/**
+ * Nombre con el que firma el formalizador. Vacío = sin firma.
+ */
+user_full_name?: string; 
+/**
+ * Tú o usted en los correos formalizados.
+ */
+formality_treatment?: FormalityTreatment; 
+/**
+ * Perfil que ejecuta el atajo de formalizar. Independiente de
+ * `post_process_selected_prompt_id` para no obligar a pasar por Ajustes.
+ */
+formalize_prompt_id?: string | null; mute_while_recording?: boolean; 
 /**
  * System output volume to hold while recording: `None` leaves the volume
  * alone, `Some(0.0)` mutes, anything above ducks to that level (0.0-1.0).
@@ -1004,6 +1017,14 @@ export type EngineType =
  * the file, so this one variant covers the whole transcribe-cpp family.
  */
 "TranscribeCpp" | "Parakeet" | "Moonshine" | "MoonshineStreaming" | "SenseVoice" | "GigaAM" | "Canary" | "Cohere"
+/**
+ * Tratamiento gramatical que usa el formalizador de correo.
+ * 
+ * Es un ajuste fijo y no algo que el LLM infiera: en español tú/usted cambia
+ * cada verbo del mensaje, así que inferirlo haría que el mismo dictado saliera
+ * distinto en dos intentos y no se pudiera cubrir con tests.
+ */
+export type FormalityTreatment = "tu" | "usted"
 export type GpuDeviceOption = { id: number; name: string; total_vram_mb: number }
 export type HistoryEntry = { id: number; file_name: string; timestamp: number; saved: boolean; title: string; transcription_text: string; post_processed_text: string | null; post_process_prompt: string | null; post_process_requested: boolean }
 export type HistoryUpdatePayload = { action: "added"; entry: HistoryEntry } | { action: "updated"; entry: HistoryEntry } | { action: "deleted"; id: number } | { action: "toggled"; id: number }

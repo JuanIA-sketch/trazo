@@ -174,6 +174,29 @@ pub enum ClipboardHandling {
     CopyToClipboard,
 }
 
+/// Tratamiento gramatical que usa el formalizador de correo.
+///
+/// Es un ajuste fijo y no algo que el LLM infiera: en español tú/usted cambia
+/// cada verbo del mensaje, así que inferirlo haría que el mismo dictado saliera
+/// distinto en dos intentos y no se pudiera cubrir con tests.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum FormalityTreatment {
+    #[default]
+    Tu,
+    Usted,
+}
+
+impl FormalityTreatment {
+    /// La palabra que se inyecta en `${tratamiento}`.
+    pub fn as_prompt_word(self) -> &'static str {
+        match self {
+            FormalityTreatment::Tu => "tú",
+            FormalityTreatment::Usted => "usted",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum AutoSubmitKey {
@@ -429,6 +452,16 @@ pub struct AppSettings {
     pub post_process_prompts: Vec<LLMPrompt>,
     #[serde(default)]
     pub post_process_selected_prompt_id: Option<String>,
+    /// Nombre con el que firma el formalizador. Vacío = sin firma.
+    #[serde(default)]
+    pub user_full_name: String,
+    /// Tú o usted en los correos formalizados.
+    #[serde(default)]
+    pub formality_treatment: FormalityTreatment,
+    /// Perfil que ejecuta el atajo de formalizar. Independiente de
+    /// `post_process_selected_prompt_id` para no obligar a pasar por Ajustes.
+    #[serde(default)]
+    pub formalize_prompt_id: Option<String>,
     #[serde(default)]
     pub mute_while_recording: bool,
     /// System output volume to hold while recording: `None` leaves the volume
@@ -476,7 +509,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 6;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 7;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -767,6 +800,9 @@ REGLAS (aplícalas en este orden):
 /// selection (a `None` selection makes the post-process hotkey silently no-op).
 pub const DEFAULT_SELECTED_PROMPT_ID: &str = "default_es_casual";
 
+/// Id del perfil de correo sembrado, al que apunta `formalize_prompt_id`.
+pub const DEFAULT_EMAIL_PROMPT_ID: &str = "default_es_email";
+
 fn spanish_profile_prompt(format_block: &str) -> String {
     // Ends with the `${output}` placeholder so the legacy (non-structured)
     // LLM path still receives the transcript; the structured path strips it.
@@ -800,6 +836,29 @@ fn default_post_process_prompts() -> Vec<LLMPrompt> {
             prompt: spanish_profile_prompt(
                 "FORMATO DE SALIDA: un post estructurado para la comunidad: primera línea como título en **negrita**, después 1-3 párrafos cortos, con viñetas si el dictado enumera pasos o ideas, y cierre con pregunta o llamado a la acción SOLO si el dictado lo contiene. Aquí SÍ puedes reorganizar el contenido para darle estructura.",
             ),
+        },
+        LLMPrompt {
+            id: DEFAULT_EMAIL_PROMPT_ID.to_string(),
+            name: "Correo formal (ES)".to_string(),
+            prompt: r#"Eres el post-procesador de un dictado por voz en español. Recibirás la transcripción cruda de un dictado y debes convertirla en un CORREO listo para enviar. Devuelve ÚNICAMENTE el texto final, sin comentarios, sin comillas envolventes y sin explicaciones.
+
+TRATAMIENTO: dirígete al destinatario de ${tratamiento}. Conjuga TODOS los verbos y pronombres en consecuencia, sin mezclar los dos tratamientos.
+
+ESTRUCTURA, en este orden:
+
+1. SALUDO: empieza exactamente por "${saludo}". Si el dictado dice a quién va dirigido el mensaje, añade su nombre: "${saludo}, María:". Si no menciona destinatario, deja "${saludo}:" a secas. NUNCA inventes un nombre, y no confundas a quién va dirigido con quién se menciona de pasada.
+2. CUERPO: reescribe el dictado en 1-3 párrafos cortos, en registro profesional pero natural. Corrige puntuación, mayúsculas y ortografía; elimina muletillas; convierte números hablados a cifras (veinticinco → 25). Si el hablante se corrige a sí mismo, conserva SOLO la versión final ("el martes... no, mejor el jueves" → "el jueves").
+3. DESPEDIDA: una línea breve, elegida según el contenido ("Un saludo," o "Quedo atento,").
+4. FIRMA: "${nombre_usuario}" en su propia línea. Si viene vacío, omite la firma Y la coma de la despedida, para no dejarla colgando.
+
+REGLAS:
+- No añadas información que no esté en el dictado. No inventes asuntos, fechas ni compromisos.
+- Conserva el significado exacto. Sí puedes reorganizar el contenido para darle forma de correo.
+- Los términos técnicos en inglés se mantienen tal cual: commit, pull request, merge, deploy, rollback, webhook, endpoint, workflow, prompt, API, token, backend, frontend, repo, branch, pipeline.
+
+Transcripción:
+${output}"#
+                .to_string(),
         },
     ]
 }
@@ -963,6 +1022,9 @@ pub fn get_default_settings() -> AppSettings {
         post_process_models: default_post_process_models(),
         post_process_prompts: default_post_process_prompts(),
         post_process_selected_prompt_id: Some(DEFAULT_SELECTED_PROMPT_ID.to_string()),
+        user_full_name: String::new(),
+        formality_treatment: FormalityTreatment::Tu,
+        formalize_prompt_id: Some(DEFAULT_EMAIL_PROMPT_ID.to_string()),
         mute_while_recording: false,
         recording_volume: None,
         append_trailing_space: false,
@@ -1215,6 +1277,27 @@ fn apply_settings_migrations(
         // migration (it only runs once).
         if settings.vad_enabled {
             settings.vad_enabled = false;
+        }
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
+    if stored_schema_version < 7 {
+        // Siembra el perfil de correo del formalizador. Mismo patrón que la v2
+        // con los perfiles ES: añadir solo lo ausente, para no pisar un prompt
+        // que el usuario haya editado. La selección global NO se toca: el atajo
+        // de formalizar tiene su propio `formalize_prompt_id`.
+        for prompt in default_post_process_prompts() {
+            if !settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == prompt.id)
+            {
+                settings.post_process_prompts.push(prompt);
+            }
+        }
+        if settings.formalize_prompt_id.is_none() {
+            settings.formalize_prompt_id = Some(DEFAULT_EMAIL_PROMPT_ID.to_string());
         }
         settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
         updated = true;
@@ -1842,6 +1925,129 @@ mod tests {
             settings.post_process_selected_prompt_id.as_deref(),
             Some("my_custom"),
             "migration must not change an explicit selection"
+        );
+    }
+
+    #[test]
+    fn the_email_profile_ships_with_a_fresh_install() {
+        let settings = get_default_settings();
+
+        let email = settings
+            .post_process_prompts
+            .iter()
+            .find(|p| p.id == DEFAULT_EMAIL_PROMPT_ID)
+            .expect("el perfil de correo debe venir sembrado");
+
+        // El formalizador es inutil sin sus tres variables.
+        assert!(email.prompt.contains("${saludo}"), "falta ${{saludo}}");
+        assert!(
+            email.prompt.contains("${nombre_usuario}"),
+            "falta ${{nombre_usuario}}"
+        );
+        assert!(
+            email.prompt.contains("${tratamiento}"),
+            "falta ${{tratamiento}}"
+        );
+        // Y sin ${output} el post-procesado no recibe la transcripcion.
+        assert!(email.prompt.contains("${output}"), "falta ${{output}}");
+    }
+
+    #[test]
+    fn formalize_defaults_point_at_the_seeded_profile() {
+        let settings = get_default_settings();
+
+        assert_eq!(
+            settings.formalize_prompt_id.as_deref(),
+            Some(DEFAULT_EMAIL_PROMPT_ID)
+        );
+        assert_eq!(settings.formality_treatment, FormalityTreatment::Tu);
+        assert_eq!(settings.user_full_name, "");
+    }
+
+    #[test]
+    fn v7_migration_seeds_the_email_profile_into_an_existing_store() {
+        let mut settings = get_default_settings();
+        settings.settings_schema_version = 6;
+        settings
+            .post_process_prompts
+            .retain(|p| p.id != DEFAULT_EMAIL_PROMPT_ID);
+        settings.formalize_prompt_id = None;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 6,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert!(
+            settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == DEFAULT_EMAIL_PROMPT_ID),
+            "la migracion debe sembrar el perfil de correo"
+        );
+        assert_eq!(
+            settings.formalize_prompt_id.as_deref(),
+            Some(DEFAULT_EMAIL_PROMPT_ID)
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn v7_migration_never_clobbers_an_edited_email_profile() {
+        let mut settings = get_default_settings();
+        settings.settings_schema_version = 6;
+        for prompt in settings.post_process_prompts.iter_mut() {
+            if prompt.id == DEFAULT_EMAIL_PROMPT_ID {
+                prompt.prompt = "MI VERSION EDITADA ${output}".to_string();
+            }
+        }
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 6,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+
+        let email = settings
+            .post_process_prompts
+            .iter()
+            .find(|p| p.id == DEFAULT_EMAIL_PROMPT_ID)
+            .expect("sigue existiendo");
+        assert_eq!(
+            email.prompt, "MI VERSION EDITADA ${output}",
+            "un prompt editado por el usuario nunca se pisa"
+        );
+    }
+
+    #[test]
+    fn v7_migration_leaves_the_global_selection_alone() {
+        // El atajo de formalizar tiene su propio ajuste; la seleccion global
+        // del usuario (su perfil del dia a dia) no se toca.
+        let mut settings = get_default_settings();
+        settings.settings_schema_version = 6;
+        settings.post_process_selected_prompt_id = Some("default_es_casual".to_string());
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 6,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+        });
+
+        apply_settings_migrations(&mut settings, &raw);
+
+        assert_eq!(
+            settings.post_process_selected_prompt_id.as_deref(),
+            Some("default_es_casual")
         );
     }
 }

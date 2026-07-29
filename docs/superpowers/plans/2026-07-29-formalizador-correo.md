@@ -829,6 +829,15 @@ Esperado: **FAIL** con `el atajo de formalizar debe venir de fabrica` (panic del
 
 **3a.** En `get_default_settings()`, después del bloque que inserta `transcribe_with_post_process` (`settings.rs:903-914`):
 
+> **⚠️ EJECUTADO CON OTRO VALOR.** El default final es **`f9` en todas las
+> plataformas, sin ramas `#[cfg]`** (`let default_formalize_shortcut = "f9";`).
+> La revisión final descubrió dos cosas que este plan no previó: un modificador
+> desnudo bloquea la _pulsación_ (pulsar Ctrl derecho para hacer Ctrl+C arrancaba
+> una grabación y la app recibía una `c` literal), y bajo la implementación Tauri
+> —la de por defecto en Linux— `ctrl_right` pasaba la validación pero fallaba al
+> parsear, dejando el atajo muerto en silencio. Charly ratificó el cambio. El
+> razonamiento sobre AltGr y `shift_right` del comentario sigue vigente.
+
 ```rust
     // Una sola tecla, nunca un acorde: en teclado español AltGr envía
     // literalmente Ctrl+Alt. Los MacBook no tienen Ctrl derecho, de ahí el

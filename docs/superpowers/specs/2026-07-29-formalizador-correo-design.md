@@ -103,10 +103,29 @@ inserción (`paste`) después. Esta feature no introduce una ruta paralela.
 Una sola tecla, con default por plataforma siguiendo el patrón que ya usa el
 atajo de post-proceso en `settings.rs`:
 
+> **⚠️ CORRECCIÓN (2026-07-29, durante la implementación).** El default final es
+> **`f9` en todas las plataformas**, no lo que dice la tabla de abajo. La revisión
+> final de la rama encontró dos problemas que este diseño no previó:
+>
+> 1. **Un modificador desnudo bloquea la _pulsación_**, no solo aparece en el
+>    hotkey. Con `ctrl_right` registrado, pulsar Ctrl derecho para hacer Ctrl+C
+>    arranca una grabación y la app enfocada recibe una `c` literal. En macOS
+>    `cmd_right` es peor: Command es el modificador de casi todos los atajos del
+>    sistema. (La regla "jamás bloquear _releases_" de §5 de `CLAUDE.md` sigue
+>    respetada; esto es sobre las pulsaciones, que es otra cosa.)
+> 2. **Bajo la implementación Tauri —la de por defecto en Linux— `ctrl_right`
+>    pasaba la validación pero fallaba al parsear**, así que el atajo aparecía en
+>    Ajustes y no respondía nunca, en silencio.
+>
+> `f9` es una sola tecla, no es modificador (no se traga nada) y ambos
+> validadores de teclado lo aceptan. Charly ratificó el cambio. El razonamiento
+> de la tabla siguiente se conserva porque explica por qué se descartaron AltGr
+> y `shift_right`, que sigue vigente.
+
 | Plataforma      | Default      | Por qué                                                             |
 | --------------- | ------------ | ------------------------------------------------------------------- |
-| Windows / Linux | `ctrl_right` | Existe en todo teclado PC, no colisiona con AltGr, libre al escribir |
-| macOS           | `cmd_right`  | Los MacBook no tienen Ctrl derecho; Command derecho sí, y suelto no hace nada |
+| Windows / Linux | ~~`ctrl_right`~~ | Existe en todo teclado PC, no colisiona con AltGr, libre al escribir |
+| macOS           | ~~`cmd_right`~~  | Los MacBook no tienen Ctrl derecho; Command derecho sí, y suelto no hace nada |
 
 **Nada de acordes de tres teclas, y nunca Ctrl+Alt.** En teclado español AltGr
 envía literalmente Ctrl+Alt, así que un atajo con esa combinación se dispararía

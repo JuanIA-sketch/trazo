@@ -191,6 +191,10 @@
           "transcribe_with_post_process": {
             "name": "Snabbkommando för efterbearbetning",
             "description": "Valfritt: En dedikerad snabbknapp som alltid tillämpar AI-efterbearbetning på din transkription."
+          },
+          "transcribe_and_formalize": {
+            "name": "Transkribera och formalisera",
+            "description": "Dikterar texten och skriver om den som ett sändningsklart e-postmeddelande."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Avbryt",
         "selectToEdit": "Välj en prompt ovan för att visa och redigera dess detaljer.",
         "createFirst": "Klicka på 'Skapa ny prompt' ovan för att skapa din första prompt för efterbearbetning."
+      },
+      "formalize": {
+        "title": "E-postformaliserare",
+        "nameLabel": "Ditt namn",
+        "nameDescription": "Används för att signera formaliserade e-postmeddelanden. Lämna tomt om du inte vill ha någon signatur.",
+        "namePlaceholder": "t.ex. Karl",
+        "treatmentLabel": "Hur mottagaren tilltalas",
+        "treatmentTu": "Informellt (tú)",
+        "treatmentUsted": "Formellt (usted)",
+        "treatmentDescription": "På spanska ändrar detta alla verb i meddelandet.",
+        "profileLabel": "Profil att köra",
+        "profileDescription": "Vilken prompt formaliseringsgenvägen kör. Oberoende av profilen som valts ovan."
       }
     },
     "history": {

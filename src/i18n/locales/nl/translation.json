@@ -191,6 +191,10 @@
           "transcribe_with_post_process": {
             "name": "Sneltoets voor naverwerking",
             "description": "Optioneel: Een specifieke sneltoets die altijd AI-naverwerking toepast op je transcriptie."
+          },
+          "transcribe_and_formalize": {
+            "name": "Transcriberen en formaliseren",
+            "description": "Dicteert de tekst en herschrijft deze als een verzendklare e-mail."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Annuleren",
         "selectToEdit": "Selecteer hierboven een prompt om de details te bekijken en te bewerken.",
         "createFirst": "Klik hierboven op 'Nieuwe prompt maken' om je eerste naverwerkingsprompt aan te maken."
+      },
+      "formalize": {
+        "title": "E-mailformalisator",
+        "nameLabel": "Jouw naam",
+        "nameDescription": "Wordt gebruikt om geformaliseerde e-mails te ondertekenen. Laat leeg voor geen ondertekening.",
+        "namePlaceholder": "bijv. Charly",
+        "treatmentLabel": "Hoe de ontvanger aan te spreken",
+        "treatmentTu": "Informeel (tú)",
+        "treatmentUsted": "Formeel (usted)",
+        "treatmentDescription": "In het Spaans verandert dit elk werkwoord in het bericht.",
+        "profileLabel": "Uit te voeren profiel",
+        "profileDescription": "Welke prompt de formaliseer-sneltoets uitvoert. Onafhankelijk van het hierboven geselecteerde profiel."
       }
     },
     "history": {

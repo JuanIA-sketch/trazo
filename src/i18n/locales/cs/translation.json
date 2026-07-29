@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Klávesa pro následné zpracování",
             "description": "Volitelné: Vyhrazená klávesová zkratka, která vždy použije AI následné zpracování na váš přepis."
+          },
+          "transcribe_and_formalize": {
+            "name": "Přepsat a formalizovat",
+            "description": "Nadiktuje text a přepíše ho jako e-mail připravený k odeslání."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Zrušit",
         "selectToEdit": "Vyberte výše prompt, abyste zobrazili a upravili jeho podrobnosti.",
         "createFirst": "Klikněte nahoře na 'Vytvořit nový prompt' a vytvořte svůj první prompt pro následné zpracování."
+      },
+      "formalize": {
+        "title": "Formalizátor e-mailů",
+        "nameLabel": "Vaše jméno",
+        "nameDescription": "Použije se k podpisu formalizovaných e-mailů. Ponechte prázdné, pokud nechcete podpis.",
+        "namePlaceholder": "např. Karel",
+        "treatmentLabel": "Jak oslovit příjemce",
+        "treatmentTu": "Neformální (tú)",
+        "treatmentUsted": "Formální (usted)",
+        "treatmentDescription": "Ve španělštině tato volba mění tvary všech sloves ve zprávě.",
+        "profileLabel": "Spouštěný profil",
+        "profileDescription": "Který prompt spouští zkratka pro formalizaci. Nezávisí na profilu vybraném výše."
       }
     },
     "history": {

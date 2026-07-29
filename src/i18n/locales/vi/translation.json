@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Phím tắt xử lý sau",
             "description": "Tùy chọn: Phím tắt chuyên dụng luôn áp dụng xử lý sau bằng AI cho bản chuyển đổi của bạn."
+          },
+          "transcribe_and_formalize": {
+            "name": "Chuyển giọng nói và trang trọng hóa",
+            "description": "Chuyển giọng nói thành văn bản và viết lại thành email sẵn sàng gửi."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Hủy",
         "selectToEdit": "Chọn một prompt ở trên để xem và chỉnh sửa chi tiết.",
         "createFirst": "Nhấn 'Tạo Prompt mới' ở trên để tạo prompt xử lý sau đầu tiên của bạn."
+      },
+      "formalize": {
+        "title": "Công cụ trang trọng hóa email",
+        "nameLabel": "Tên của bạn",
+        "nameDescription": "Dùng để ký tên trong các email đã trang trọng hóa. Để trống nếu không muốn có chữ ký.",
+        "namePlaceholder": "vd: Minh",
+        "treatmentLabel": "Cách xưng hô với người nhận",
+        "treatmentTu": "Thân mật (tú)",
+        "treatmentUsted": "Trang trọng (usted)",
+        "treatmentDescription": "Trong tiếng Tây Ban Nha, lựa chọn này thay đổi toàn bộ cách chia động từ trong tin nhắn.",
+        "profileLabel": "Hồ sơ sẽ chạy",
+        "profileDescription": "Phím tắt trang trọng hóa sẽ chạy prompt nào. Độc lập với hồ sơ đã chọn ở trên."
       }
     },
     "history": {

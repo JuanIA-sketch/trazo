@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Son İşlem Kısayolu",
             "description": "İsteğe bağlı: Transkripsiyonunuza her zaman AI son işleme uygulayan özel bir kısayol tuşu."
+          },
+          "transcribe_and_formalize": {
+            "name": "Yazıya dök ve resmileştir",
+            "description": "Konuşmayı yazıya döker ve gönderime hazır bir e-postaya dönüştürür."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "İptal",
         "selectToEdit": "Ayrıntılarını görüntülemek ve düzenlemek için yukarıdan bir prompt seçin.",
         "createFirst": "İlk son işlem prompt'unuzu oluşturmak için yukarıdaki “Yeni Prompt Oluştur” seçeneğine tıklayın."
+      },
+      "formalize": {
+        "title": "E-posta resmileştirici",
+        "nameLabel": "Adınız",
+        "nameDescription": "Resmileştirilmiş e-postaları imzalamak için kullanılır. İmza istemiyorsanız boş bırakın.",
+        "namePlaceholder": "örn. Can",
+        "treatmentLabel": "Alıcıya nasıl hitap edileceği",
+        "treatmentTu": "Gayriresmi (tú)",
+        "treatmentUsted": "Resmi (usted)",
+        "treatmentDescription": "İspanyolcada bu, mesajdaki tüm fiilleri değiştirir.",
+        "profileLabel": "Çalıştırılacak profil",
+        "profileDescription": "Resmileştirme kısayolunun hangi prompt'u çalıştıracağı. Yukarıda seçilen profilden bağımsızdır."
       }
     },
     "history": {

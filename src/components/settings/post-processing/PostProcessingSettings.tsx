@@ -21,6 +21,7 @@ import { ModelSelect } from "../PostProcessingSettingsApi/ModelSelect";
 import { usePostProcessProviderState } from "../PostProcessingSettingsApi/usePostProcessProviderState";
 import { ShortcutInput } from "../ShortcutInput";
 import { useSettings } from "../../../hooks/useSettings";
+import { FormalizeSettings } from "./FormalizeSettings";
 
 const PostProcessingSettingsApiComponent: React.FC = () => {
   const { t } = useTranslation();
@@ -435,6 +436,15 @@ export const PostProcessingSettings: React.FC = () => {
           descriptionMode="tooltip"
           grouped={true}
         />
+      </SettingsGroup>
+
+      <SettingsGroup title={t("settings.postProcessing.formalize.title")}>
+        <ShortcutInput
+          shortcutId="transcribe_and_formalize"
+          descriptionMode="tooltip"
+          grouped={true}
+        />
+        <FormalizeSettings />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.postProcessing.api.title")}>

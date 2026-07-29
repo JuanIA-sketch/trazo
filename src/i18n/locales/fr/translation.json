@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Raccourci de post-traitement",
             "description": "Facultatif : Un raccourci dédié qui applique toujours le post-traitement IA à votre transcription."
+          },
+          "transcribe_and_formalize": {
+            "name": "Transcrire et formaliser",
+            "description": "Dicte le texte et le réécrit comme un e-mail prêt à envoyer."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Annuler",
         "selectToEdit": "Sélectionnez un prompt ci-dessus pour voir et modifier ses détails.",
         "createFirst": "Cliquez sur 'Créer un nouveau prompt' ci-dessus pour créer votre premier prompt de post-traitement."
+      },
+      "formalize": {
+        "title": "Formalisateur d'e-mails",
+        "nameLabel": "Votre nom",
+        "nameDescription": "Utilisé pour signer les e-mails formalisés. Laissez vide pour ne pas ajouter de signature.",
+        "namePlaceholder": "ex. Charly",
+        "treatmentLabel": "Comment s'adresser au destinataire",
+        "treatmentTu": "Informel (tú)",
+        "treatmentUsted": "Formel (usted)",
+        "treatmentDescription": "En espagnol, cela change chaque verbe du message.",
+        "profileLabel": "Profil à exécuter",
+        "profileDescription": "Le prompt exécuté par le raccourci de formalisation. Indépendant du profil sélectionné ci-dessus."
       }
     },
     "history": {

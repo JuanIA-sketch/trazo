@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Tasto di post-elaborazione",
             "description": "Facoltativo: Un tasto di scelta rapida dedicato che applica sempre la post-elaborazione IA alla trascrizione."
+          },
+          "transcribe_and_formalize": {
+            "name": "Trascrivi e formalizza",
+            "description": "Detta il testo e lo riscrive come un'email pronta per l'invio."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Annulla",
         "selectToEdit": "Scegli un prompt qui sopra per visualizzare o modificare i dettagli.",
         "createFirst": "Clicca 'Crea un nuovo prompt' qui sopra per creare il tuo primo prompt di post-elaborazione."
+      },
+      "formalize": {
+        "title": "Formalizzatore email",
+        "nameLabel": "Il tuo nome",
+        "nameDescription": "Usato per firmare le email formalizzate. Lascia vuoto per non includere una firma.",
+        "namePlaceholder": "es. Charly",
+        "treatmentLabel": "Come rivolgersi al destinatario",
+        "treatmentTu": "Informale (tú)",
+        "treatmentUsted": "Formale (usted)",
+        "treatmentDescription": "In spagnolo questo cambia ogni verbo del messaggio.",
+        "profileLabel": "Profilo da eseguire",
+        "profileDescription": "Quale prompt esegue la scorciatoia di formalizzazione. Indipendente dal profilo selezionato sopra."
       }
     },
     "history": {

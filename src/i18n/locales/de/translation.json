@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Nachbearbeitungs-Tastenkürzel",
             "description": "Optional: Ein dediziertes Tastenkürzel, das immer die KI-Nachbearbeitung auf deine Transkription anwendet."
+          },
+          "transcribe_and_formalize": {
+            "name": "Transkribieren und Formalisieren",
+            "description": "Diktiert den Text und schreibt ihn als versandfertige E-Mail um."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Abbrechen",
         "selectToEdit": "Wähle oben einen Prompt aus, um dessen Details anzuzeigen und zu bearbeiten.",
         "createFirst": "Klicke oben auf 'Neuen Prompt erstellen', um deinen ersten Nachbearbeitungs-Prompt zu erstellen."
+      },
+      "formalize": {
+        "title": "E-Mail-Formalisierer",
+        "nameLabel": "Dein Name",
+        "nameDescription": "Wird verwendet, um formalisierte E-Mails zu signieren. Leer lassen für keine Signatur.",
+        "namePlaceholder": "z. B. Charly",
+        "treatmentLabel": "Wie der Empfänger angesprochen wird",
+        "treatmentTu": "Informell (tú)",
+        "treatmentUsted": "Formell (usted)",
+        "treatmentDescription": "Im Spanischen ändert dies jedes Verb in der Nachricht.",
+        "profileLabel": "Auszuführendes Profil",
+        "profileDescription": "Welchen Prompt der Formalisierungs-Shortcut ausführt. Unabhängig vom oben ausgewählten Profil."
       }
     },
     "history": {

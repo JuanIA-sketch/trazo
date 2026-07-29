@@ -191,6 +191,10 @@
           "transcribe_with_post_process": {
             "name": "후처리 단축키",
             "description": "선택 사항: 항상 AI 후처리를 적용하는 전용 단축키입니다."
+          },
+          "transcribe_and_formalize": {
+            "name": "받아쓰기 후 격식체로 변환",
+            "description": "받아쓴 내용을 바로 보낼 수 있는 이메일로 다시 작성합니다."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "취소",
         "selectToEdit": "세부 정보를 보고 편집하려면 위에서 프롬프트를 선택하세요.",
         "createFirst": "첫 번째 후처리 프롬프트를 만들려면 위의 '새 프롬프트 만들기'를 클릭하세요."
+      },
+      "formalize": {
+        "title": "이메일 격식체 변환기",
+        "nameLabel": "이름",
+        "nameDescription": "격식체로 변환된 이메일에 서명할 때 사용됩니다. 서명을 넣지 않으려면 비워 두세요.",
+        "namePlaceholder": "예: 민수",
+        "treatmentLabel": "받는 사람을 부르는 방식",
+        "treatmentTu": "비격식체 (tú)",
+        "treatmentUsted": "격식체 (usted)",
+        "treatmentDescription": "스페인어에서는 이 설정이 메시지의 모든 동사 형태를 바꿉니다.",
+        "profileLabel": "실행할 프로필",
+        "profileDescription": "격식체 변환 단축키가 실행할 프롬프트입니다. 위에서 선택한 프로필과는 별개입니다."
       }
     },
     "history": {

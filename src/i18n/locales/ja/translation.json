@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "後処理のショートカット",
             "description": "文字起こしに常に AI 後処理を適用するキーボードショートカット。 (任意)"
+          },
+          "transcribe_and_formalize": {
+            "name": "文字起こしして整形する",
+            "description": "音声を文字起こしし、すぐに送信できるメール文面に書き直します。"
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "キャンセル",
         "selectToEdit": "上からプロンプトを選択して、詳細を表示・編集します。",
         "createFirst": "上の「新しいプロンプトを作成」をクリックして、最初の後処理プロンプトを作成してください。"
+      },
+      "formalize": {
+        "title": "メール整形機能",
+        "nameLabel": "お名前",
+        "nameDescription": "整形されたメールの署名に使用されます。空欄にすると署名は追加されません。",
+        "namePlaceholder": "例：田中",
+        "treatmentLabel": "宛先への呼びかけ方",
+        "treatmentTu": "非公式（tú）",
+        "treatmentUsted": "丁寧（usted）",
+        "treatmentDescription": "スペイン語では、この設定によって文中のすべての動詞の活用が変わります。",
+        "profileLabel": "実行するプロファイル",
+        "profileDescription": "整形ショートカットが実行するプロンプトです。上で選択したプロファイルとは独立しています。"
       }
     },
     "history": {

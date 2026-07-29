@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "Skrót postprocessingu",
             "description": "Opcjonalnie: Dedykowany skrót klawiszowy, który zawsze stosuje postprocessing AI do transkrypcji."
+          },
+          "transcribe_and_formalize": {
+            "name": "Transkrybuj i sformalizuj",
+            "description": "Dyktuje tekst i przepisuje go jako gotowy do wysłania e-mail."
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "Anuluj",
         "selectToEdit": "Wybierz prompt powyżej, aby zobaczyć i edytować jego szczegóły.",
         "createFirst": "Kliknij 'Utwórz nowy prompt' powyżej, aby utworzyć pierwszy prompt postprocessingu."
+      },
+      "formalize": {
+        "title": "Formalizator e-maili",
+        "nameLabel": "Twoje imię",
+        "nameDescription": "Używane do podpisywania sformalizowanych e-maili. Pozostaw puste, aby nie dodawać podpisu.",
+        "namePlaceholder": "np. Karol",
+        "treatmentLabel": "Jak zwracać się do odbiorcy",
+        "treatmentTu": "Nieformalnie (tú)",
+        "treatmentUsted": "Formalnie (usted)",
+        "treatmentDescription": "W języku hiszpańskim ta opcja zmienia każdy czasownik w wiadomości.",
+        "profileLabel": "Profil do uruchomienia",
+        "profileDescription": "Który prompt uruchamia skrót formalizacji. Niezależny od profilu wybranego powyżej."
       }
     },
     "history": {

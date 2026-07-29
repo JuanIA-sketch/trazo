@@ -191,6 +191,10 @@
           "transcribe_with_post_process": {
             "name": "後處理快捷鍵",
             "description": "可選：專用快捷鍵，使用時一律對轉錄結果套用 AI 後處理"
+          },
+          "transcribe_and_formalize": {
+            "name": "轉錄並正式化",
+            "description": "聽寫內容並將其改寫為可直接傳送的郵件。"
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "取消",
         "selectToEdit": "選擇上方的提示詞以檢視和編輯其詳細資訊",
         "createFirst": "點選上方的「建立新提示詞」來建立您的第一個後處理提示詞"
+      },
+      "formalize": {
+        "title": "郵件正式化",
+        "nameLabel": "您的姓名",
+        "nameDescription": "用於在正式化郵件末尾簽名。留空則不加入簽名。",
+        "namePlaceholder": "例如：王小明",
+        "treatmentLabel": "如何稱呼收件人",
+        "treatmentTu": "非正式 (tú)",
+        "treatmentUsted": "正式 (usted)",
+        "treatmentDescription": "在西班牙語中，這會改變郵件裡所有動詞的形式。",
+        "profileLabel": "要執行的設定檔",
+        "profileDescription": "正式化快捷鍵會執行哪個提示詞。與上方選擇的設定檔無關。"
       }
     },
     "history": {

@@ -209,6 +209,10 @@
           "transcribe_with_post_process": {
             "name": "后处理快捷键",
             "description": "可选：一个专用快捷键，始终对您的转录应用 AI 后处理。"
+          },
+          "transcribe_and_formalize": {
+            "name": "转录并正式化",
+            "description": "听写内容并将其改写为可直接发送的邮件。"
           }
         },
         "errors": {
@@ -455,6 +459,18 @@
         "cancel": "取消",
         "selectToEdit": "选择上方的提示词以查看和编辑其详细信息。",
         "createFirst": "点击上方的「创建新提示词」来创建您的第一个后处理提示词。"
+      },
+      "formalize": {
+        "title": "邮件正式化",
+        "nameLabel": "您的姓名",
+        "nameDescription": "用于在正式化邮件末尾签名。留空则不添加签名。",
+        "namePlaceholder": "例如：张三",
+        "treatmentLabel": "如何称呼收件人",
+        "treatmentTu": "非正式 (tú)",
+        "treatmentUsted": "正式 (usted)",
+        "treatmentDescription": "在西班牙语中，这会改变邮件里的所有动词形式。",
+        "profileLabel": "要运行的配置",
+        "profileDescription": "正式化快捷键运行哪个提示词。与上面选择的配置无关。"
       }
     },
     "history": {

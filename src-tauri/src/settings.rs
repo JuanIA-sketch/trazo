@@ -848,13 +848,38 @@ ESTRUCTURA, en este orden:
 
 1. SALUDO: empieza exactamente por "${saludo}". Si el dictado dice a quién va dirigido el mensaje, añade su nombre: "${saludo}, María:". Si no menciona destinatario, deja "${saludo}:" a secas. NUNCA inventes un nombre, y no confundas a quién va dirigido con quién se menciona de pasada.
 2. CUERPO: reescribe el dictado en 1-3 párrafos cortos, en registro profesional pero natural. Corrige puntuación, mayúsculas y ortografía; elimina muletillas; convierte números hablados a cifras (veinticinco → 25). Si el hablante se corrige a sí mismo, conserva SOLO la versión final ("el martes... no, mejor el jueves" → "el jueves").
-3. DESPEDIDA: una línea breve, elegida según el contenido ("Un saludo," o "Quedo atento,").
-4. FIRMA: "${nombre_usuario}" en su propia línea. Si viene vacío, omite la firma Y la coma de la despedida, para no dejarla colgando.
+3. DESPEDIDA + FIRMA: el valor exacto del nombre del firmante es lo que hay entre estas comillas angulares: «${nombre_usuario}». Mira con atención qué hay entre «» antes de decidir:
+   - Si entre «» hay al menos un carácter (ejemplo: «Charly»): NO ESTÁ VACÍO. Escribe una despedida breve terminada en COMA ("Un saludo," o "Quedo atento,"), y en la línea siguiente el nombre solo, sin nada más debajo.
+   - Si entre «» no hay ningún carácter, es decir ves «» pegado y vacío: SÍ ESTÁ VACÍO, no hay firma. Escribe la misma despedida pero terminada en PUNTO, nunca en coma ("Un saludo." o "Quedo atento."), y esa despedida es la ÚLTIMA línea del correo: no la sigas de ninguna línea de firma ni de ninguna línea en blanco.
+   - MAL (prohibido cuando «» está vacío): "Quedo atento," seguido de nada o de una línea vacía. BIEN: "Quedo atento." y ahí termina el correo. Antes de dar tu respuesta por buena, mira la última línea: si no escribiste un nombre de persona en ella, esa línea no puede terminar en coma.
 
 REGLAS:
 - No añadas información que no esté en el dictado. No inventes asuntos, fechas ni compromisos.
 - Conserva el significado exacto. Sí puedes reorganizar el contenido para darle forma de correo.
 - Los términos técnicos en inglés se mantienen tal cual: commit, pull request, merge, deploy, rollback, webhook, endpoint, workflow, prompt, API, token, backend, frontend, repo, branch, pipeline.
+
+Dos ejemplos completos, uno por cada valor posible de «${nombre_usuario}» — usa el que de verdad
+corresponda al valor mostrado arriba entre «», NO copies siempre el mismo:
+
+EJEMPLO A (cuando «${nombre_usuario}» SÍ tiene contenido, p. ej. «Charly»):
+
+Buenas tardes, Ana:
+
+Te confirmo que el despliegue quedó completado sin problemas.
+
+Quedo atento,
+Charly
+
+EJEMPLO B (cuando «${nombre_usuario}» está vacío, «»):
+
+Buenas tardes, Ana:
+
+Te confirmo que el despliegue quedó completado sin problemas.
+
+Quedo atento.
+
+RECUERDA antes de responder: el valor real de la firma en ESTE dictado es «${nombre_usuario}».
+Comprueba si eso está vacío o no, y sigue el ejemplo (A o B) que de verdad le corresponde.
 
 Transcripción:
 ${output}"#

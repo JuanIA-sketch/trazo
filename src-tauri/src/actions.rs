@@ -1015,7 +1015,7 @@ mod tests {
 #[cfg(test)]
 mod post_process_profile_tests {
     use super::post_process_transcription;
-    use crate::settings::{get_default_settings, AppSettings};
+    use crate::settings::{get_default_settings, AppSettings, FormalityTreatment};
 
     /// Read the user's OpenAI key from the local Handy settings store without
     /// ever logging it. Returns `None` when unavailable (test will skip).
@@ -1080,6 +1080,28 @@ mod post_process_profile_tests {
                 profile_id
             )
         }))
+    }
+
+    /// Como `run_profile`, pero rellenando los ajustes del formalizador que
+    /// `post_process_transcription` inyecta en `${nombre_usuario}` y
+    /// `${tratamiento}`. El saludo no se parametriza: lo calcula la hora real
+    /// del sistema, y afirmar sobre una hora concreta haría el test frágil
+    /// según cuándo se ejecute.
+    fn run_email_profile(
+        transcript: &str,
+        user_name: &str,
+        treatment: FormalityTreatment,
+    ) -> Option<String> {
+        let mut settings = settings_for_profile(crate::settings::DEFAULT_EMAIL_PROMPT_ID)?;
+        settings.user_full_name = user_name.to_string();
+        settings.formality_treatment = treatment;
+
+        let output = tauri::async_runtime::block_on(post_process_transcription(
+            &settings,
+            transcript,
+            crate::settings::DEFAULT_EMAIL_PROMPT_ID,
+        ));
+        Some(output.expect("el perfil de correo debe devolver texto"))
     }
 
     #[test]
@@ -1174,5 +1196,49 @@ mod post_process_profile_tests {
             "conventional commit subject must be <= 72 chars, got {} in: {first_line}",
             first_line.len()
         );
+    }
+
+    #[test]
+    fn email_profile_greets_the_recipient_and_signs_with_the_configured_name() {
+        let Some(out) = run_email_profile(
+            "oye dile a maría que el deploy se retrasa hasta el jueves porque el \
+             pipeline está fallando",
+            "Charly",
+            FormalityTreatment::Usted,
+        ) else {
+            return;
+        };
+
+        assert!(out.contains("María"), "no saluda al destinatario: {out}");
+        assert!(out.contains("Charly"), "no firma: {out}");
+        assert!(out.contains("jueves"), "pierde el contenido: {out}");
+        assert!(
+            out.contains("deploy") || out.contains("pipeline"),
+            "los terminos tecnicos se conservan: {out}"
+        );
+        // El saludo depende de la hora real; basta con que este alguno.
+        assert!(
+            out.contains("Buenos días")
+                || out.contains("Buenas tardes")
+                || out.contains("Buenas noches"),
+            "falta el saludo: {out}"
+        );
+    }
+
+    #[test]
+    fn email_profile_omits_the_signature_when_no_name_is_configured() {
+        let Some(out) = run_email_profile(
+            "confírmale a juan que el commit ya está en main",
+            "",
+            FormalityTreatment::Tu,
+        ) else {
+            return;
+        };
+
+        assert!(
+            !out.trim_end().ends_with(','),
+            "con nombre vacio la despedida no puede quedar colgando: {out}"
+        );
+        assert!(out.contains("Juan") || out.contains("juan"), "got {out}");
     }
 }

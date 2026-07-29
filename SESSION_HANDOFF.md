@@ -1,6 +1,7 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-28 · **Rama:** `main` · **HEAD:** `019207e`+
+**Última actualización:** 2026-07-29 · **Rama:** `feat/formalizador-correo` ·
+**HEAD:** `9c6e7f9` · `origin/main`: `3d7a67b`
 **Entrega del hackathon:** 31 de julio de 2026
 
 Documento de continuidad entre sesiones de Claude Code. Léelo antes de tocar
@@ -8,17 +9,29 @@ nada. Complementa a `CLAUDE.md` (convenciones del fork) y a
 `docs/superpowers/specs/` (diseños detallados); aquí está el _estado_ y el
 _porqué_, no las convenciones.
 
-> **⚠️ ESTADO AL CERRAR LA SESIÓN DEL 2026-07-28**
+> **⚠️ ESTADO AL CERRAR LA SESIÓN DEL 2026-07-29**
 >
-> 1. **El grupo (b) sigue sin commitear**, igual que desde el 26/07: espera la
->    validación en vivo de Charly (§1.2.1, §4.2).
-> 2. **El rebrand quedó commiteado en `019207e`** y pusheado, con la migración
->    de datos y los fixes de autostart (§7.1). Charly respaldó su carpeta de
->    datos antes; falta confirmar en vivo que la migración funcionó.
-> 3. **`batch_vs_loop.rs` sigue sin trackear** a propósito: experimento
->    rechazado (§4.1).
+> 1. **Hay tres ramas/estados distintos, no confundirlos:**
+>    - `origin/main` = **`3d7a67b`** (lo publicado; el release v0.9.0 sale de
+>      `a74d97c`).
+>    - `main` local = **`e8091fa`**, dos commits por delante de `origin/main`
+>      (spec `68d7c44` y plan `e8091fa` del formalizador), **sin pushear**.
+>    - `feat/formalizador-correo` = **`9c6e7f9`**, 11 commits sobre `main`
+>      local. **Sin pushear y sin integrar.** Es el formalizador de correo (§8).
+> 2. **El formalizador está terminado y con la revisión final limpia**, pero
+>    **pendiente de la validación en vivo de Charly** (§8.4). Suite:
+>    275 passed, 0 failed, 1 ignored.
+> 3. **El repositorio es PÚBLICO desde el 2026-07-28** (§8.1). Antes era
+>    privado; se abrió para desbloquear Actions. Los emails de commit y los
+>    documentos internos (este archivo incluido) son visibles.
+> 4. **Release v0.9.0 publicado** con los 7 instaladores, descarga anónima
+>    verificada (§8.2).
+> 5. **`batch_vs_loop.rs` sigue sin trackear** a propósito: experimento
+>    rechazado (§4.1). El `src-tauri/Cargo.toml` modificado es un fantasma de
+>    CRLF, no un cambio real.
 >
-> Todo lo demás de la sesión está commiteado y pusheado.
+> El grupo (b), pendiente desde el 26/07, **quedó validado y commiteado**
+> (`b170a9e`).
 
 ---
 
@@ -406,21 +419,43 @@ cuelgue. Mirar al tocar esa zona.
 
 ## 4. Próximos pasos
 
-### 4.0 Inmediatos (orden sugerido al retomar)
+### 4.0 Inmediatos (orden sugerido al retomar) — actualizado 2026-07-29
 
-1. **Validar en vivo la migración del rebrand** (§7.1). Es lo primero porque
-   toca los datos de Charly: al primer arranque verificar que aparecen en
-   `%APPDATA%\com.trazo.app` y que la clave de OpenAI sigue ahí. Si algo
-   falla, el respaldo de `com.pais.handy` está intacto — la migración copia,
-   no mueve.
-2. **Revisar el matrix relanzado** con el nombre nuevo: los instaladores deben
-   llamarse `Trazo_0.9.0_*`. Si quedó en rojo, empezar por ahí.
-3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
+**Hechos y cerrados:** ~~validar la migración del rebrand~~ (§8.3, 19/19)
+· ~~revisar el matrix con el nombre nuevo~~ (§8.2, 5/5 y release publicado)
+· ~~validar y commitear el grupo b~~ (§8.5, `b170a9e`).
+
+Lo que queda, por orden:
+
+1. **Validar en vivo el formalizador** (§8.4) y decidir la integración de
+   `feat/formalizador-correo`. Es lo único que bloquea una feature terminada.
+   Tres cosas: que `f9` latchee con doble-tap, que el nombre y el tratamiento
+   **sobrevivan a un reinicio**, y que un correo real salga presentable.
+2. **Decidir la contraseña del updater** (§7.6, §8.7): recuperarla o generar
+   keypair nueva. Es el bloqueo **más barato** de los tres de firma y desbloquea
+   3 de los 7 jobs de `Main Branch Build` sin tocar código.
+3. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
+   subirlo a 200-300 ms y ver si dejan de perderse las últimas palabras. Si
+   funciona, el arreglo es cambiar un default.
+4. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
+   el diagnóstico está confirmado; si es `CtrlV`, hay que rehacerlo.
+5. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
    dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
    también con qué prueba concreta descartó el downmix.
-4. **Decidir sobre la contraseña del updater** (§7.6): recuperarla o generar
-   keypair nueva. Bloquea cualquier release firmado.
-5. **Validar en vivo el grupo b** (§4.2) y commitearlo.
+6. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
+   junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
+   (a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
+   desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
+   construido (`apply_custom_replacements`, `audio_toolkit/text.rs:113`), no es
+   infraestructura nueva. **No empezada.**
+
+**Backlog explícito de Charly (post-hackathon):** cancelación de ruido (no
+priorizar antes del viernes) · aprendizaje "puro" — usar la confianza interna del
+modelo para detectar sus propias palabras dudosas y pasarle el vocabulario del
+usuario a Whisper como pista **antes** de transcribir, no corrigiendo después. De
+esto último **queda una investigación de 10-15 min sin hacer**: averiguar si
+`transcribe-cpp` expone datos de confianza por palabra. Sin compromiso de
+construir nada.
 
 ### 4.1 ~~Experimento pendiente~~ → RECHAZADO con datos (2026-07-27)
 
@@ -860,3 +895,294 @@ advertencia de que los permisos de Accesibilidad/Micrófono se reconceden en cad
 actualización porque van atados a la firma), Windows (SmartScreen) y Linux
 (`mesa-vulkan-drivers` no declarado como dependencia → cae a CPU en silencio; y
 Wayland sin atajos globales).
+
+---
+
+## 8. Sesión 2026-07-28/29
+
+### 8.1 El repositorio pasó a PÚBLICO — y por qué
+
+**Actions llevaba horas sin arrancar**, y no por el código: cada job moría en
+1-5 s con _"The job was not started because recent account payments have failed
+or your spending limit needs to be increased"_. Cayeron **11 runs seguidos**
+desde las 01:45 UTC del 28/07, en los cuatro workflows, incluido el `test`
+barato de Ubuntu — que caiga ese descarta el código.
+
+La causa de fondo: `JuanIA-sketch/trazo` era **privado**, y en repos privados
+los minutos se facturan con multiplicadores (macOS ×10, Windows ×2). El matrix
+usa dos runners de macOS y uno de Windows.
+
+**Decisión de Charly: abrir el repo.** Antes se escaneó el historial completo
+(1.248 commits): 0 credenciales en 9 patrones (`sk-`, `ghp_`, `AKIA`, claves
+privadas, secret key de minisign), 0 nombres de archivo sensibles, ningún path
+personal en archivos trackeados. **El WAV con la voz de Charly
+(`short-es-misdetected-as-is.wav`) no está trackeado y está cubierto por
+`.gitignore:47`.**
+
+**Consecuencias aceptadas a sabiendas:** los emails de commit quedan expuestos
+(`juancharly.ia@gmail.com`, 39 commits; el de Benjamin), y `SESSION_HANDOFF.md`
++ `CLAUDE.md` son públicos — incluida la §1.3.1 sobre la rama de Benjamin.
+Sacarlos del árbol no serviría: seguirían en la historia. **Ojo al escribir aquí
+de ahora en adelante.**
+
+### 8.2 Release v0.9.0 publicado
+
+<https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.0> — pre-release (sin
+firmar), con los **7 instaladores** del matrix.
+
+**El tag apunta a `a74d97c`, no al HEAD de entonces**, y es deliberado: esos
+binarios los compiló el matrix desde ese commit. Un tag en un commit posterior
+diría que los instaladores llevan código que no está dentro. **Para una build
+con el formalizador hay que relanzar el matrix y sacar v0.9.1.**
+
+**Descarga anónima verificada de verdad**, no supuesta: `curl` sin token sobre
+tres assets → HTTP 200 y el archivo completo. Link para el tester de Mac:
+`https://github.com/JuanIA-sketch/trazo/releases/download/v0.9.0/Trazo_0.9.0_aarch64.dmg`
+
+Las notas (en español) llevan tabla de qué archivo bajar, el paso de clic derecho
+→ Abrir para Gatekeeper, el aviso de que macOS pide de nuevo los permisos de
+Accesibilidad y Micrófono en **cada** build sin firma, SmartScreen en Windows,
+`mesa-vulkan-drivers` en Linux, y que el updater no funciona.
+
+### 8.3 Migración de datos del rebrand — VALIDADA en vivo
+
+§7.1 quedaba pendiente de confirmar. Confirmado: **19/19 comprobaciones**, más
+los **14 WAV verificados hash a hash**. `%APPDATA%\com.trazo.app` con los 17
+archivos, `history.db` con el mismo SHA, clave de OpenAI intacta, y
+`com.pais.handy` **sin tocar** (copia, no movimiento). El log mostró
+`Rebrand: migrated 17 file(s)` y la eliminación de la entrada `Run` huérfana.
+
+Efectos colaterales observados:
+
+- **El autostart se re-registró como `Trazo`**, apuntando a `C:\h\debug\handy.exe`
+  (el binario de dev). No es regresión —la entrada vieja apuntaba al mismo
+  sitio— pero un `cargo clean` dejaría el arranque roto hasta instalar un bundle.
+- **En dev el ejecutable sigue siendo `handy.exe`** (el nombre sale de
+  `[package] name` de Cargo, no de `productName`), y el log sigue llamándose
+  `handy.log`, ahora bajo `%LOCALAPPDATA%\com.trazo.app\logs\`.
+
+**Los instaladores sí llevan el nombre nuevo, verificado abriendo el bundle:**
+`Trazo_0.9.0_x64.dmg`, `Trazo.app` con `CFBundleIdentifier = com.trazo.app`,
+`Trazo_0.9.0_x64_en-US.msi`, `Trazo_0.9.0_x64-setup.exe`,
+`Trazo_0.9.0_amd64.deb`, `.AppImage` y `.rpm`.
+
+**Pendiente del rebrand, con su coste real medido:** el ejecutable dentro de los
+bundles sigue siendo `handy`/`handy.exe`. Poner `"mainBinaryName": "Trazo"` **no
+es una línea**: `build.yml` tiene **8 asserts** que exigen ese nombre
+(`usr/bin/handy` en deb/rpm/AppImage, líneas 726, 748 y 764; el smoke test de
+Linux en 717; y tres de `handy.exe` en 837-849). Tocar solo el config pone el
+matrix rojo en los cinco jobs. **Charly decidió no tocarlo antes del viernes.**
+
+### 8.4 Formalizador de correo — TERMINADO, pendiente de validación en vivo
+
+Rama **`feat/formalizador-correo`** (`9c6e7f9`), 11 commits, 37 archivos,
++1682/−60. Sin pushear, sin integrar. Suite: **275 passed, 0 failed, 1 ignored**.
+
+Spec: `docs/superpowers/specs/2026-07-29-formalizador-correo-design.md`.
+Plan: `docs/superpowers/plans/2026-07-29-formalizador-correo.md`.
+
+**Qué hace:** pulsas **`f9`**, dictas casual, y sale un correo con saludo según
+la hora local, cuerpo reestructurado, despedida y firma, tuteando o de usted
+según ajuste. Reutiliza el post-procesado LLM existente.
+
+**Decisiones y su porqué (no reabrir sin motivo nuevo):**
+
+- **Atajo propio, no cambiar el perfil en Ajustes.** Qué prompt corre lo decide
+  un único valor global (`post_process_selected_prompt_id`); sin atajo propio el
+  flujo sería Ajustes → cambiar → dictar → Ajustes → deshacer.
+- **Tú/usted es un ajuste fijo, no inferido por el LLM.** En español atraviesa la
+  gramática: inferirlo haría que el mismo dictado saliera distinto en dos
+  intentos, y eso no se puede cubrir con tests.
+- **La hora la calcula Rust** (`greeting_for_hour`, determinista y con tests de
+  límites); **a quién saluda lo extrae el LLM del dictado**. Riesgo aceptado y
+  documentado: puede confundir destinatario con mencionado ("dile a Ana que Pedro
+  no viene"). Plan B si molesta en uso real: saludo genérico siempre.
+- **Un solo perfil, forma de correo.** Para chat ya está `default_es_casual`.
+- **`formalize_prompt_id` como ajuste propio**, en vez de fijar el perfil a fuego
+  o refactorizar "cada binding lleva su perfil" (descartado por alcance).
+
+**El default del atajo cambió a `f9` A MITAD DE IMPLEMENTACIÓN.** El spec decía
+`ctrl_right`/`cmd_right` y la corrección está anotada allí. Dos razones que el
+diseño no previó:
+
+1. **Un modificador desnudo bloquea la _pulsación_.** Con `ctrl_right`
+   registrado, pulsar Ctrl derecho para hacer Ctrl+C arranca una grabación y la
+   app recibe una `c` literal. En macOS `cmd_right` es peor. **La regla "jamás
+   bloquear _releases_" de `CLAUDE.md` §5 sigue respetada: esto es sobre
+   pulsaciones, es otro asunto.**
+2. **Bajo la implementación Tauri (la de por defecto en Linux)**, `ctrl_right`
+   pasaba `validate_shortcut` pero fallaba al parsear, así que el atajo aparecía
+   en Ajustes y no respondía nunca, en silencio.
+
+`f9` es una tecla, no modificador, y ambos validadores la aceptan. Hay test que
+fija el literal: los de "forma" no bastaban (con `ctrl_right` restaurado seguían
+verdes).
+
+**Migración v6 a v7 ya aplicada al store real de Charly** (regenerar
+`bindings.ts` arranca la app headless): versión 7, perfil `default_es_casual`
+**intacto**, `default_es_email` sembrado, `formalize_prompt_id` puesto, clave y
+resto de ajustes sin tocar. Solo siembra el perfil de correo (no los cuatro: si
+el usuario borró uno, no resucita) y no pisa un prompt con el mismo id.
+
+**Residuos aplazados a propósito:**
+
+- El `<select>` de perfil no tiene `<option value="">` para `null` (hoy
+  inalcanzable: default y migración garantizan `Some`).
+- **No hay equivalente de `--toggle-post-process` ni de `SIGUSR1` para
+  formalizar** (`lib.rs:762`, `signal_handle.rs:32`). Preexistente y fuera del
+  spec.
+- **Reintentar un correo desde el Historial lo re-ejecuta con el perfil global**,
+  nunca como formalizado: `post_process_requested` es un bool sin perfil por
+  entrada. Limitación del esquema previo, documentada en el código.
+- El prompt sembrado necesitó **tres iteraciones** para que `gpt-4o-mini` dejara
+  de escribir una coma colgando sin firma. **Es prompt engineering contra un
+  modelo concreto: si se cambia de modelo o proveedor, revalidar.**
+
+**FALTA LA VALIDACIÓN EN VIVO DE CHARLY:** que `f9` latchee con doble-tap; que el
+nombre y el tratamiento **se guarden y sobrevivan a un reinicio** (fue el bug que
+casi se escapó); y que un correo real salga presentable.
+
+### 8.5 Grupo (b) — validado y commiteado por fin
+
+Pendiente desde el 26/07. Charly validó el doble-tap con Alt y el espacio
+separador. Commiteado en **`b170a9e`** (`clipboard.rs`,
+`transcription_coordinator.rs`, `shortcut/handler.rs`, `signal_handle.rs`) tras
+237 tests en verde, y pusheado.
+
+**Matiz honesto sobre esa validación:** el caso que §2.1 arregla exige que
+`TranscribeAction::start` supere los 600 ms, y en la prueba tardó **377 ms** —
+pasaron 76 s entre que los atajos quedaron listos y la pulsación. Lo que quedó
+demostrado es que **el camino feliz no se rompió**, que era el riesgo real del
+cambio. El caso patológico lo cubren los tests unitarios con `sleep(700ms)`
+deliberado. Dato útil: el histórico de `start completed in` solo tiene 272 ms,
+377 ms y **580 ms** — esa última se quedó a 20 ms del umbral, así que el bug era
+plausible, no exótico.
+
+Del 93% del tiempo de arranque que es abrir el micrófono, **167 ms son
+`vad_ensure`, con `vad_enabled: false`**. No es "sobra, quítalo" —el pulso de la
+letra del overlay usa el VAD real (§11 de `CLAUDE.md`)— pero es la mitad del
+presupuesto de latencia y merece una mirada al tocar esa zona.
+
+### 8.6 `nix build check` — VERDE tras 12 días rojo
+
+Estaba rojo en **todas** las ejecuciones desde `bca3ac4` (2026-07-16), que añadió
+`@types/bun` a `package.json` y `bun.lock` sin regenerar `.nix/bun.nix`. Incluido
+el 24/07, con el resto del CI en verde: nadie lo miró. Arreglado en `3d7a67b` con
+el comando que sugiere el propio workflow:
+
+```bash
+bunx bun2nix -o .nix/bun.nix
+```
+
+Funciona desde Windows y solo toca ese archivo (`bun.lock` queda intacto pese al
+mensaje "Saved lockfile").
+
+### 8.7 `Main Branch Build` — los TRES bloqueos de firma, con su error literal
+
+Sigue rojo, y **no por el código**. Los 7 jobs fallan por tres causas distintas,
+ahora identificadas con precisión:
+
+| Jobs       | Error literal                                                                                      | Ref  |
+| ---------- | -------------------------------------------------------------------------------------------------- | ---- |
+| Linux ×3   | `failed to decode secret key: incorrect updater private key password: Wrong password for that key`  | §7.6 |
+| macOS ×2   | `security: SecKeychainItemImport: One or more parameters passed to a function were not valid`        | §7.5 |
+| Windows ×2 | `failed to bundle project 'failed to run trusted-signing-cli'` (variables AZURE vacías)             | §7.5 |
+
+**La pista que descarta el código:** los jobs de Linux **compilaron 12-21 minutos
+enteros** y murieron al firmar el artefacto del updater; Windows corrió 30 min. Si
+el código estuviera roto, petaría al compilar.
+
+**El de Linux es el más barato y solo depende de Charly:** si aparece la
+contraseña del updater, 3 de los 7 jobs se desbloquean sin tocar nada. Los otros
+dos necesitan cuenta de Apple Developer ($99/año) e infraestructura de firma de
+Windows propia (hoy apunta a la cuenta de Azure de cjpais).
+
+`Cross-Platform Build Check` sí pasa 5/5 porque **omite** las variables de firma
+en vez de pasarlas vacías (`b7c50a2`), y es el que alimenta el release.
+
+### 8.8 Reportes de Benja en Mac — dos bugs con diagnóstico, sin arreglar
+
+Probó el `.dmg` ARM: **funcionó en ambas pruebas, sin cortes de audio.** Errores
+de reconocimiento puntuales ("voz" salió "vos", "ballerina" salió "valentina").
+
+**Bug 1 — el respaldo al portapapeles no siempre ocurre.** Diagnóstico:
+**`5f4552e` no es que no lo cubra, es que lo causó.** Antes copiaba con
+`CopyToClipboard` para **todos** los métodos; ahora solo con `PasteMethod::None`
+(`clipboard.rs:646`). Con **`Direct`** (la inserción directa que describe Benja)
+ya no queda respaldo. Y hay una contradicción: `transcript_lands_on_clipboard()`
+devuelve `true` para `CopyToClipboard` **sin mirar el método**, así que el overlay
+dice "Texto copiado" cuando con `Direct` no se copió nada. Alejarse del campo **no
+se puede detectar**: Enigo informa éxito si logró enviar las pulsaciones.
+**Confirmar con Benja qué `paste_method` tiene** — la predicción es `Direct`; si
+fuera `CtrlV`, el diagnóstico está mal.
+
+**Bug 2 — se pierden las últimas palabras, intermitente.** El umbral de 2,7
+palabras/segundo **no puede verlo, por aritmética**: 12 s con 36 palabras van a
+3,0 w/s; perder las dos últimas deja 2,83, por encima del umbral. Se calibró
+contra truncados catastróficos (1,31 / 1,86 / 2,08), no contra pérdida de cola.
+**No es el VAD ni el nivel** (100% de supervivencia a −24 dB, y el VAD viene
+apagado desde `80f3cbe`). **Sospechoso real: la cola del audio.**
+`extra_recording_buffer_ms` tiene default **0** (`settings.rs:981`), así que al
+soltar la tecla la grabación se detiene de golpe, y Whisper —entrenado con
+ventanas rellenadas de silencio— tiende a soltar los tokens finales. Que sea
+intermitente encaja. **Experimento barato pendiente: que Benja lo suba a 200-300
+ms y repita.** Si dejan de perderse, es cambiar un default.
+
+### 8.9 Falso positivo que NO hay que "arreglar"
+
+Un revisor marcó `settings.rs:1129` (el `debug!` que imprime los settings) como
+fuga de la clave de API al log. **Es falso.** `post_process_api_keys` es un
+`SecretMap` con `impl Debug` propio (`settings.rs:332`) que sustituye cada valor
+no vacío por `[REDACTED]`, con dos tests que lo protegen. Verificado también
+contra el log real: la clave **no aparece**; `[REDACTED]` sale 4 veces. **No
+tocar.**
+
+(La clave sí se imprimió en claro en el transcript de la sesión, por un comando de
+inspección de `settings_store.json` con `ConvertFrom-Json` — no por la app.
+Rotarla es decisión de Charly.)
+
+### 8.10 Lecciones del proceso de subagentes, para la siguiente feature
+
+El formalizador se ejecutó con un subagente por tarea y revisión entre cada una.
+**Encontró 9 defectos reales, 7 de ellos huecos del plan**, ninguno detectable por
+la suite. Los más caros, para calibrar dónde mirar la próxima vez:
+
+1. **Los ajustes de UI no se persistían.** No había comando Tauri ni entrada en
+   `settingUpdaters`: la UI mostraba los valores y el backend seguía en los
+   viejos. **Al añadir un ajuste, la cadena es de cinco eslabones** (comando Rust
+   → `invoke_handler` → `bindings.ts` → `settingUpdaters` → componente);
+   verificarlos uno a uno.
+2. **Un atajo nuevo debe enseñarse en 5 sitios**, no en 2: los tres
+   `init_shortcuts` (`mod.rs`, `handy_keys.rs`, `tauri_impl.rs`), el cambio en
+   caliente (`change_post_process_enabled_setting`) y `is_transcribe_binding` del
+   coordinador. Si falta el último, el atajo se salta el
+   `TranscriptionCoordinator`: sin toggle, sin debounce y **sin doble-tap a
+   continuo**. Ahora hay un predicado compartido,
+   `is_post_process_gated_binding`.
+3. **Un test puede "proteger" un orden sin protegerlo.** El primer test del orden
+   de sustitución fijaba el orden a mano, así que habría seguido verde si se
+   invirtiera en la función real. **Criterio: revertir el arreglo y ver el test
+   caer.** Se aplicó en la última oleada a los 6 hallazgos.
+4. **No dar por buenos los informes de los subagentes.** Un revisor solo corrió
+   el subconjunto de su tarea y declaró 242 passed; la suite completa daba 241 +
+   1 fallo (inestabilidad conocida de los perfiles ES). Y el falso positivo de
+   §8.9 llegó a relayarse antes de verificarlo.
+5. **Test inestable identificado por fin:**
+   `casual_profile_restores_spanish_opening_question_marks` (API real de OpenAI).
+   Reintentar antes de sospechar una regresión.
+6. **No exportar `CARGO_TARGET_DIR` desde Git Bash**: `C:\h` se degrada a un `h`
+   relativo y crea un `src-tauri/h/` basura. `.cargo/config.toml` ya lo fija.
+
+### 8.11 Cómo levantar la app (para Charly)
+
+Desde `C:\Handy`, y nada más:
+
+```powershell
+bun run tauri dev
+```
+
+**No hace falta `$env:CARGO_TARGET_DIR`**: `.cargo/config.toml` ya fija
+`target-dir = "C:/h"` con `skip-worktree`. La app está lista cuando aparece
+`Shortcuts initialized successfully`; antes de esa línea los atajos no responden.
+`Ctrl+C` en la terminal para cerrarla — **la X solo la manda a la bandeja** y
+sigue bloqueando las DLLs.

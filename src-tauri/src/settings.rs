@@ -970,6 +970,27 @@ pub fn get_default_settings() -> AppSettings {
             current_binding: default_post_process_shortcut.to_string(),
         },
     );
+
+    // Una sola tecla, nunca un acorde: en teclado español AltGr envía
+    // literalmente Ctrl+Alt. Los MacBook no tienen Ctrl derecho, de ahí el
+    // default distinto en macOS; Command derecho existe en todos y suelto no
+    // hace nada. `fn` queda descartado en macOS porque el sistema lo reserva
+    // para su propio dictado.
+    #[cfg(target_os = "macos")]
+    let default_formalize_shortcut = "cmd_right";
+    #[cfg(not(target_os = "macos"))]
+    let default_formalize_shortcut = "ctrl_right";
+
+    bindings.insert(
+        "transcribe_and_formalize".to_string(),
+        ShortcutBinding {
+            id: "transcribe_and_formalize".to_string(),
+            name: "Transcribe and Formalize".to_string(),
+            description: "Dictates and rewrites it as a ready-to-send email.".to_string(),
+            default_binding: default_formalize_shortcut.to_string(),
+            current_binding: default_formalize_shortcut.to_string(),
+        },
+    );
     bindings.insert(
         "cancel".to_string(),
         ShortcutBinding {
@@ -1376,6 +1397,42 @@ mod tests {
         assert_eq!(
             settings.settings_schema_version,
             CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn the_formalize_binding_ships_by_default() {
+        let settings = get_default_settings();
+
+        let binding = settings
+            .bindings
+            .get("transcribe_and_formalize")
+            .expect("el atajo de formalizar debe venir de fabrica");
+
+        assert!(!binding.current_binding.is_empty());
+        assert_eq!(binding.current_binding, binding.default_binding);
+    }
+
+    #[test]
+    fn the_formalize_default_is_a_single_key_and_never_ctrl_alt() {
+        // En teclado espanol AltGr ES Ctrl+Alt: un default con esa combinacion
+        // se dispararia al escribir @, #, € o \. Y nada de acordes de tres
+        // teclas sostenidas. Ver el spec y modifiers.rs:128, donde alt_right
+        // esta aliaseado a "altgr".
+        let settings = get_default_settings();
+        let binding = &settings.bindings["transcribe_and_formalize"].default_binding;
+
+        assert!(
+            !binding.contains('+'),
+            "el default debe ser una sola tecla, es {binding}"
+        );
+        assert!(
+            !binding.contains("alt_right") && !binding.contains("altgr"),
+            "AltGr jamas, es {binding}"
+        );
+        assert!(
+            !binding.contains("shift_right"),
+            "shift_right se pisa con cada mayuscula, es {binding}"
         );
     }
 

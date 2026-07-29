@@ -23,8 +23,12 @@ pub fn init_shortcuts(app: &AppHandle) {
         if id == "cancel" {
             continue; // Skip cancel shortcut, it will be registered dynamically
         }
-        // Skip post-processing shortcut when the feature is disabled
-        if id == "transcribe_with_post_process" && !user_settings.post_process_enabled {
+        // Ambos atajos de post-proceso quedan sin registrar cuando la función
+        // está apagada: registrar una tecla que no hace nada es peor que no
+        // tenerla.
+        if (id == "transcribe_with_post_process" || id == "transcribe_and_formalize")
+            && !user_settings.post_process_enabled
+        {
             continue;
         }
         let binding = user_settings

@@ -393,8 +393,12 @@ fn register_all_shortcuts_for_implementation(
             continue;
         }
 
-        // Skip post-processing shortcut when the feature is disabled
-        if id == "transcribe_with_post_process" && !current_settings.post_process_enabled {
+        // Ambos atajos de post-proceso quedan sin registrar cuando la función
+        // está apagada: registrar una tecla que no hace nada es peor que no
+        // tenerla.
+        if (id == "transcribe_with_post_process" || id == "transcribe_and_formalize")
+            && !current_settings.post_process_enabled
+        {
             continue;
         }
 

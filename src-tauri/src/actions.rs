@@ -947,6 +947,12 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
+        "transcribe_and_formalize".to_string(),
+        Arc::new(TranscribeAction {
+            mode: crate::formalize::PostProcessMode::Formalize,
+        }) as Arc<dyn ShortcutAction>,
+    );
+    map.insert(
         "cancel".to_string(),
         Arc::new(CancelAction) as Arc<dyn ShortcutAction>,
     );

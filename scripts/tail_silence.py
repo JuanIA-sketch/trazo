@@ -17,7 +17,9 @@ Este script lo comprueba sin necesidad de cargar ningún modelo.
   en la decodificación, no en la captura, y hay que buscarlo en otro sitio.
 
 Medido el 2026-07-30 sobre 25 grabaciones reales en Windows con el default de
-0 ms: mediana 910 ms, mínimo 160 ms, ningún clip por debajo de 100 ms.
+0 ms: mediana 1540 ms, mínimo 270 ms, ningún clip por debajo de 100 ms. O sea
+que el tiempo de reacción al soltar la tecla ya aporta mucho más margen que los
+200-300 ms que se planteaba añadir.
 
 Uso:
     python scripts/tail_silence.py                     # carpeta por defecto
@@ -38,8 +40,16 @@ FRAME_MS = 10
 # umbral en cero y haría pasar por voz cualquier cosa) y clip cortado en seco
 # (donde el "fondo" ES la voz y el umbral se dispararía hasta ocultar el corte).
 FONDO_X = 4.0  # el umbral queda ~12 dB por encima del fondo medido
-MIN_REL_VOZ = 0.02  # nunca por debajo de −34 dB respecto a la voz
+MIN_REL_VOZ = 0.08  # nunca por debajo de −22 dB respecto a la voz
 MAX_REL_VOZ = 0.25  # nunca por encima de −12 dB respecto a la voz
+
+# Duración mínima para que un tramo cuente como voz. Sin esto, el clic de
+# soltar la tecla —que el micro capta justo al final— se toma por una palabra y
+# el clip parece cortado en seco cuando en realidad está completo. Pasó de
+# verdad con handy-1785365965.wav: la herramienta dijo "0 ms de cola" y al
+# escucharlo era un clic. Una sílaba real no baja de ~100 ms, así que 60 ms deja
+# margen de sobra sin dejar pasar transitorios.
+MIN_VOZ_MS = 60
 
 
 def _frames_rms(path):
@@ -80,10 +90,26 @@ def trailing_silence_ms(path):
     umbral = max(fondo * FONDO_X, voz * MIN_REL_VOZ)
     umbral = min(umbral, voz * MAX_REL_VOZ)
 
-    for i in range(len(rms) - 1, -1, -1):
-        if rms[i] >= umbral:
-            return (len(rms) - 1 - i) * FRAME_MS
-    return None
+    # Último tramo CONTINUO por encima del umbral que dure lo suficiente para
+    # ser voz. Se recorre hacia atrás y se descarta cualquier racha corta: esas
+    # son clics, golpes de mesa o chasquidos, no palabras.
+    min_tramas = max(1, MIN_VOZ_MS // FRAME_MS)
+    fin = None
+    i = len(rms) - 1
+    while i >= 0:
+        if rms[i] < umbral:
+            i -= 1
+            continue
+        j = i
+        while j >= 0 and rms[j] >= umbral:
+            j -= 1
+        if (i - j) >= min_tramas:  # racha de i..j+1
+            fin = i
+            break
+        i = j  # racha demasiado corta: se ignora y se sigue hacia atrás
+    if fin is None:
+        return None
+    return (len(rms) - 1 - fin) * FRAME_MS
 
 
 def _wavs(argv):

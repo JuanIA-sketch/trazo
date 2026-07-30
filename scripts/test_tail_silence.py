@@ -88,6 +88,29 @@ def main():
     if not ok:
         fallos += 1
 
+    # 6. Clic de la tecla al final. Caso real: en handy-1785365965.wav la
+    #    herramienta dio "0 ms de cola" y Charly confirmó al oírlo que era el
+    #    clic de soltar la tecla, no una palabra. Un transitorio corto no puede
+    #    contar como voz o daremos por truncados clips que están completos.
+    p = _tmp("ts_clic_final.wav")
+    _write(p, [(1000, 8000), (500, 0), (30, 2000), (100, 0)])
+    if not check("clic corto al final se ignora", trailing_silence_ms(p), 630, 40):
+        fallos += 1
+
+    # 7. Clic pegado al final, sin nada detrás: el caso exacto del clip real.
+    p = _tmp("ts_clic_al_borde.wav")
+    _write(p, [(1000, 8000), (500, 0), (30, 2000)])
+    if not check("clic en el ultimo sample se ignora", trailing_silence_ms(p), 530, 40):
+        fallos += 1
+
+    # 8. Contrapeso del arreglo anterior: una palabra final CORTA pero real
+    #    tiene que seguir contando. Si al ignorar clics nos cargáramos esto,
+    #    pasaríamos a no detectar nunca un truncado de verdad.
+    p = _tmp("ts_palabra_corta.wav")
+    _write(p, [(1000, 8000), (300, 0), (120, 6000), (200, 0)])
+    if not check("palabra final corta SI cuenta", trailing_silence_ms(p), 200, 40):
+        fallos += 1
+
     print()
     if fallos:
         print(f"{fallos} test(s) fallando")

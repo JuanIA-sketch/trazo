@@ -45,3 +45,7 @@ result
 
 # Local test fixtures that must never be committed (e.g. voice recordings)
 src-tauri/tests/fixtures/local/
+
+# Bytecode de los scripts de scripts/
+__pycache__/
+*.pyc

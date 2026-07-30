@@ -1,7 +1,7 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-29 · **Rama:** `feat/formalizador-correo` ·
-**HEAD:** `9c6e7f9` · `origin/main`: `3d7a67b`
+**Última actualización:** 2026-07-30 · **Rama:** `main` ·
+`main` y `origin/main` **sincronizados** (el formalizador entró en `a9a7918`)
 **Entrega del hackathon:** 31 de julio de 2026
 
 Documento de continuidad entre sesiones de Claude Code. Léelo antes de tocar
@@ -9,29 +9,25 @@ nada. Complementa a `CLAUDE.md` (convenciones del fork) y a
 `docs/superpowers/specs/` (diseños detallados); aquí está el _estado_ y el
 _porqué_, no las convenciones.
 
-> **⚠️ ESTADO AL CERRAR LA SESIÓN DEL 2026-07-29**
+> **⚠️ ESTADO AL CERRAR LA SESIÓN DEL 2026-07-30**
 >
-> 1. **Hay tres ramas/estados distintos, no confundirlos:**
->    - `origin/main` = **`3d7a67b`** (lo publicado; el release v0.9.0 sale de
->      `a74d97c`).
->    - `main` local = **`e8091fa`**, dos commits por delante de `origin/main`
->      (spec `68d7c44` y plan `e8091fa` del formalizador), **sin pushear**.
->    - `feat/formalizador-correo` = **`9c6e7f9`**, 11 commits sobre `main`
->      local. **Sin pushear y sin integrar.** Es el formalizador de correo (§8).
-> 2. **El formalizador está terminado y con la revisión final limpia**, pero
->    **pendiente de la validación en vivo de Charly** (§8.4). Suite:
->    275 passed, 0 failed, 1 ignored.
+> 1. **Ya no hay ramas divergentes: `main` y `origin/main` están sincronizados.**
+>    Se acabó el enredo de tres estados de las sesiones anteriores. La única otra
+>    rama local es `revision-benja`. El release v0.9.0 salió de `a74d97c`.
+> 2. **El formalizador de correo está VALIDADO en vivo por Charly e integrado**
+>    en `main` (fast-forward de 12 commits, §9.1). La rama
+>    `feat/formalizador-correo` **ya no existe**: se borró tras el merge. Suite
+>    tras integrar: 39/39 frontend y 275 passed / 0 failed / 1 ignored backend.
 > 3. **El repositorio es PÚBLICO desde el 2026-07-28** (§8.1). Antes era
 >    privado; se abrió para desbloquear Actions. Los emails de commit y los
 >    documentos internos (este archivo incluido) son visibles.
 > 4. **Release v0.9.0 publicado** con los 7 instaladores, descarga anónima
 >    verificada (§8.2).
-> 5. **`batch_vs_loop.rs` sigue sin trackear** a propósito: experimento
->    rechazado (§4.1). El `src-tauri/Cargo.toml` modificado es un fantasma de
->    CRLF, no un cambio real.
->
-> El grupo (b), pendiente desde el 26/07, **quedó validado y commiteado**
-> (`b170a9e`).
+> 5. **`batch_vs_loop.rs` se borró** el 30/07 sin haberse commiteado nunca
+>    (§4.1: el harness habría que rehacerlo). El `src-tauri/Cargo.toml`
+>    modificado es un fantasma de CRLF, no un cambio real: **dejarlo así**.
+> 6. **Lo siguiente es la contraseña del updater** (§4.0, punto 1): el bloqueo
+>    más barato de los tres de firma.
 
 ---
 
@@ -419,30 +415,30 @@ cuelgue. Mirar al tocar esa zona.
 
 ## 4. Próximos pasos
 
-### 4.0 Inmediatos (orden sugerido al retomar) — actualizado 2026-07-29
+### 4.0 Inmediatos (orden sugerido al retomar) — actualizado 2026-07-30
 
 **Hechos y cerrados:** ~~validar la migración del rebrand~~ (§8.3, 19/19)
 · ~~revisar el matrix con el nombre nuevo~~ (§8.2, 5/5 y release publicado)
-· ~~validar y commitear el grupo b~~ (§8.5, `b170a9e`).
+· ~~validar y commitear el grupo b~~ (§8.5, `b170a9e`)
+· ~~validar e integrar el formalizador~~ (§9.1 — validado en vivo por Charly
+y mergeado a `main` en fast-forward).
 
 Lo que queda, por orden:
 
-1. **Validar en vivo el formalizador** (§8.4) y decidir la integración de
-   `feat/formalizador-correo`. Es lo único que bloquea una feature terminada.
-   Tres cosas: que `f9` latchee con doble-tap, que el nombre y el tratamiento
-   **sobrevivan a un reinicio**, y que un correo real salga presentable.
-2. **Decidir la contraseña del updater** (§7.6, §8.7): recuperarla o generar
-   keypair nueva. Es el bloqueo **más barato** de los tres de firma y desbloquea
-   3 de los 7 jobs de `Main Branch Build` sin tocar código.
-3. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
+1. **Decidir la contraseña del updater** (§7.6, §8.7): recuperarla o generar
+   keypair nueva. Ahora es lo primero: es el bloqueo **más barato** de los tres
+   de firma y desbloquea 3 de los 7 jobs de `Main Branch Build` sin tocar
+   código. Nada más de la lista depende de él, así que cuanto antes se quite,
+   antes deja de contaminar el rojo del CI.
+2. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
    subirlo a 200-300 ms y ver si dejan de perderse las últimas palabras. Si
    funciona, el arreglo es cambiar un default.
-4. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
+3. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
    el diagnóstico está confirmado; si es `CtrlV`, hay que rehacerlo.
-5. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
+4. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
    dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
    también con qué prueba concreta descartó el downmix.
-6. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
+5. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
    junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
    (a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
    desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
@@ -462,14 +458,21 @@ construir nada.
 `run()` en bucle vs `Session::run_batch()`. Era la última optimización de
 velocidad viva tras la investigación de §5. **Medida y descartada.**
 
-Harness: `src-tauri/examples/batch_vs_loop.rs` (sin commitear, grupo c de
-§1.2.1). Usa el `speech_segments()` real, así que decodifica exactamente los
-tramos que decodificaría el reintento troceado.
+Harness: `src-tauri/examples/batch_vs_loop.rs`, **borrado el 2026-07-30 sin
+llegar a commitearse** (era el grupo c de §1.2.1). Usaba el `speech_segments()`
+real, así que decodificaba exactamente los tramos que decodificaría el reintento
+troceado. Se invocaba así:
 
 ```bash
 cargo run --example batch_vs_loop -- <model.gguf> --lang es \
     --backend vulkan --gpu 1 [--repeat 3] [--control] <wav>...
 ```
+
+Se borró a propósito: el experimento está cerrado con datos y el archivo solo
+ensuciaba el `git status`. **Si alguien quiere reabrir esto, el harness hay que
+rehacerlo** — no está en el historial de git, en ninguna rama. Lo que sí queda
+es el diseño, que es la parte con valor: 274 líneas cuyo detalle importante es
+el modo `--control` descrito abajo.
 
 **Criterio de éxito era: el texto no debe cambiar. Cambió.**
 
@@ -973,10 +976,15 @@ es una línea**: `build.yml` tiene **8 asserts** que exigen ese nombre
 Linux en 717; y tres de `handy.exe` en 837-849). Tocar solo el config pone el
 matrix rojo en los cinco jobs. **Charly decidió no tocarlo antes del viernes.**
 
-### 8.4 Formalizador de correo — TERMINADO, pendiente de validación en vivo
+### 8.4 Formalizador de correo — TERMINADO, VALIDADO y MERGEADO
 
-Rama **`feat/formalizador-correo`** (`9c6e7f9`), 11 commits, 37 archivos,
-+1682/−60. Sin pushear, sin integrar. Suite: **275 passed, 0 failed, 1 ignored**.
+> Estado final: validado en vivo por Charly e integrado en `main` el
+> 2026-07-30. **La rama ya no existe.** Ver §9.1 para la validación y el merge.
+> Lo de abajo es el registro de las decisiones de diseño, que sigue vigente.
+
+Rama **`feat/formalizador-correo`** (`9c6e7f9` cuando se escribió esto; acabó en
+`a9a7918`), 11 commits, 37 archivos, +1682/−60. Suite: **275 passed, 0 failed,
+1 ignored**.
 
 Spec: `docs/superpowers/specs/2026-07-29-formalizador-correo-design.md`.
 Plan: `docs/superpowers/plans/2026-07-29-formalizador-correo.md`.
@@ -1186,3 +1194,66 @@ bun run tauri dev
 `Shortcuts initialized successfully`; antes de esa línea los atajos no responden.
 `Ctrl+C` en la terminal para cerrarla — **la X solo la manda a la bandeja** y
 sigue bloqueando las DLLs.
+
+---
+
+## 9. Sesión 2026-07-30
+
+### 9.1 Formalizador de correo: validado en vivo e integrado en `main`
+
+**Charly lo validó y lo aprobó.** Las tres cosas que estaban en duda salieron
+bien: `f9` latchea con doble-tap, el tratamiento de usted se respeta **en todo**
+el correo (no solo en el saludo, que era el riesgo real), y el nombre y el ajuste
+**sobrevivieron a cerrar y reabrir la app** — que era la parte con historial de
+fallos, porque la cadena de persistencia tiene cinco eslabones (§8.10).
+
+Integrado con la skill `finishing-a-development-branch`. Cómo quedó:
+
+- **Fast-forward, sin commit de merge.** `main` era ancestro directo de la rama y
+  no tenía commits propios, así que los 12 entraron limpios: 38 archivos,
+  +2031/−83. Cero conflictos, cero posibilidad de tenerlos.
+- **La suite se corrió DOS veces**: sobre la rama y **otra vez sobre el resultado
+  ya mergeado**. Verde las dos: `bun test src/` 39/39, `cargo test --lib`
+  275 passed / 0 failed / 1 ignored, y la crate vendorizada 51/51 en `--lib`.
+  El segundo pase es el que cuenta — verde antes del merge solo prueba el árbol
+  de antes.
+- **Rama borrada con `git branch -d`** (no `-D`): así git solo la borra si
+  confirma que no se pierde nada.
+- `main` = **`a9a7918`**, pushado a `origin/main` el mismo día por petición
+  explícita de Charly ("quiero esto respaldado antes del viernes"). Iban 14
+  commits acumulados sin subir.
+
+### 9.2 Limpieza y dos trampas del entorno
+
+**Borrado `src-tauri/examples/batch_vs_loop.rs`** (274 líneas, nunca
+commiteado). Consecuencia registrada en §4.1: si alguien reabre ese experimento,
+**el harness hay que rehacerlo**, no está en ningún sitio del historial.
+
+**El `M` de `src-tauri/Cargo.toml` se deja a propósito.** No es un cambio de
+contenido: `git diff` sale vacío y con `--ignore-cr-at-eol` también. Es solo
+normalización LF→CRLF de Windows. **No lo "arregles"** y no pierdas tiempo
+buscando qué cambió: no cambió nada.
+
+Dos trampas que costaron tiempo esta sesión:
+
+- **Nunca exportar `CARGO_TARGET_DIR` a mano.** Ya lo fija
+  `.cargo/config.toml`. Y si se escribe mal en bash, `C:h` (sin barra) es una
+  ruta **relativa al directorio actual de la unidad C:**, no un error: cargo se
+  pone a crear artefactos en `src-tauri/h` y falla con `os error 3` cientos de
+  líneas después. Silencioso y desconcertante.
+- **`taskkill //PID <n> //T` desde el shell bash no mató la app**: informó de
+  procesos hijos de otro PID y dejó `handy.exe` vivo. Lo que funciona es
+  PowerShell: `Stop-Process -Id <n> -Force`. Hay que cerrarla antes de cualquier
+  build que re-enlace.
+
+### 9.3 Tarea pequeña detectada, no arreglada
+
+El ejemplo `basic` de la crate vendorizada **no compila**: importa
+`handy_keys::check_accessibility` y `open_accessibility_settings`, que ya no
+existen. Viene de `8477b61`, **el propio commit de vendorización**, así que lleva
+roto en `main` desde entonces — no lo trajo el formalizador.
+
+Efecto real, acotado: un `cargo test` pelado dentro de
+`src-tauri/vendor/handy-keys` falla al compilar el ejemplo. El `--lib` va 51/51,
+y la app no usa ese ejemplo. Arreglo estimado en dos minutos: borrar el ejemplo o
+quitarle esos dos imports.

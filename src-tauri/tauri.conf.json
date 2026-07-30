@@ -80,7 +80,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY1OTZFRjU0QkQ2NkIyOTYKUldTV3NtYTlWTytXWlJpLzVmRG5kMTRhV3NYbkhwbEdkTXp2NUdvOWN4NGw0VWFnSm1HRFBQbW8K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQyNjIxNURBNDVBQzY3NzYKUldSMlo2eEYyaFZpUWdrdGpzaEYya0VqM3VvUmRiSmdjZTR5NTRpZUx3NFAvaFBrbkVBNS9zbHgK",
       "endpoints": [
         "https://github.com/JuanIA-sketch/trazo/releases/latest/download/latest.json"
       ]

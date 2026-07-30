@@ -26,8 +26,12 @@ _porqué_, no las convenciones.
 > 5. **`batch_vs_loop.rs` se borró** el 30/07 sin haberse commiteado nunca
 >    (§4.1: el harness habría que rehacerlo). El `src-tauri/Cargo.toml`
 >    modificado es un fantasma de CRLF, no un cambio real: **dejarlo así**.
-> 6. **Lo siguiente es la contraseña del updater** (§4.0, punto 1): el bloqueo
->    más barato de los tres de firma.
+> 6. **El updater ya firma** (§9.4): clave rotada, `Main Branch Build` de 0/7 a
+>    3/7. Los 4 rojos que quedan son macOS y Windows, y **no dependen de
+>    trabajo técnico** sino de una cuenta de Apple ($99/año) y de infra de firma
+>    de Windows. No perder tiempo depurándolos.
+> 7. **Lo siguiente es el experimento de `extra_recording_buffer_ms` con Benja**
+>    (§4.0, punto 1; bug 2 de §8.8).
 
 ---
 
@@ -421,24 +425,21 @@ cuelgue. Mirar al tocar esa zona.
 · ~~revisar el matrix con el nombre nuevo~~ (§8.2, 5/5 y release publicado)
 · ~~validar y commitear el grupo b~~ (§8.5, `b170a9e`)
 · ~~validar e integrar el formalizador~~ (§9.1 — validado en vivo por Charly
-y mergeado a `main` en fast-forward).
+y mergeado a `main` en fast-forward)
+· ~~la contraseña del updater~~ (§9.4 — clave rotada, CI de 0/7 a 3/7; el
+diagnóstico de §7.6 resultó ser falso).
 
 Lo que queda, por orden:
 
-1. **Decidir la contraseña del updater** (§7.6, §8.7): recuperarla o generar
-   keypair nueva. Ahora es lo primero: es el bloqueo **más barato** de los tres
-   de firma y desbloquea 3 de los 7 jobs de `Main Branch Build` sin tocar
-   código. Nada más de la lista depende de él, así que cuanto antes se quite,
-   antes deja de contaminar el rojo del CI.
-2. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
+1. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
    subirlo a 200-300 ms y ver si dejan de perderse las últimas palabras. Si
    funciona, el arreglo es cambiar un default.
-3. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
+2. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
    el diagnóstico está confirmado; si es `CtrlV`, hay que rehacerlo.
-4. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
+3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
    dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
    también con qué prueba concreta descartó el downmix.
-5. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
+4. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
    junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
    (a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
    desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
@@ -869,7 +870,19 @@ Workflow nuevo `cross-platform-check.yml` (`bda3139`) + arreglo de `build.yml`
 commitear. Los artefactos actuales dicen `Handy_0.9.0_*`. Hay que relanzarlo
 tras commitear el grupo c.
 
-### 7.6 Secrets del updater — clave arreglada, contraseña perdida
+### 7.6 Secrets del updater — RESUELTO el 2026-07-30, y el diagnóstico era falso
+
+> **⚠️ ESTA SECCIÓN QUEDÓ OBSOLETA. Ver §9.4.**
+>
+> Lo de abajo se escribió el 28/07 y da por hecho que **Charly perdió la
+> contraseña**. **Era falso.** La clave del 16/07 se generó con **contraseña
+> vacía**, y el firmador de tauri no puede abrir esas claves: era irrecuperable
+> por diseño, no por olvido. Buscarla en un gestor no habría servido de nada, y
+> la "decisión pendiente de Charly" que plantea el último punto nunca tuvo dos
+> opciones reales — solo cabía rotar. Se rotó el 30/07 y el CI ya firma.
+>
+> Se conserva el texto porque el trabajo de descarte (BOM, correspondencia de
+> clave, contraseñas probadas) sigue siendo válido y es lo que acotó el problema.
 
 - **El BOM está resuelto.** El archivo local nunca lo tuvo (empieza en
   `64 57 35`); se introducía al subirlo. Resubido con
@@ -1085,25 +1098,26 @@ bunx bun2nix -o .nix/bun.nix
 Funciona desde Windows y solo toca ese archivo (`bun.lock` queda intacto pese al
 mensaje "Saved lockfile").
 
-### 8.7 `Main Branch Build` — los TRES bloqueos de firma, con su error literal
+### 8.7 `Main Branch Build` — de 0/7 a 3/7; quedan DOS bloqueos, no tres
 
-Sigue rojo, y **no por el código**. Los 7 jobs fallan por tres causas distintas,
-ahora identificadas con precisión:
+**Nunca falló por el código.** Eran tres causas distintas; **la del updater se
+resolvió el 30/07** (§9.4) y con ella los 3 jobs de Linux:
 
-| Jobs       | Error literal                                                                                      | Ref  |
-| ---------- | -------------------------------------------------------------------------------------------------- | ---- |
-| Linux ×3   | `failed to decode secret key: incorrect updater private key password: Wrong password for that key`  | §7.6 |
-| macOS ×2   | `security: SecKeychainItemImport: One or more parameters passed to a function were not valid`        | §7.5 |
-| Windows ×2 | `failed to bundle project 'failed to run trusted-signing-cli'` (variables AZURE vacías)             | §7.5 |
+| Jobs       | Error literal                                                                                      | Estado                     |
+| ---------- | -------------------------------------------------------------------------------------------------- | -------------------------- |
+| Linux ×3   | ~~`incorrect updater private key password: Wrong password for that key`~~                          | **VERDE** desde §9.4       |
+| macOS ×2   | `security: SecKeychainItemImport: One or more parameters passed to a function were not valid`        | rojo — falta Apple (§7.5)  |
+| Windows ×2 | `failed to bundle project 'failed to run trusted-signing-cli'` (variables AZURE vacías)             | rojo — falta Azure (§7.5)  |
 
-**La pista que descarta el código:** los jobs de Linux **compilaron 12-21 minutos
-enteros** y murieron al firmar el artefacto del updater; Windows corrió 30 min. Si
-el código estuviera roto, petaría al compilar.
+**La pista que descartó el código:** los jobs de Linux **compilaron 12-21 minutos
+enteros** y morían al firmar el artefacto del updater; Windows corrió 30 min. Si
+el código estuviera roto, petaría al compilar. Confirmado a posteriori: al
+arreglar solo la clave, esos tres pasaron a verde sin tocar una línea de código.
 
-**El de Linux es el más barato y solo depende de Charly:** si aparece la
-contraseña del updater, 3 de los 7 jobs se desbloquean sin tocar nada. Los otros
-dos necesitan cuenta de Apple Developer ($99/año) e infraestructura de firma de
-Windows propia (hoy apunta a la cuenta de Azure de cjpais).
+**Los dos que quedan no dependen de trabajo técnico sino de dinero y cuentas:**
+cuenta de Apple Developer ($99/año) e infraestructura de firma de Windows propia
+(hoy apunta a la cuenta de Azure de cjpais). Mientras no existan, ese workflow
+no puede pasar de 3/7 — **no perder tiempo depurándolo**.
 
 `Cross-Platform Build Check` sí pasa 5/5 porque **omite** las variables de firma
 en vez de pasarlas vacías (`b7c50a2`), y es el que alimenta el release.
@@ -1257,3 +1271,58 @@ Efecto real, acotado: un `cargo test` pelado dentro de
 `src-tauri/vendor/handy-keys` falla al compilar el ejemplo. El `--lib` va 51/51,
 y la app no usa ese ejemplo. Arreglo estimado en dos minutos: borrar el ejemplo o
 quitarle esos dos imports.
+
+### 9.4 Updater: la contraseña nunca se perdió — la clave nació inservible
+
+**Resuelto.** `Main Branch Build` pasó de **0/7 a 3/7** jobs (`16d4390`).
+
+**El diagnóstico de §7.6 era falso.** No hubo contraseña perdida: la clave del
+16/07 **se generó con contraseña vacía**, y el firmador de tauri no puede abrir
+esas claves. Era irrecuperable por diseño. Cualquier rato invertido en buscarla
+en un gestor habría sido tiempo tirado.
+
+**Cómo se demostró, porque el control es lo que hace válida la conclusión:**
+
+| Prueba                                             | Resultado                          |
+| -------------------------------------------------- | ---------------------------------- |
+| Clave con contraseña real, firmar con ella (control) | ✅ firma generada                  |
+| Clave con `-p ""`, firmar con `-p ""`               | ❌ `Wrong password for that key`   |
+| Clave con `-p ""`, firmar con la env vacía          | ❌ `Wrong password for that key`   |
+| Clave con `-p ""`, sin contraseña ninguna           | ⏳ se cuelga pidiéndola por teclado |
+
+Sin el control, el fallo parecería "contraseña incorrecta". Con él queda claro
+que la ruta de firma funciona y lo que no existe es la contraseña vacía.
+**`kdf_alg` es scrypt (`0x5363`) en todas las claves que genera tauri: "sin
+contraseña" NO es una opción en esta herramienta**, aunque el `--help` sugiera
+que la contraseña es opcional.
+
+**Por qué rotar salió gratis, y por qué no lo será la próxima vez:** el release
+v0.9.0 no publicó ningún `latest.json` ni `.sig` — el endpoint del updater daba
+**HTTP 404** —, así que ninguna build podía autoactualizarse y no había nada que
+invalidar. Descargas reales: 2 en el `aarch64.dmg` (Benja), 0 en todo lo demás.
+**Con updates ya distribuidos, esta misma rotación obligaría a reinstalar a
+mano.**
+
+**Estado actual:**
+
+- Clave activa **`426215DA45AC6776`**, con contraseña de 32 caracteres.
+  La contraseña la movió Charly a su gestor el 30/07; el archivo intermedio era
+  `~/.tauri/trazo-key-password.txt`.
+- Clave vieja (`6596EF54BD66B296`) respaldada en `~/.tauri/*.bak-20260730`.
+- Ambos secrets reescritos **desde Git Bash, nunca PowerShell** (el BOM que metía
+  PowerShell costó una sesión entera, §7.6).
+- `pubkey` de `tauri.conf.json` actualizada en el mismo commit.
+
+**Verificación doble, y la segunda importa más de lo que parece:** el CI emitió
+`Finished 1 updater signature at: .../Trazo_0.9.0_amd64.deb.sig`; y en local, el
+key ID **dentro de una firma** coincide con el de la pubkey commiteada
+(`426215DA45AC6776`). Si solo se comprobara el CI, una pubkey desparejada daría
+verde igualmente y los updates se rechazarían **en el cliente**, un fallo que no
+aparece hasta la primera actualización real.
+
+**Trampa de `gh` que costó un susto:** el repo tiene dos remotos (`origin` =
+Trazo, `upstream` = cjpais/handy) y **no hay default configurado**. Un
+`gh release view v0.9.0` sin `--repo` leyó el release de **cjpais**, con
+instaladores `Handy_0.9.0_*` y decenas de miles de descargas — y por un momento
+pareció que el rebrand no había funcionado y que había miles de usuarios
+afectados por la rotación. **Usar siempre `--repo JuanIA-sketch/trazo`.**

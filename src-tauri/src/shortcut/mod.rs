@@ -1096,8 +1096,7 @@ fn delete_post_process_prompt_from_settings(
 
     // Same repair for the formalize shortcut's independent selection.
     if settings.formalize_prompt_id.as_deref() == Some(id) {
-        settings.formalize_prompt_id =
-            settings.post_process_prompts.first().map(|p| p.id.clone());
+        settings.formalize_prompt_id = settings.post_process_prompts.first().map(|p| p.id.clone());
     }
 
     Ok(())
@@ -1200,10 +1199,7 @@ fn parse_formality_treatment(raw: &str) -> settings::FormalityTreatment {
 /// Tu o usted en los correos formalizados.
 #[tauri::command]
 #[specta::specta]
-pub fn change_formality_treatment_setting(
-    app: AppHandle,
-    treatment: String,
-) -> Result<(), String> {
+pub fn change_formality_treatment_setting(app: AppHandle, treatment: String) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.formality_treatment = parse_formality_treatment(&treatment);
     settings::write_settings(&app, settings);
@@ -1385,7 +1381,9 @@ mod tests {
     /// apagarlo lo dejaba registrado llamando al LLM igual.
     #[test]
     fn both_post_process_shortcuts_are_gated_together() {
-        assert!(is_post_process_gated_binding("transcribe_with_post_process"));
+        assert!(is_post_process_gated_binding(
+            "transcribe_with_post_process"
+        ));
         assert!(is_post_process_gated_binding("transcribe_and_formalize"));
     }
 
@@ -1412,7 +1410,10 @@ mod tests {
 
         assert!(result.is_ok());
         assert!(
-            !settings.post_process_prompts.iter().any(|p| p.id == email_id),
+            !settings
+                .post_process_prompts
+                .iter()
+                .any(|p| p.id == email_id),
             "el perfil borrado no debe seguir en la lista"
         );
         assert_ne!(
@@ -1469,10 +1470,8 @@ mod tests {
     fn set_formalize_prompt_accepts_an_existing_id() {
         let mut settings = settings::get_default_settings();
 
-        let result = set_formalize_prompt_in_settings(
-            &mut settings,
-            "default_es_commit".to_string(),
-        );
+        let result =
+            set_formalize_prompt_in_settings(&mut settings, "default_es_commit".to_string());
 
         assert!(result.is_ok());
         assert_eq!(
@@ -1499,6 +1498,9 @@ mod tests {
             parse_formality_treatment("no_existe"),
             settings::FormalityTreatment::Tu
         );
-        assert_eq!(parse_formality_treatment(""), settings::FormalityTreatment::Tu);
+        assert_eq!(
+            parse_formality_treatment(""),
+            settings::FormalityTreatment::Tu
+        );
     }
 }

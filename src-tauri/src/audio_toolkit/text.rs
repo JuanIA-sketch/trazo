@@ -151,7 +151,10 @@ pub fn apply_custom_replacements(text: &str, rules: &[(String, String)]) -> Stri
                 let matches = if comparable {
                     lower_chars[i..i + plen].iter().copied().eq(pattern.chars())
                 } else {
-                    chars[i..i + plen].iter().map(|(_, c)| *c).eq(pattern.chars())
+                    chars[i..i + plen]
+                        .iter()
+                        .map(|(_, c)| *c)
+                        .eq(pattern.chars())
                 };
                 if !matches {
                     continue;
@@ -449,10 +452,7 @@ mod tests {
 
         #[test]
         fn expands_a_simple_abbreviation() {
-            let out = apply_custom_replacements(
-                "no vino pq llovía",
-                &rules(&[("pq", "porque")]),
-            );
+            let out = apply_custom_replacements("no vino pq llovía", &rules(&[("pq", "porque")]));
             assert_eq!(out, "no vino porque llovía");
         }
 
@@ -504,10 +504,7 @@ mod tests {
         #[test]
         fn an_expansion_is_not_re_expanded_by_a_later_rule() {
             // "pq" → "porque" must not then have its "que" expanded again.
-            let out = apply_custom_replacements(
-                "pq",
-                &rules(&[("pq", "porque"), ("que", "QUE")]),
-            );
+            let out = apply_custom_replacements("pq", &rules(&[("pq", "porque"), ("que", "QUE")]));
             assert_eq!(out, "porque");
         }
     }

@@ -15,7 +15,12 @@
     "postProcessing": "Son İşlem",
     "history": "Geçmiş",
     "debug": "Hata Ayıklama",
-    "about": "Hakkında"
+    "about": "Hakkında",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "Başlamak için bir transkripsiyon modeli seçin",
@@ -698,5 +703,10 @@
   },
   "whatsNew": {
     "title": "Trazo v{{version}} yenilikleri"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded."
   }
 }

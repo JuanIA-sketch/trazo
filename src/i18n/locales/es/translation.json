@@ -15,7 +15,12 @@
     "postProcessing": "Post Proceso",
     "history": "Historial",
     "debug": "Depuración",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "group": {
+      "dictation": "Dictado",
+      "voice": "Tu voz",
+      "settings": "Ajustes"
+    }
   },
   "onboarding": {
     "subtitle": "Para comenzar, elige un modelo de transcripción",
@@ -698,5 +703,10 @@
   },
   "whatsNew": {
     "title": "Nuevo en Trazo v{{version}}"
+  },
+  "heyTrazo": {
+    "idle": "Activar «Hey Trazo»",
+    "listening": "Di «Hey Trazo»",
+    "privacy": "Escucha en tu equipo. El audio no se sube."
   }
 }

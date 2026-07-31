@@ -15,7 +15,12 @@
     "postProcessing": "Post-traitement",
     "history": "Historique",
     "debug": "Débogage",
-    "about": "À propos"
+    "about": "À propos",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "Pour commencer, choisissez un modèle de transcription",
@@ -698,5 +703,10 @@
   },
   "whatsNew": {
     "title": "Nouveautés de Trazo v{{version}}"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded."
   }
 }

@@ -15,7 +15,12 @@
     "postProcessing": "עיבוד משלים",
     "history": "היסטוריה",
     "debug": "ניפוי שגיאות",
-    "about": "אודות"
+    "about": "אודות",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "כדי להתחיל, בחר מודל תמלול",
@@ -698,5 +703,10 @@
   },
   "whatsNew": {
     "title": "חדש ב-Trazo v{{version}}"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded."
   }
 }

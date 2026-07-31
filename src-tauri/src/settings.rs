@@ -509,7 +509,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 7;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 8;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -1358,6 +1358,27 @@ fn apply_settings_migrations(
         updated = true;
     }
 
+    if stored_schema_version < 8 {
+        // Repara los stores que la interfaz volteó a `dont_modify` sin que nadie
+        // lo eligiera: el desplegable pintaba esa opción como seleccionada
+        // mientras los ajustes no habían cargado y escribía al pulsar la que ya
+        // aparecía marcada. La v3 no alcanza a estos stores porque ya están muy
+        // por encima de su versión, así que sin este paso quedarían rotos para
+        // siempre.
+        //
+        // Mismo criterio que la v6 con el VAD, y con el mismo precio: no hay
+        // forma de distinguir a quien eligió `dont_modify` a propósito de quien
+        // lo sufrió, porque el store no guarda quién lo escribió. Se acepta
+        // porque los dos lados no cuestan igual: a quien lo quería le sobra un
+        // dictado en el portapapeles y lo vuelve a poner con un clic, mientras
+        // que al afectado se le pierde el dictado entero y de forma silenciosa,
+        // sin manera de recuperarlo. Corre una sola vez, así que la elección
+        // repetida sobrevive.
+        settings.clipboard_handling = ClipboardHandling::CopyToClipboard;
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
     // One-time overlay migration (only while the new key is absent): the retired
     // overlay_position `none` meant "hide the overlay" → OverlayStyle::None; any
     // other position had it visible → Live. The position enum no longer has a
@@ -1647,6 +1668,58 @@ mod tests {
             settings.clipboard_handling,
             ClipboardHandling::CopyToClipboard
         );
+    }
+
+    #[test]
+    fn migration_v8_repairs_clipboard_handling_flipped_by_the_ui() {
+        // La interfaz proponía `dont_modify` mientras los ajustes no habían
+        // cargado, y el desplegable escribía al pulsar la opción ya marcada, así
+        // que había stores con `dont_modify` que nadie eligió. Un store ya en v7
+        // está fuera del alcance de la v3, de modo que sin este paso quedaría
+        // roto para siempre.
+        let mut settings = get_default_settings();
+        settings.clipboard_handling = ClipboardHandling::DontModify;
+        settings.settings_schema_version = 7;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": 7,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "clipboard_handling": "dont_modify",
+        });
+
+        assert!(apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(
+            settings.clipboard_handling,
+            ClipboardHandling::CopyToClipboard,
+            "un store en v7 con dont_modify debe repararse"
+        );
+        assert_eq!(
+            settings.settings_schema_version,
+            CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn migration_v8_runs_only_once() {
+        // El precio aceptado: la v8 pisa también a quien eligió `dont_modify` a
+        // propósito. Lo que no puede hacer es pisárselo DOS veces — tras volver
+        // a seleccionarlo, su elección tiene que sobrevivir a cada arranque.
+        let mut settings = get_default_settings();
+        settings.clipboard_handling = ClipboardHandling::DontModify;
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+
+        let raw = serde_json::json!({
+            "settings_schema_version": CURRENT_SETTINGS_SCHEMA_VERSION,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+            "overlay_style": "live",
+            "clipboard_handling": "dont_modify",
+        });
+
+        assert!(!apply_settings_migrations(&mut settings, &raw));
+        assert_eq!(settings.clipboard_handling, ClipboardHandling::DontModify);
     }
 
     #[test]

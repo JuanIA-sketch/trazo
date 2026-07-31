@@ -486,7 +486,26 @@
       "retranscribe": "Přepsat znovu",
       "retranscribeError": "Opětovný přepis se nezdařil. Zkuste to prosím znovu.",
       "transcribing": "Přepisuji...",
-      "transcriptionFailed": "Přepis selhal. Můžete zkusit přepis znovu pomocí ikony opakování."
+      "transcriptionFailed": "Přepis selhal. Můžete zkusit přepis znovu pomocí ikony opakování.",
+      "correctWord": {
+        "action": "Correct a word",
+        "title": "Correct a word",
+        "description": "Create a rule so future dictations write it correctly. This does not change the saved dictation.",
+        "fromPlaceholder": "what came out wrong",
+        "toPlaceholder": "what it should say",
+        "impactLoading": "Checking your history…",
+        "impactCount_one": "Would affect {{count}} dictation in your history",
+        "impactCount_other": "Would affect {{count}} dictations in your history",
+        "error": {
+          "empty": "Fill in both fields.",
+          "unchanged": "That rule would not change anything.",
+          "duplicate": "There is already a rule for that word."
+        },
+        "save": "Save rule",
+        "cancel": "Cancel",
+        "close": "Close",
+        "saved": "Rule saved. It will apply to your next dictation."
+      }
     },
     "debug": {
       "title": "Ladění",

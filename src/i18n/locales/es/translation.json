@@ -486,7 +486,26 @@
       "retranscribe": "Re-transcribir",
       "retranscribeError": "No se pudo re-transcribir. Por favor, inténtalo de nuevo.",
       "transcribing": "Transcribiendo...",
-      "transcriptionFailed": "La transcripción falló. Puedes re-transcribir usando el ícono de reintentar."
+      "transcriptionFailed": "La transcripción falló. Puedes re-transcribir usando el ícono de reintentar.",
+      "correctWord": {
+        "action": "Corregir una palabra",
+        "title": "Corregir una palabra",
+        "description": "Crea una regla para que los próximos dictados la escriban bien. Esto no cambia el dictado ya guardado.",
+        "fromPlaceholder": "lo que salió mal",
+        "toPlaceholder": "lo que debería decir",
+        "impactLoading": "Revisando tu historial…",
+        "impactCount_one": "Afectaría a {{count}} dictado de tu historial",
+        "impactCount_other": "Afectaría a {{count}} dictados de tu historial",
+        "error": {
+          "empty": "Rellena los dos campos.",
+          "unchanged": "Esa regla no cambiaría nada.",
+          "duplicate": "Ya hay una regla para esa palabra."
+        },
+        "save": "Guardar regla",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "saved": "Regla guardada. Se aplicará en tu próximo dictado."
+      }
     },
     "debug": {
       "title": "Depuración",

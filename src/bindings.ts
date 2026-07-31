@@ -863,6 +863,22 @@ async unloadModelManually() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Qué cambiaría esta regla en los dictados que ya existen.
+ * 
+ * Se mide contra `transcription_text` y **no** contra `post_processed_text` a
+ * propósito: los reemplazos se aplican a la transcripción
+ * (`post_process_transcription_text`), no a la salida del LLM. Medir sobre el
+ * texto post-procesado enseñaría un impacto que la regla nunca va a tener.
+ */
+async previewReplacementImpact(from: string, to: string) : Promise<Result<ImpactReport, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("preview_replacement_impact", { from, to }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getHistoryEntries(cursor: number | null, limit: number | null) : Promise<Result<PaginatedHistory, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_history_entries", { cursor, limit }) };
@@ -1063,6 +1079,18 @@ export type FormalityTreatment = "tu" | "usted"
 export type GpuDeviceOption = { id: number; name: string; total_vram_mb: number }
 export type HistoryEntry = { id: number; file_name: string; timestamp: number; saved: boolean; title: string; transcription_text: string; post_processed_text: string | null; post_process_prompt: string | null; post_process_requested: boolean }
 export type HistoryUpdatePayload = { action: "added"; entry: HistoryEntry } | { action: "updated"; entry: HistoryEntry } | { action: "deleted"; id: number } | { action: "toggled"; id: number }
+/**
+ * Un dictado que la regla cambiaría, con el antes y el después.
+ */
+export type ImpactExcerpt = { before: string; after: string }
+/**
+ * Cuántos dictados del historial cambiaría una regla, con algunos ejemplos.
+ * 
+ * `total` cuenta **dictados afectados**, no apariciones: un dictado que
+ * contiene la palabra tres veces sigue siendo uno. Es la cifra con la que el
+ * usuario decide si guardar la regla, y contar apariciones la inflaría.
+ */
+export type ImpactReport = { total: number; excerpts: ImpactExcerpt[] }
 /**
  * Result of changing keyboard implementation
  */

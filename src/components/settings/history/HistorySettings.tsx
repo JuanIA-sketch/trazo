@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { Check, Copy, FolderOpen, RotateCcw, Star, Trash2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  FolderOpen,
+  RotateCcw,
+  SpellCheck,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -13,6 +21,7 @@ import {
 import { useOsType } from "@/hooks/useOsType";
 import { formatDateTime } from "@/utils/dateFormat";
 import { AudioPlayer } from "../../ui/AudioPlayer";
+import { CorrectWordDialog } from "./CorrectWordDialog";
 import { Button } from "../../ui/Button";
 
 const IconButton: React.FC<{
@@ -312,6 +321,7 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
   const { t, i18n } = useTranslation();
   const [showCopied, setShowCopied] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [correcting, setCorrecting] = useState(false);
 
   const hasTranscription = entry.transcription_text.trim().length > 0;
 
@@ -401,6 +411,13 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
             />
           </IconButton>
           <IconButton
+            onClick={() => setCorrecting(true)}
+            disabled={retrying || !hasTranscription}
+            title={t("settings.history.correctWord.action")}
+          >
+            <SpellCheck width={16} height={16} />
+          </IconButton>
+          <IconButton
             onClick={handleDeleteEntry}
             disabled={retrying}
             title={t("settings.history.delete")}
@@ -409,6 +426,12 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
           </IconButton>
         </div>
       </div>
+
+      <CorrectWordDialog
+        open={correcting}
+        onOpenChange={setCorrecting}
+        transcript={entry.transcription_text}
+      />
 
       <p
         className={`italic text-sm pb-2 ${

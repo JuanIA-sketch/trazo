@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { shouldEmitSelection } from "./dropdownSelection";
 
 export interface DropdownOption {
   value: string;
@@ -48,7 +49,11 @@ export const Dropdown: React.FC<DropdownProps> = ({
   );
 
   const handleSelect = (value: string) => {
-    onSelect(value);
+    // El desplegable se cierra siempre: la pulsación sí es una interacción,
+    // aunque no cambie nada.
+    if (shouldEmitSelection(selectedValue, value)) {
+      onSelect(value);
+    }
     setIsOpen(false);
   };
 

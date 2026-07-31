@@ -401,6 +401,9 @@ pub(crate) struct ProcessedTranscription {
     pub final_text: String,
     pub post_processed_text: Option<String>,
     pub post_process_prompt: Option<String>,
+    /// Id del perfil que corrió de verdad. El historial guarda el *texto* del
+    /// prompt; el mapa de actividad necesita el id para su histograma.
+    pub post_process_prompt_id: Option<String>,
 }
 
 /// Resolve the persisted language *intent* into the language the currently-loaded
@@ -433,6 +436,7 @@ pub(crate) async fn process_transcription_output(
     let mut final_text = transcription.to_string();
     let mut post_processed_text: Option<String> = None;
     let mut post_process_prompt: Option<String> = None;
+    let mut post_process_prompt_id: Option<String> = None;
 
     // Resolve the language the transcription actually ran in (the persisted
     // intent coerced against the loaded model's capabilities) so OpenCC keys off
@@ -467,6 +471,7 @@ pub(crate) async fn process_transcription_output(
             {
                 post_process_prompt = Some(prompt.prompt.clone());
             }
+            post_process_prompt_id = Some(prompt_id);
         }
     } else if final_text != transcription {
         post_processed_text = Some(final_text.clone());
@@ -476,6 +481,7 @@ pub(crate) async fn process_transcription_output(
         final_text,
         post_processed_text,
         post_process_prompt,
+        post_process_prompt_id,
     }
 }
 
@@ -781,7 +787,12 @@ impl ShortcutAction for TranscribeAction {
                                 return;
                             }
 
-                            // Save to history if WAV was saved
+                            // La entrada de historial depende del WAV: sin audio
+                            // no hay nada que reintentar ni que reproducir. El
+                            // mapa de actividad NO depende de él — si el WAV no
+                            // verificó (disco lleno, antivirus), el dictado
+                            // ocurrió igual y no puede desaparecer de las
+                            // métricas.
                             if wav_saved {
                                 if let Err(err) = hm.save_entry(
                                     file_name,
@@ -789,9 +800,16 @@ impl ShortcutAction for TranscribeAction {
                                     mode != crate::formalize::PostProcessMode::Off,
                                     processed.post_processed_text.clone(),
                                     processed.post_process_prompt.clone(),
+                                    processed.post_process_prompt_id.clone(),
                                 ) {
                                     error!("Failed to save history entry: {}", err);
                                 }
+                            } else if let Err(err) = hm.record_activity_only(
+                                &transcription,
+                                processed.post_processed_text.as_deref(),
+                                processed.post_process_prompt_id.as_deref(),
+                            ) {
+                                error!("Failed to record daily activity: {}", err);
                             }
 
                             if processed.final_text.is_empty() {
@@ -862,7 +880,9 @@ impl ShortcutAction for TranscribeAction {
                             // Surface the failure to the UI (toast). The full
                             // message is also in handy.log via the line above.
                             let _ = ah.emit("transcription-error", err.to_string());
-                            // Save entry with empty text so user can retry
+                            // Save entry with empty text so user can retry.
+                            // El fallo cuenta en el mapa (columna `failed`) haya
+                            // WAV o no: es el mismo criterio que arriba.
                             if wav_saved {
                                 if let Err(save_err) = hm.save_entry(
                                     file_name,
@@ -870,9 +890,14 @@ impl ShortcutAction for TranscribeAction {
                                     mode != crate::formalize::PostProcessMode::Off,
                                     None,
                                     None,
+                                    None,
                                 ) {
                                     error!("Failed to save failed history entry: {}", save_err);
                                 }
+                            } else if let Err(activity_err) =
+                                hm.record_activity_only("", None, None)
+                            {
+                                error!("Failed to record daily activity: {}", activity_err);
                             }
                             utils::hide_recording_overlay(&ah);
                             change_tray_icon(&ah, TrayIconState::Idle);

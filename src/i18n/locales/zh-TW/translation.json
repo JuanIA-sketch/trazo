@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "活動",
+        "streak": "連續天數",
+        "dictations": "聽寫次數",
+        "words": "字數",
+        "activeDays": "活躍天數",
+        "less": "少",
+        "more": "多",
+        "error": "無法載入活動地圖。",
+        "cellTooltip": "{{day}}：聽寫 {{dictations}} 次，{{words}} 字",
+        "cellFailedTooltip": "{{day}}：失敗 {{failed}} 次",
+        "cellEmptyTooltip": "{{day}}：沒有聽寫"
       }
     },
     "debug": {

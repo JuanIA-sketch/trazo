@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "활동",
+        "streak": "연속 기록",
+        "dictations": "받아쓰기",
+        "words": "단어",
+        "activeDays": "활동한 날",
+        "less": "적음",
+        "more": "많음",
+        "error": "활동 지도를 불러오지 못했습니다.",
+        "cellTooltip": "{{day}}: 받아쓰기 {{dictations}}회, {{words}}단어",
+        "cellFailedTooltip": "{{day}}: 실패 {{failed}}회",
+        "cellEmptyTooltip": "{{day}}: 받아쓰기 없음"
       }
     },
     "debug": {

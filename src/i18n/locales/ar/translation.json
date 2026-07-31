@@ -484,6 +484,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "النشاط",
+        "streak": "التتابع",
+        "dictations": "الإملاءات",
+        "words": "الكلمات",
+        "activeDays": "الأيام النشطة",
+        "less": "أقل",
+        "more": "أكثر",
+        "error": "تعذّر تحميل خريطة النشاط.",
+        "cellTooltip": "{{day}}: {{dictations}} إملاءات، {{words}} كلمة",
+        "cellFailedTooltip": "{{day}}: {{failed}} فاشلة",
+        "cellEmptyTooltip": "{{day}}: لا إملاءات"
       }
     },
     "debug": {

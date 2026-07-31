@@ -21,6 +21,7 @@ import {
 import { useOsType } from "@/hooks/useOsType";
 import { formatDateTime } from "@/utils/dateFormat";
 import { AudioPlayer } from "../../ui/AudioPlayer";
+import { ActivityMap } from "./ActivityMap";
 import { CorrectWordDialog } from "./CorrectWordDialog";
 import { Button } from "../../ui/Button";
 
@@ -281,6 +282,17 @@ export const HistorySettings: React.FC = () => {
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
+      <div className="space-y-2">
+        <div className="px-4">
+          <h2 className="text-xs font-medium text-mid-gray uppercase tracking-wide">
+            {t("settings.history.activity.title")}
+          </h2>
+        </div>
+        <div className="bg-background border border-mid-gray/20 rounded-lg">
+          <ActivityMap />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <div className="px-4 flex items-center justify-between">
           <div>

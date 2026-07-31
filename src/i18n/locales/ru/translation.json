@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "Активность",
+        "streak": "Серия",
+        "dictations": "Диктовки",
+        "words": "Слова",
+        "activeDays": "Активные дни",
+        "less": "Меньше",
+        "more": "Больше",
+        "error": "Не удалось загрузить карту активности.",
+        "cellTooltip": "{{day}}: {{dictations}} диктовок, {{words}} слов",
+        "cellFailedTooltip": "{{day}}: {{failed}} неудачных",
+        "cellEmptyTooltip": "{{day}}: диктовок нет"
       }
     },
     "debug": {

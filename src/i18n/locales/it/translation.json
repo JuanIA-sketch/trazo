@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "Attività",
+        "streak": "Serie",
+        "dictations": "Dettature",
+        "words": "Parole",
+        "activeDays": "Giorni attivi",
+        "less": "Meno",
+        "more": "Più",
+        "error": "Impossibile caricare la mappa di attività.",
+        "cellTooltip": "{{day}}: {{dictations}} dettature, {{words}} parole",
+        "cellFailedTooltip": "{{day}}: {{failed}} fallite",
+        "cellEmptyTooltip": "{{day}}: nessuna dettatura"
       }
     },
     "debug": {

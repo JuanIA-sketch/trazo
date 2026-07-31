@@ -1,10 +1,52 @@
 use crate::actions::process_transcription_output;
 use crate::managers::{
     history::{HistoryManager, PaginatedHistory},
+    insights::{self, DailyActivity},
     transcription::TranscriptionManager,
 };
+use serde::{Deserialize, Serialize};
+use specta::Type;
 use std::sync::Arc;
 use tauri::{AppHandle, State};
+
+/// El mapa de actividad tal como lo pinta la interfaz: la ventana pedida, las
+/// filas con actividad dentro de ella, y la racha en curso.
+#[derive(Clone, Debug, Serialize, Deserialize, Type)]
+pub struct ActivityMap {
+    pub from_day: String,
+    pub to_day: String,
+    pub days: Vec<DailyActivity>,
+    pub streak: i64,
+}
+
+/// Ventana máxima que se puede pedir de una vez. Un año de celdas ya no cabe en
+/// pantalla; pedir más solo sirve para cargar la base de datos sin motivo.
+const MAX_ACTIVITY_DAYS: u32 = 366;
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_activity_map(
+    _app: AppHandle,
+    history_manager: State<'_, Arc<HistoryManager>>,
+    days: u32,
+) -> Result<ActivityMap, String> {
+    // El día local lo decide el backend, igual que al escribir: si lo calculara
+    // la interfaz, un cambio de zona horaria movería las celdas ya escritas.
+    let today = chrono::Local::now().date_naive();
+    let (from_day, to_day) = insights::activity_range(today, days.clamp(1, MAX_ACTIVITY_DAYS));
+
+    let days = history_manager
+        .daily_activity(&from_day, &to_day)
+        .map_err(|e| e.to_string())?;
+    let streak = insights::current_streak(&days, today);
+
+    Ok(ActivityMap {
+        from_day,
+        to_day,
+        days,
+        streak,
+    })
+}
 
 #[tauri::command]
 #[specta::specta]

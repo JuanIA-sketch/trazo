@@ -31,6 +31,12 @@ static MIGRATIONS: &[M] = &[
     M::up("ALTER TABLE transcription_history ADD COLUMN post_processed_text TEXT;"),
     M::up("ALTER TABLE transcription_history ADD COLUMN post_process_prompt TEXT;"),
     M::up("ALTER TABLE transcription_history ADD COLUMN post_process_requested BOOLEAN NOT NULL DEFAULT 0;"),
+    // Mapa de actividad diaria. La tabla es propia a proposito: el historial se
+    // poda en cada dictado, asi que los contadores se congelan al escribir.
+    M::up(crate::managers::insights::CREATE_INSIGHTS_DAILY),
+    // El indice no lo usa el mapa sino el propio historial, que ordena por
+    // timestamp en la poda y en la consulta del ultimo dictado.
+    M::up("CREATE INDEX IF NOT EXISTS idx_history_timestamp ON transcription_history(timestamp);"),
 ];
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
@@ -214,20 +220,36 @@ impl HistoryManager {
         &self.recordings_dir
     }
 
-    /// Save a new history entry to the database.
-    /// The WAV file should already have been written to the recordings directory.
-    pub fn save_entry(
-        &self,
-        file_name: String,
-        transcription_text: String,
+    /// Inserta la fila del historial **y** suma el dictado al mapa de actividad
+    /// diaria, en la misma llamada.
+    ///
+    /// Que las dos escrituras vivan juntas no es cosmético: el mapa se congela
+    /// aquí, antes de que `cleanup_old_entries()` pode el historial. Calcularlo
+    /// después —o derivarlo de `transcription_history`— daría un mapa de dos
+    /// días, porque la poda deja 20 entradas.
+    #[allow(clippy::too_many_arguments)]
+    fn insert_entry_with_conn(
+        conn: &Connection,
+        day: &str,
+        timestamp: i64,
+        title: &str,
+        file_name: &str,
+        transcription_text: &str,
         post_process_requested: bool,
-        post_processed_text: Option<String>,
-        post_process_prompt: Option<String>,
-    ) -> Result<HistoryEntry> {
-        let timestamp = Utc::now().timestamp();
-        let title = self.format_timestamp_title(timestamp);
+        post_processed_text: Option<&str>,
+        post_process_prompt: Option<&str>,
+        post_process_prompt_id: Option<&str>,
+    ) -> Result<i64> {
+        crate::managers::insights::record_dictation(
+            conn,
+            day,
+            &crate::managers::insights::DictationOutcome::from_texts(
+                transcription_text,
+                post_processed_text,
+                post_process_prompt_id.map(str::to_string),
+            ),
+        )?;
 
-        let conn = self.get_connection()?;
         conn.execute(
             "INSERT INTO transcription_history (
                 file_name,
@@ -240,19 +262,100 @@ impl HistoryManager {
                 post_process_requested
             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
-                &file_name,
+                file_name,
                 timestamp,
                 false,
-                &title,
-                &transcription_text,
-                &post_processed_text,
-                &post_process_prompt,
+                title,
+                transcription_text,
+                post_processed_text,
+                post_process_prompt,
                 post_process_requested,
             ],
         )?;
 
+        Ok(conn.last_insert_rowid())
+    }
+
+    /// Suma el dictado al mapa de actividad sin crear entrada de historial.
+    ///
+    /// Es el camino para cuando el WAV no se pudo guardar o verificar: sin audio
+    /// no hay nada que reintentar, así que la entrada de historial no tendría
+    /// sentido, pero el dictado ocurrió y las métricas no pueden perderlo.
+    fn record_activity_with_conn(
+        conn: &Connection,
+        day: &str,
+        transcription_text: &str,
+        post_processed_text: Option<&str>,
+        post_process_prompt_id: Option<&str>,
+    ) -> Result<()> {
+        crate::managers::insights::record_dictation(
+            conn,
+            day,
+            &crate::managers::insights::DictationOutcome::from_texts(
+                transcription_text,
+                post_processed_text,
+                post_process_prompt_id.map(str::to_string),
+            ),
+        )
+    }
+
+    /// Ver [`Self::record_activity_with_conn`].
+    pub fn record_activity_only(
+        &self,
+        transcription_text: &str,
+        post_processed_text: Option<&str>,
+        post_process_prompt_id: Option<&str>,
+    ) -> Result<()> {
+        let conn = self.get_connection()?;
+        Self::record_activity_with_conn(
+            &conn,
+            &crate::managers::insights::today_local(),
+            transcription_text,
+            post_processed_text,
+            post_process_prompt_id,
+        )
+    }
+
+    /// Devuelve el mapa de actividad del rango `[from_day, to_day]`, inclusive.
+    pub fn daily_activity(
+        &self,
+        from_day: &str,
+        to_day: &str,
+    ) -> Result<Vec<crate::managers::insights::DailyActivity>> {
+        let conn = self.get_connection()?;
+        crate::managers::insights::daily_activity(&conn, from_day, to_day)
+    }
+
+    /// Save a new history entry to the database.
+    /// The WAV file should already have been written to the recordings directory.
+    pub fn save_entry(
+        &self,
+        file_name: String,
+        transcription_text: String,
+        post_process_requested: bool,
+        post_processed_text: Option<String>,
+        post_process_prompt: Option<String>,
+        post_process_prompt_id: Option<String>,
+    ) -> Result<HistoryEntry> {
+        let timestamp = Utc::now().timestamp();
+        let title = self.format_timestamp_title(timestamp);
+
+        let conn = self.get_connection()?;
+        let id = Self::insert_entry_with_conn(
+            &conn,
+            &crate::managers::insights::today_local(),
+            timestamp,
+            &title,
+            &file_name,
+            &transcription_text,
+            post_process_requested,
+            post_processed_text.as_deref(),
+            post_process_prompt.as_deref(),
+            post_process_prompt_id.as_deref(),
+        )?;
+
         let entry = HistoryEntry {
-            id: conn.last_insert_rowid(),
+            id,
             file_name,
             timestamp,
             saved: false,
@@ -656,6 +759,8 @@ mod tests {
 
     fn setup_conn() -> Connection {
         let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.execute_batch(crate::managers::insights::CREATE_INSIGHTS_DAILY)
+            .expect("create insights_daily table");
         conn.execute_batch(
             "CREATE TABLE transcription_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -719,6 +824,103 @@ mod tests {
         assert_eq!(entry.timestamp, 200);
         assert_eq!(entry.transcription_text, "second");
         assert_eq!(entry.post_processed_text.as_deref(), Some("processed"));
+    }
+
+    fn insert_via_manager(conn: &Connection, day: &str, text: &str) {
+        HistoryManager::insert_entry_with_conn(
+            conn,
+            day,
+            1_800_000_000,
+            "Recording",
+            "handy-1.wav",
+            text,
+            false,
+            None,
+            None,
+            None,
+        )
+        .expect("insert entry");
+    }
+
+    #[test]
+    fn saving_an_entry_records_the_dictation_in_the_activity_map() {
+        let conn = setup_conn();
+
+        insert_via_manager(&conn, "2026-07-31", "uno dos tres");
+
+        let rows = crate::managers::insights::daily_activity(&conn, "2026-07-31", "2026-07-31")
+            .expect("query activity");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].dictations, 1);
+        assert_eq!(rows[0].words, 3);
+    }
+
+    /// El historial se poda en cada dictado (20 entradas por defecto). Si el
+    /// mapa se calculara sobre `transcription_history` nunca tendría más de dos
+    /// días; este test cae si alguien lo reescribe como una consulta al
+    /// historial en lugar de un contador congelado al escribir.
+    #[test]
+    fn the_activity_map_survives_the_history_being_pruned() {
+        let conn = setup_conn();
+
+        for _ in 0..25 {
+            insert_via_manager(&conn, "2026-07-31", "una palabra mas");
+        }
+        // Lo que hace cleanup_by_count: deja solo las 20 más recientes.
+        conn.execute(
+            "DELETE FROM transcription_history WHERE id NOT IN (
+                SELECT id FROM transcription_history ORDER BY id DESC LIMIT 20
+             )",
+            [],
+        )
+        .expect("prune history");
+
+        let remaining: i64 = conn
+            .query_row("SELECT COUNT(*) FROM transcription_history", [], |row| {
+                row.get(0)
+            })
+            .expect("count history");
+        assert_eq!(remaining, 20, "la poda debe haber recortado el historial");
+
+        let rows = crate::managers::insights::daily_activity(&conn, "2026-07-31", "2026-07-31")
+            .expect("query activity");
+        assert_eq!(rows[0].dictations, 25);
+        assert_eq!(rows[0].words, 75);
+    }
+
+    /// Si el WAV no verifica (disco lleno, antivirus) no hay nada que
+    /// reintentar, así que no se crea entrada de historial — pero el dictado
+    /// ocurrió y no puede desaparecer de las métricas.
+    #[test]
+    fn a_dictation_whose_wav_failed_still_counts_without_a_history_row() {
+        let conn = setup_conn();
+
+        HistoryManager::record_activity_with_conn(&conn, "2026-07-31", "uno dos", None, None)
+            .expect("record activity");
+
+        let rows = crate::managers::insights::daily_activity(&conn, "2026-07-31", "2026-07-31")
+            .expect("query activity");
+        assert_eq!(rows[0].dictations, 1);
+        assert_eq!(rows[0].words, 2);
+
+        let history_rows: i64 = conn
+            .query_row("SELECT COUNT(*) FROM transcription_history", [], |row| {
+                row.get(0)
+            })
+            .expect("count history");
+        assert_eq!(history_rows, 0);
+    }
+
+    #[test]
+    fn a_failed_transcription_lands_in_failed_and_leaves_the_streak_alone() {
+        let conn = setup_conn();
+
+        insert_via_manager(&conn, "2026-07-31", "");
+
+        let rows = crate::managers::insights::daily_activity(&conn, "2026-07-31", "2026-07-31")
+            .expect("query activity");
+        assert_eq!(rows[0].dictations, 0);
+        assert_eq!(rows[0].failed, 1);
     }
 
     #[test]

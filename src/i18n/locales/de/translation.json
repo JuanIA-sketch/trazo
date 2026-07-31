@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "Aktivität",
+        "streak": "Serie",
+        "dictations": "Diktate",
+        "words": "Wörter",
+        "activeDays": "Aktive Tage",
+        "less": "Weniger",
+        "more": "Mehr",
+        "error": "Die Aktivitätskarte konnte nicht geladen werden.",
+        "cellTooltip": "{{day}}: {{dictations}} Diktate, {{words}} Wörter",
+        "cellFailedTooltip": "{{day}}: {{failed}} fehlgeschlagen",
+        "cellEmptyTooltip": "{{day}}: keine Diktate"
       }
     },
     "debug": {

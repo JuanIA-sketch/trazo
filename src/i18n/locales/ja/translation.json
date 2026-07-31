@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "アクティビティ",
+        "streak": "連続日数",
+        "dictations": "口述回数",
+        "words": "単語数",
+        "activeDays": "活動日数",
+        "less": "少",
+        "more": "多",
+        "error": "アクティビティマップを読み込めませんでした。",
+        "cellTooltip": "{{day}}: 口述 {{dictations}} 件、{{words}} 単語",
+        "cellFailedTooltip": "{{day}}: 失敗 {{failed}} 件",
+        "cellEmptyTooltip": "{{day}}: 口述なし"
       }
     },
     "debug": {

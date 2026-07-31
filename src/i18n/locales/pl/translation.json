@@ -505,6 +505,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "Aktywność",
+        "streak": "Passa",
+        "dictations": "Dyktowania",
+        "words": "Słowa",
+        "activeDays": "Aktywne dni",
+        "less": "Mniej",
+        "more": "Więcej",
+        "error": "Nie udało się wczytać mapy aktywności.",
+        "cellTooltip": "{{day}}: {{dictations}} dyktowań, {{words}} słów",
+        "cellFailedTooltip": "{{day}}: {{failed}} nieudanych",
+        "cellEmptyTooltip": "{{day}}: brak dyktowań"
       }
     },
     "debug": {

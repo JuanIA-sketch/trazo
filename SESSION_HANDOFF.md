@@ -446,20 +446,36 @@ diagnóstico de §7.6 resultó ser falso)
 
 Lo que queda, por orden:
 
-1. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2).
-   **La hipótesis está MUY debilitada**: las 25 grabaciones de Charly tienen
-   1540 ms de silencio de cola de mediana (§9.2), o sea que el tiempo de
-   reacción al soltar la tecla ya da mucho más margen que los 200-300 ms que se
-   iban a añadir. Falta el WAV de Benja; con él es un solo comando:
-   `python scripts/tail_silence.py <archivo>`. Si también da cola de sobra, se
-   descarta el buffer y el sospechoso pasa a ser **el nivel de captura**
-   (§9.7).
-2. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
-   el diagnóstico está confirmado; si es `CtrlV`, hay que rehacerlo.
+1. **~~El experimento de `extra_recording_buffer_ms`~~ → DESCARTADO por datos.**
+   No era pérdida de cola: las 25 grabaciones tienen 1540 ms de silencio final
+   de mediana (§9.2). La causa real era otra y **ya está arreglada** (§9.8): el
+   rescate no se disparaba porque su medida de habla depende del nivel de
+   grabación. **No subir ese default.**
+
+   Lo que queda de ese hilo: **el suelo absoluto de −50 dBFS sigue sin tocarse**
+   (§9.8, "sigue abierto"). La segunda red tapa el síntoma en el rescate, pero
+   `speech_seconds` sigue midiendo de menos y esa medida la usan también
+   `speech_segments` y el troceado. Con el WAV de Benja:
+   `cargo run --example silence_gate_probe -- <wav> [palabras]`.
+2. **~~Preguntar a Benja qué `paste_method` tiene~~ → RESPONDIDO: `ctrl_v`.**
+   La predicción era `Direct`, así que **el diagnóstico del bug 1 en §8.8 queda
+   refutado**. La causa real resultó ser otra y ya está arreglada: no era el
+   método de pegado sino `clipboard_handling` en `dont_modify`, puesto ahí por
+   el bug de la interfaz (§9.5). Benja y Charly tenían el mismo `ctrl_v`; lo que
+   los igualaba era el otro ajuste.
 3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
    dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
    también con qué prueba concreta descartó el downmix.
-4. **Feature 1 pendiente: diccionario de reemplazos ampliado.** Charly la pidió
+4. **Diccionario de reemplazos — SPEC APROBADO, falta el plan y el código.**
+   Spec en `docs/superpowers/specs/2026-07-30-diccionario-reemplazos-design.md`
+   (`55d871b`), aprobado por Charly el 30/07 incluido el giro de diseño: la
+   lista **no** va al motor difuso porque se midió y corrompe (5 de 12 frases:
+   "flujo"→"Flux", "Claudia"→"Claude"). Las reglas se proponen desde el
+   historial del propio usuario, con previsualización del radio de impacto.
+   Decidido también: **quitar `custom_words: ["Claude"]`** de los ajustes de
+   Charly y cubrirlo con la regla exacta `cloud → Claude` (2 aciertos, 0 roturas
+   en su corpus). **Pendiente de ejecutar**, requiere cerrar la app.
+   Registro histórico del encargo original:
    junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
    (a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
    desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
@@ -1438,3 +1454,80 @@ y ahí sí cambiaría algo. Merece la prueba, sin esperar que arregle lo otro.
 **Hipótesis sin verificar** de por qué Wispr Flow suena bien: usa la unidad de
 *Voice Processing* de macOS (control automático de ganancia), que cpal no
 activa. No se puede comprobar desde fuera.
+
+### 9.8 El truncado por silencio largo: causa raíz y arreglo (`015aca3`)
+
+**Reproducido en la máquina de Charly, no solo en la de Benja.** Un dictado de
+27,1 s devolvió **26 palabras**, con un silencio sostenido de 1610 ms en medio
+(el fallo de §2.2: Whisper termina el decode al toparse con un silencio largo).
+
+**Lo nuevo, y lo grave: el reintento de rescate NO se disparó**, existiendo
+precisamente para esto.
+
+**Por qué no se disparó.** `looks_truncated` divide las palabras por los
+**segundos de habla** que mide el gate, y esa medida **no es independiente del
+nivel de grabación**: `ABSOLUTE_FLOOR_DB` es un suelo absoluto de −50 dBFS y esa
+voz está a −39,6, así que las sílabas átonas caen por debajo y cuentan como
+silencio.
+
+| Medida                    | Valor      |
+| ------------------------- | ---------- |
+| Duración real             | 27,15 s    |
+| Habla según el gate       | **6,90 s** |
+| 26 palabras sobre habla   | 3,77 p/s → "sano", no dispara |
+| 26 palabras sobre el clip | **0,96 p/s** → truncado evidente |
+
+**Medido sobre las 25 grabaciones reales**, la correlación es limpia: el gate ve
+el **13%** del clip como habla con la voz a −47 dBFS y el **53%** a −14 dBFS. Es
+decir: **cuanto más floja la grabación, más sano parece un dictado truncado.**
+
+> **La frase que resume el bug:** el fallo (audio flojo → Whisper se rinde) y el
+> punto ciego de su remedio (audio flojo → el gate mide de menos) **tenían la
+> misma causa**. Por eso a Benja le pasa más que a Charly. Y explica su caso sin
+> necesidad de su WAV.
+
+**Daño real antes del arreglo:** de los 20 dictados con transcripción, el rescate
+saltó **en 1**. Al menos cuatro salieron truncados y pasaron por buenos (12
+palabras en 18,6 s; 21 en 22,2 s).
+
+**El arreglo:** `looks_truncated_by_duration(palabras, segundos_de_clip)`, una
+segunda red **independiente del nivel**, combinada con OR en el llamante. **No se
+tocó el umbral de 2,7**, que está calibrado contra un corpus.
+
+Es seguro por una razón concreta y verificada en el código: el reintento **ya se
+descarta salvo que recupere más palabras** (`transcription.rs:1284`), así que
+disparar de más cuesta decodes, nunca precisión. Coste medido: 4 clips de 20
+pasan a reintentar.
+
+**Por qué va en función aparte y no como tercer parámetro de `looks_truncated`:**
+los tests de esa función encodean un corpus real (palabras y segundos de habla
+medidos en cinco dictados) y **nadie midió las duraciones totales** de esos
+clips. Añadir el parámetro habría obligado a inventárselas, convirtiendo
+evidencia medida en ficción dentro del test que vale justo por ser real.
+
+**Herramienta:** `cargo run --example silence_gate_probe -- <wav> [palabras]`
+imprime lo que ve el gate y cuál de las dos redes dispara. Es la que encontró
+esto y la que sirve para el WAV de Benja.
+
+**Sigue abierto:** el suelo absoluto de −50 dBFS no se tocó. La segunda red tapa
+el síntoma, pero `speech_seconds` sigue midiendo de menos en grabaciones flojas,
+y esa medida la usan también `speech_segments` y el propio troceado.
+
+### 9.9 ⚠️ Test intermitente SIN IDENTIFICAR (2026-07-30)
+
+En una pasada de `cargo test --lib` durante el trabajo de §9.8: **280 passed, 1
+failed**. No se capturó la salida y **no se supo cuál era**. En las **cinco
+pasadas siguientes** salieron los 281 en verde.
+
+**Hipótesis descartada, no confirmada:** se sospechó contención por el archivo
+temporal compartido `handy_volume_recovery.txt` (ruta fija en
+`system_volume.rs:49`) porque la app estaba corriendo a la vez. **Se comprobó y
+es falsa**: esos tests se aíslan con `tempfile::tempdir()`, cada uno con su
+directorio. La ruta fija la usa solo el código de producción.
+
+**Queda sin explicar.** No darlo por benigno. Si reaparece, lo primero es
+**guardar la salida completa** (`cargo test --lib > salida.txt 2>&1`) para saber
+al menos qué test es — que es exactamente lo que faltó esta vez.
+
+Que la app estuviera corriendo durante la pasada es la única circunstancia
+anómala conocida, pero no se ha establecido ninguna relación causal.

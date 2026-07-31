@@ -546,6 +546,157 @@ h2 em,h1 em{font-style:italic}
 .js-reveal .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
 .js-reveal .reveal.is-in{opacity:1;transform:none}
 
+
+/* ═══════════════════════════════════════════════════════════════
+   ELEVACIÓN VISUAL — el fondo respira, la luz pesa, el trazo firma
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  /* expo.out: arranca rápido y aterriza suave. Es la curva que separa
+     "se mueve" de "está bien hecho". La vieja --ease se conserva para
+     no romper lo que ya la usa. */
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-in:cubic-bezier(.7,0,.84,0);
+
+  /* #64748B daba 3.93 sobre el fondo y 3.45 sobre panel; el minimo es 4.5.
+     Este da 5.48 / 4.80 / 4.57 y sigue leyendose como secundario. */
+  --text-3:#7C8CA5;
+
+  --halo-primary:rgba(37,99,235,.45);
+  --halo-accent:rgba(34,211,238,.38);
+}
+
+/* ── 1 · El fondo deja de estar muerto ───────────────────────────
+   Los glows solo se desplazaban con el scroll: si el usuario no
+   scrollea, la pantalla es un JPG. Ahora respiran solos.
+   Se anima `scale` y `opacity` — propiedades independientes de
+   `transform`, para no pisar el driftA que ya usa translateY. */
+@keyframes respiraA{
+  0%,100%{scale:1;opacity:.72}
+  50%    {scale:1.14;opacity:1}
+}
+@keyframes respiraB{
+  0%,100%{scale:1.1;opacity:.62}
+  45%    {scale:.94;opacity:.95}
+}
+.bg-glow-a{animation:respiraA 34s var(--ease-out) infinite;will-change:scale,opacity}
+.bg-glow-b{animation:respiraB 41s var(--ease-out) infinite;will-change:scale,opacity}
+
+@supports (animation-timeline: scroll()){
+  /* el drift por scroll (transform) y la respiracion (scale/opacity)
+     conviven porque tocan propiedades distintas */
+  .bg-glow-a{animation:driftA linear both,respiraA 34s var(--ease-out) infinite;animation-timeline:scroll(),auto}
+  .bg-glow-b{animation:driftB linear both,respiraB 41s var(--ease-out) infinite;animation-timeline:scroll(),auto}
+}
+
+/* Una tercera fuente de luz, mas cerca y mas lenta: da profundidad
+   porque se mueve a otra velocidad que las otras dos. */
+.bg-stage::after{
+  content:"";position:absolute;top:34%;left:38%;
+  width:640px;height:640px;border-radius:50%;translate:-50% -50%;
+  background:radial-gradient(closest-side,rgba(37,99,235,.14),transparent 70%);
+  animation:respiraB 52s var(--ease-out) infinite reverse;
+}
+
+/* ── 2 · Textura: que el negro no se vea plano ──────────────────
+   El grano solo estaba a .05 y no se leia. Sube, y encima va una
+   trama de barrido finisima que le da superficie a las zonas oscuras. */
+.grain{opacity:.075}
+.grain::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(148,163,184,.05) 0 1px,transparent 1px 3px);
+  opacity:.5;
+}
+
+/* ── 3 · La luz pesa: halos detras de lo importante ─────────────
+   El CTA azul flotaba sobre el fondo sin proyectar nada. */
+.cta-primary{isolation:isolate}
+.cta-primary::before{
+  content:"";position:absolute;inset:-45% -12%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,var(--halo-primary),transparent 72%);
+  opacity:.85;transition:opacity .4s var(--ease-out);
+}
+.cta-primary:hover::before{opacity:1}
+
+.panel-after{box-shadow:var(--inner-light),var(--shadow-lg),0 0 42px -14px var(--halo-accent)}
+.icon{box-shadow:var(--inner-light),0 0 22px -6px var(--halo-accent)}
+
+/* ── 4 · El titular del hero pesa mas ───────────────────────────
+   Un halo bajisimo detras del texto lo despega del video sin
+   ensuciarlo, y el eyebrow se enciende como una senal. */
+.hero h1{text-shadow:0 0 60px rgba(2,6,23,.85),0 1px 0 rgba(2,6,23,.5)}
+.hero .eyebrow{text-shadow:0 0 18px rgba(34,211,238,.5)}
+.hero-badges li{transition:border-color .3s var(--ease-out),color .3s var(--ease-out)}
+.hero-badges li:hover{border-color:rgba(34,211,238,.5);color:var(--text)}
+
+/* ── 5 · El trazo firma cada seccion ────────────────────────────
+   Trazo se llama asi y su isotipo es una "t" de un solo trazo. El
+   subrayado no aparece: se dibuja, de izquierda a derecha. Es la
+   marca convertida en gesto, no en logo pegado. */
+.container > h2.display{position:relative}
+.container > h2.display::after{
+  content:"";position:absolute;left:2px;bottom:-14px;
+  height:2px;width:clamp(56px,6.5vw,92px);border-radius:999px;
+  background:linear-gradient(90deg,var(--accent),rgba(37,99,235,.15));
+  box-shadow:0 0 14px rgba(34,211,238,.6);
+  transform:scaleX(0);transform-origin:0 50%;
+}
+@keyframes trazar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@supports (animation-timeline: view()){
+  .container > h2.display::after{
+    animation:trazar .9s var(--ease-out) both;
+    animation-timeline:view();animation-range:entry 12% entry 52%;
+  }
+}
+.js-reveal .reveal.is-in > h2.display::after{
+  transform:scaleX(1);transition:transform .9s var(--ease-out) .15s;
+}
+
+/* ── 6 · Escalonado: las tarjetas dejan de entrar todas juntas ──
+   30-50ms entre una y otra. Con timeline de scroll el escalonado se
+   expresa corriendo el rango de entrada, no con delay. */
+@supports (animation-timeline: view()){
+  .feature-grid > *,.proof-grid > *,.quotes > *{
+    animation:riseSoft .75s var(--ease-out) both;animation-timeline:view();
+  }
+  .feature-grid > :nth-child(1),.proof-grid > :nth-child(1),.quotes > :nth-child(1){animation-range:entry 4% entry 46%}
+  .feature-grid > :nth-child(2),.proof-grid > :nth-child(2),.quotes > :nth-child(2){animation-range:entry 9% entry 51%}
+  .feature-grid > :nth-child(3),.proof-grid > :nth-child(3),.quotes > :nth-child(3){animation-range:entry 14% entry 56%}
+  .feature-grid > :nth-child(4),.proof-grid > :nth-child(4){animation-range:entry 19% entry 61%}
+}
+
+/* ── 7 · Respuesta al dedo: todo lo pulsable se hunde ───────────
+   Escala 0.97 -> 1. Es el detalle que hace que una pagina se sienta
+   construida y no maquetada. */
+.btn,.feature,.proof-item,.app-logo-img{transition:transform .28s var(--ease-out),border-color .28s var(--ease-out),opacity .28s var(--ease-out),box-shadow .28s var(--ease-out)}
+.btn:active,.proof-item:active{transform:scale(.972)}
+.feature:active{transform:translateY(-4px) scale(.985)}
+
+/* Las tarjetas se encienden por el borde al pasar por encima */
+.feature{transition:transform .3s var(--ease-out),border-color .3s var(--ease-out),box-shadow .3s var(--ease-out)}
+.feature:hover{
+  border-color:rgba(59,130,246,.55);
+  box-shadow:var(--inner-light),0 24px 50px -28px rgba(2,6,23,.9),0 0 34px -16px var(--halo-primary);
+}
+
+/* ── 8 · Curva nueva donde ya habia movimiento ──────────────────
+   Mismo gesto, otra fisica: entra rapido y aterriza. */
+.hero .eyebrow,.hero h1,.hero-sub,.hero-actions,.hero-badges,.hero-micro{
+  animation-timing-function:var(--ease-out);
+}
+.js-reveal .reveal{transition:opacity .85s var(--ease-out),transform .85s var(--ease-out)}
+@supports (animation-timeline: view()){
+  .reveal{animation-timing-function:var(--ease-out)}
+}
+
+/* ── 9 · Movimiento reducido: nada de esto sobrevive ────────────
+   La regla global ya apaga animaciones y transiciones, pero el
+   subrayado trazado quedaria invisible: aqui se deja dibujado. */
+@media (prefers-reduced-motion:reduce){
+  .container > h2.display::after{transform:scaleX(1)}
+  .bg-stage::after{opacity:.5}
+}
+
 @media (min-width:760px){
   .proof-grid{grid-template-columns:repeat(2,1fr)}
 }

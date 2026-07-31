@@ -1219,7 +1219,13 @@ impl ModelManager {
         let mut models = self.available_models.lock().unwrap();
         if let Some(model) = models.get_mut(model_id) {
             model.supports_streaming = supports_streaming;
-            model.supports_translation = supports_translation;
+            // El motor reporta la capacidad de la FAMILIA, no la del
+            // checkpoint. Sin esto, cargar el modelo resucitaria el toggle que
+            // el catalogo acaba de esconder. Ver `checkpoint_translates`.
+            model.supports_translation = crate::managers::model_capabilities::checkpoint_translates(
+                model_id,
+                supports_translation,
+            );
             model.supports_language_detection = supports_language_detection;
             // An empty set means the model is language-agnostic — but it is also
             // what a failed capability read leaves behind, so keep the probed /

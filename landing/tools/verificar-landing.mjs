@@ -251,13 +251,57 @@ for (const archivo of listar(RAIZ)) {
   }
 }
 
+/* ── 7b · Caché inmutable solo sobre nombres versionados ───────── */
+/* El fallo que costó una sesión entera: /assets/ servido con caché de un año
+   e inmutable, y encima se regeneró el video conservando el nombre. Para
+   quien ya había visitado la página, ese archivo quedaba congelado un año —
+   veía la versión vieja y ninguna cantidad de deploys se la cambiaba. */
+
+const rutaVercel = join(RAIZ, "vercel.json");
+if (existsSync(rutaVercel)) {
+  const conf = JSON.parse(readFileSync(rutaVercel, "utf8"));
+  for (const regla of conf.headers ?? []) {
+    const cache = (regla.headers ?? []).find(
+      (h) => h.key.toLowerCase() === "cache-control"
+    );
+    if (!cache || !/immutable/i.test(cache.value)) continue;
+
+    // Un patrón inmutable obliga a que TODO lo que sirve lleve versión o hash
+    // en el nombre; si no, actualizarlo nunca le llega a quien ya estuvo.
+    const prefijo = regla.source.replace(/\(\.\*\)$/, "").replace(/^\//, "");
+    const alcanzados = [...referencias].filter((r) => r.startsWith(prefijo));
+    const sinVersion = alcanzados.filter(
+      (r) => !/[-_](v\d+|[0-9a-f]{8,})\.[a-z0-9]+$/i.test(r)
+    );
+    if (sinVersion.length) {
+      fallo(
+        `vercel.json sirve "${regla.source}" como immutable, pero ` +
+          `${sinVersion.length} archivo(s) no llevan versión en el nombre ` +
+          `(${sinVersion.slice(0, 3).join(", ")}…). Al regenerarlos, quien ya ` +
+          `visitó la página seguiría viendo los viejos.`
+      );
+    }
+  }
+}
+
 /* ── 8 · Presupuesto de peso del hero ─────────────────────────── */
 
-const HERO = ["assets/hero/hero.webm", "assets/hero/poster.jpg"];
+/* Los archivos del hero se leen DEL HTML, no de una lista escrita a mano:
+   al versionar los nombres, una lista fija se queda midiendo la nada y el
+   presupuesto pasa en verde sin haber comprobado nada. */
+const bloqueHero = /<video id="hero-video"[\s\S]*?<\/video>/.exec(html)?.[0] ?? "";
+const HERO = [
+  ...[...bloqueHero.matchAll(/src="([^"]+\.webm)"/g)].map((m) => m[1]),
+  ...[...bloqueHero.matchAll(/poster="([^"]+)"/g)].map((m) => m[1]),
+];
+if (!HERO.length) fallo("No pude leer los archivos del hero desde el HTML.");
 const pesoHero = HERO.reduce(
   (t, f) => t + (existsSync(join(RAIZ, f)) ? statSync(join(RAIZ, f)).size : 0),
   0
 );
+if (HERO.length && pesoHero === 0) {
+  fallo(`El hero mide 0 bytes: ${HERO.join(", ")} no existen en el disco.`);
+}
 const MB = 1024 * 1024;
 if (pesoHero > 10 * MB) {
   fallo(`El hero pesa ${(pesoHero / MB).toFixed(1)} MB y el techo en móvil es 10 MB.`);

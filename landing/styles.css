@@ -697,6 +697,269 @@ h2 em,h1 em{font-style:italic}
   .bg-stage::after{opacity:.5}
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   TANDA 2 — tipografía, gradientes y el filo que recorre el header
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  /* Geist para el cuerpo: es lo que el contrato de diseno pedia desde el
+     principio. Manrope nunca estuvo ahi. Geist y Geist Mono son la misma
+     superfamilia, asi que la pagina baja de 3 familias a 2 + display. */
+  --font-sans:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+
+/* Geist tiene ojo mas pequeno que Manrope: se compensa con altura de linea
+   y un pelo de tracking negativo en los tamanos grandes. */
+body{letter-spacing:-.005em}
+.display{letter-spacing:-.028em}
+h2.display{letter-spacing:-.03em}
+.hero h1{letter-spacing:-.038em}
+.eyebrow{letter-spacing:.08em;text-transform:none}
+.sub,.hero-sub,.privacy .lead{letter-spacing:-.008em}
+
+/* ── El filo que recorre el header ──────────────────────────────
+   Un hilo de luz que da la vuelta al borde de la pildora. Va lento y
+   con la mayor parte del recorrido apagado, para que se lea como un
+   destello que pasa y no como un cartel de neon. */
+@property --giro{syntax:"<angle>";initial-value:0deg;inherits:false}
+
+.nav-pill{position:relative}
+/* El contenido va por encima del filo */
+.nav-pill > *{position:relative;z-index:1}
+.nav-pill::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;z-index:0;
+  padding:1px;pointer-events:none;
+  background:conic-gradient(from var(--giro),
+    transparent 0deg 300deg,
+    rgba(61,123,255,.55) 330deg,
+    var(--accent) 348deg,
+    transparent 360deg);
+  /* Sin esta máscara el degradado se ve a través de toda la píldora,
+     porque su fondo es translúcido. La máscara lo recorta al anillo. */
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  animation:recorrerBorde 7s linear infinite;
+}
+@keyframes recorrerBorde{to{--giro:360deg}}
+
+/* Sin @property el angulo no interpola: se deja un filo fijo, discreto */
+@supports not (background: conic-gradient(from var(--giro), red, blue)){
+  .nav-pill::before{
+    background:linear-gradient(120deg,transparent 40%,rgba(34,211,238,.4) 55%,transparent 70%);
+    animation:none;
+  }
+}
+
+/* ── Gradientes: aurora arriba y superficies con temperatura ────
+   El fondo era plano; ahora tiene una capa alta que tine la parte
+   superior y se apaga hacia el medio. */
+.bg-stage::before{
+  content:"";position:absolute;inset:0 0 auto 0;height:72vh;pointer-events:none;
+  background:
+    radial-gradient(120% 85% at 78% -12%,rgba(34,211,238,.10),transparent 62%),
+    radial-gradient(95% 70% at 22% -8%,rgba(37,99,235,.16),transparent 60%),
+    linear-gradient(180deg,rgba(37,99,235,.05),transparent 78%);
+}
+
+/* Las superficies dejan de ser un gris azulado plano */
+.panel,.feature,.proof-item,.quotes blockquote{
+  background:
+    linear-gradient(180deg,rgba(22,35,63,.60),rgba(15,26,48,.34)),
+    radial-gradient(140% 110% at 0% 0%,rgba(59,130,246,.09),transparent 58%);
+}
+.cta-card{
+  background:
+    linear-gradient(180deg,rgba(22,35,63,.66),rgba(11,18,32,.8)),
+    radial-gradient(90% 70% at 50% 0%,rgba(37,99,235,.14),transparent 62%);
+}
+
+/* Barra de anuncio: el degradado ahora corre y no se queda quieto */
+.announce::before{
+  background:
+    linear-gradient(180deg,rgba(15,26,48,.92),rgba(11,18,32,.62)),
+    linear-gradient(90deg,transparent,rgba(37,99,235,.16),transparent);
+}
+
+/* La barra de velocidad gana volumen en vez de ser un bloque de color */
+.bar-speak{
+  background:linear-gradient(90deg,var(--primary) 0%,#3B82F6 42%,var(--accent) 100%);
+  box-shadow:inset 0 1px 0 rgba(248,250,252,.4),0 0 30px rgba(34,211,238,.45);
+}
+
+/* ── El isotipo respira con la marca ────────────────────────────  */
+.brand-mark{
+  box-shadow:0 0 0 1px rgba(34,211,238,.18),0 0 18px -4px rgba(34,211,238,.5);
+  transition:box-shadow .35s var(--ease-out),transform .35s var(--ease-out);
+}
+.brand:hover .brand-mark{
+  box-shadow:0 0 0 1px rgba(34,211,238,.4),0 0 26px -2px rgba(34,211,238,.75);
+  transform:translateY(-1px);
+}
+
+/* ── Los logos del carrusel dejan de ser calcomanias planas ───── */
+.app-logo-img{
+  opacity:.5;filter:saturate(.75) brightness(1.05);
+  transition:opacity .35s var(--ease-out),filter .35s var(--ease-out),transform .35s var(--ease-out);
+}
+.app-logo-img:hover{
+  opacity:1;filter:saturate(1) brightness(1.12) drop-shadow(0 0 12px rgba(34,211,238,.45));
+  transform:translateY(-4px) scale(1.06);
+}
+
+/* ── Enlaces del nav: subrayado que se traza al pasar ──────────  */
+.nav-links a{position:relative}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:0;bottom:-5px;height:1.5px;border-radius:999px;
+  background:linear-gradient(90deg,var(--accent),rgba(37,99,235,.4));
+  transform:scaleX(0);transform-origin:0 50%;
+  transition:transform .32s var(--ease-out);
+}
+.nav-links a:hover::after{transform:scaleX(1)}
+
+@media (prefers-reduced-motion:reduce){
+  .nav-pill::before{animation:none}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TANDA 3 — azul eléctrico luminoso sobre base oscura
+   ═══════════════════════════════════════════════════════════════
+
+   El azul se veía apagado porque los fondos eran casi grises (#0B1220
+   tiene poquísimo azul real) y el primario cargaba con todo el trabajo.
+
+   La regla que ordena esta paleta: NINGÚN azul lo bastante brillante
+   como para verse eléctrico aguanta texto blanco encima. Medido:
+   #3D7BFF con blanco da 3.67 y el mínimo es 4.5. Así que el brillante
+   va a todo lo que NO lleva texto — bordes, glows, gradientes, hover —
+   y el relleno del botón se queda en el azul donde el blanco se lee.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  /* Fondos: más azul real, no gris azulado */
+  --bg-deep:#060D1F;
+  --bg:#0D1930;
+  --surface:#16243F;
+  --surface-2:#1E3054;
+  --border:#2C3E63;
+
+  /* Relleno con texto blanco encima: 4.94 de contraste */
+  --primary:#2563EB;
+  --primary-hover:#1D4ED8;
+  /* Luminoso, solo donde no hay texto: 4.57 contra el fondo */
+  --primary-bright:#3D7BFF;
+
+  --accent:#34E5FF;
+
+  --text:#F8FAFC;
+  --text-2:#A6B6CC;
+  --text-3:#8FA1BA;
+
+  --glass:linear-gradient(180deg,rgba(30,48,84,.55),rgba(22,36,63,.4));
+  --halo-primary:rgba(61,123,255,.55);
+  --halo-accent:rgba(52,229,255,.45);
+}
+
+/* ── Los glows dejan de ser un susurro ─────────────────────────── */
+.bg-glow-a{
+  background:radial-gradient(closest-side,
+    rgba(61,123,255,.36),rgba(37,99,235,.12) 52%,transparent 72%);
+}
+.bg-glow-b{
+  background:radial-gradient(closest-side,
+    rgba(52,229,255,.24),rgba(52,229,255,.07) 52%,transparent 72%);
+}
+.bg-stage::after{
+  background:radial-gradient(closest-side,rgba(61,123,255,.22),transparent 70%);
+}
+.bg-stage::before{
+  background:
+    radial-gradient(120% 85% at 78% -12%,rgba(52,229,255,.16),transparent 62%),
+    radial-gradient(95% 70% at 22% -8%,rgba(61,123,255,.24),transparent 60%),
+    linear-gradient(180deg,rgba(61,123,255,.08),transparent 78%);
+}
+.bg-grid{
+  background-image:
+    linear-gradient(rgba(120,160,220,.075) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,160,220,.075) 1px,transparent 1px);
+}
+
+/* ── El CTA: brillante arriba, legible donde va el texto ───────── */
+.cta-primary{
+  background:linear-gradient(180deg,var(--primary-bright) 0%,var(--primary) 48%,var(--primary-hover) 100%);
+  border-color:rgba(61,123,255,.75);
+  box-shadow:
+    inset 0 1px 0 rgba(248,250,252,.4),
+    0 14px 38px -8px rgba(61,123,255,.6),
+    0 0 0 1px rgba(61,123,255,.25);
+}
+.cta-primary:hover{
+  background:linear-gradient(180deg,#5A90FF 0%,var(--primary) 52%,var(--primary-hover) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(248,250,252,.5),
+    0 18px 46px -8px rgba(61,123,255,.75),
+    0 0 0 1px rgba(61,123,255,.4);
+}
+
+/* ── Superficies: más claras y con temperatura azul ────────────── */
+.panel,.feature,.proof-item,.quotes blockquote{
+  background:
+    linear-gradient(180deg,rgba(30,48,84,.62),rgba(22,36,63,.38)),
+    radial-gradient(140% 110% at 0% 0%,rgba(61,123,255,.14),transparent 58%);
+  border-color:rgba(44,62,99,.95);
+}
+.cta-card{
+  background:
+    linear-gradient(180deg,rgba(30,48,84,.66),rgba(13,25,48,.82)),
+    radial-gradient(90% 70% at 50% 0%,rgba(61,123,255,.2),transparent 62%);
+  border-color:rgba(44,62,99,1);
+}
+.nav-pill{
+  background:linear-gradient(180deg,rgba(30,48,84,.72),rgba(13,25,48,.58));
+  border-color:rgba(61,123,255,.28);
+}
+.hero-badges li,.chip,.dl{
+  border-color:rgba(61,123,255,.26);
+}
+.dl:hover{border-color:rgba(61,123,255,.75)}
+
+/* ── El cián manda como luz de acento ──────────────────────────── */
+.eyebrow,.panel-after .panel-label,.dict .ok,.chip,.proofs .check{color:var(--accent)}
+.brand::after{background:var(--accent);box-shadow:0 0 10px rgba(52,229,255,.9)}
+.announce .dot{
+  background:var(--accent);
+  box-shadow:0 0 12px rgba(52,229,255,1),0 0 26px rgba(52,229,255,.55);
+}
+.icon{
+  color:var(--accent);
+  background:linear-gradient(180deg,rgba(52,229,255,.2),rgba(61,123,255,.14));
+  border-color:rgba(52,229,255,.4);
+  box-shadow:var(--inner-light),0 0 26px -6px rgba(52,229,255,.6);
+}
+.panel-after{border-color:rgba(52,229,255,.42)}
+.bar-speak{
+  background:linear-gradient(90deg,var(--primary-bright) 0%,#5AA6FF 40%,var(--accent) 100%);
+  box-shadow:inset 0 1px 0 rgba(248,250,252,.45),0 0 36px rgba(52,229,255,.55);
+}
+.container > h2.display::after{
+  background:linear-gradient(90deg,var(--accent),rgba(61,123,255,.2));
+  box-shadow:0 0 16px rgba(52,229,255,.75);
+}
+.feature:hover{border-color:rgba(61,123,255,.7)}
+.proof-item:hover{border-color:rgba(61,123,255,.7)}
+
+/* ── El velo del hero deja pasar más color del video ───────────── */
+.hero-veil{
+  background:
+    linear-gradient(90deg,rgba(6,13,31,.66) 0%,rgba(6,13,31,.16) 58%,transparent 100%),
+    linear-gradient(180deg,rgba(6,13,31,.5) 0%,rgba(13,25,48,.16) 40%,rgba(13,25,48,.45) 74%,var(--bg) 100%);
+}
+.privacy{background:linear-gradient(180deg,var(--bg-deep),#0A1428 55%,var(--bg))}
+.footer{background:linear-gradient(180deg,var(--bg),var(--bg-deep))}
+
 @media (min-width:760px){
   .proof-grid{grid-template-columns:repeat(2,1fr)}
 }

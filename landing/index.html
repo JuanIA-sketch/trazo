@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trazo — Dictado por voz con IA, gratis y en español</title>
   <meta name="description" content="Habla como piensas y envía como si lo hubieras escrito. Dictado por voz con IA, gratis, en español y 100% local. Tu voz nunca sale de tu computador.">
-  <meta name="theme-color" content="#020617">
+  <meta name="theme-color" content="#060D1F">
   <link rel="canonical" href="https://usatrazo.vercel.app/">
 
   <link rel="icon" href="assets/icons/icon-32.png" type="image/png" sizes="32x32">
@@ -32,7 +32,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 
   <script type="application/ld+json">
@@ -87,9 +87,13 @@
       <section class="hero-scroll" id="hero-scroll">
         <div class="hero-sticky hero">
           <div class="hero-media" aria-hidden="true">
-            <video id="hero-video" muted playsinline preload="auto" poster="assets/hero/poster.jpg">
-              <source src="assets/hero/hero.webm" type="video/webm">
-              <source src="assets/hero/hero.mp4" type="video/mp4">
+            <!-- Nombres versionados a propósito: /assets/ se sirve con caché
+                 inmutable de un año. Sobrescribir un archivo sin cambiarle el
+                 nombre deja al visitante que ya estuvo viendo la versión vieja
+                 para siempre. Al regenerar el video, sube el sufijo. -->
+            <video id="hero-video" muted playsinline preload="auto" poster="assets/hero/poster-v2.jpg">
+              <source src="assets/hero/hero-v2.webm" type="video/webm">
+              <source src="assets/hero/hero-v2.mp4" type="video/mp4">
             </video>
             <div class="hero-veil"></div>
           </div>

@@ -19,6 +19,9 @@ css/
 
 # Fuentes de assets: el master 4K y los PNG de origen pesan 50 MB y no los
 # referencia ninguna página. Se quedan en el repo, no en el CDN.
+assets/hero/hero.mp4
+assets/hero/hero.webm
+assets/hero/poster.jpg
 assets/hero/hero-4k.mp4
 assets/hero/hero-start.png
 assets/hero/master.png

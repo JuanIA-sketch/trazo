@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSettings } from "../../hooks/useSettings";
 import { Input } from "../ui/Input";
 import { SettingContainer } from "../ui/SettingContainer";
+import { HISTORY_LIMIT_DEFAULT } from "./settingFallbacks";
 
 interface HistoryLimitProps {
   descriptionMode?: "tooltip" | "inline";
@@ -16,7 +17,7 @@ export const HistoryLimit: React.FC<HistoryLimitProps> = ({
   const { t } = useTranslation();
   const { getSetting, updateSetting, isUpdating } = useSettings();
 
-  const historyLimit = getSetting("history_limit") ?? 5;
+  const historyLimit = getSetting("history_limit") ?? HISTORY_LIMIT_DEFAULT;
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value, 10);

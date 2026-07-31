@@ -4,6 +4,10 @@ import { Dropdown } from "../ui/Dropdown";
 import { SettingContainer } from "../ui/SettingContainer";
 import { useSettings } from "../../hooks/useSettings";
 import { RecordingRetentionPeriod } from "@/bindings";
+import {
+  HISTORY_LIMIT_DEFAULT,
+  RECORDING_RETENTION_DEFAULT,
+} from "./settingFallbacks";
 
 interface RecordingRetentionPeriodProps {
   descriptionMode?: "inline" | "tooltip";
@@ -16,8 +20,8 @@ export const RecordingRetentionPeriodSelector: React.FC<RecordingRetentionPeriod
     const { getSetting, updateSetting, isUpdating } = useSettings();
 
     const selectedRetentionPeriod =
-      getSetting("recording_retention_period") || "never";
-    const historyLimit = getSetting("history_limit") || 5;
+      getSetting("recording_retention_period") || RECORDING_RETENTION_DEFAULT;
+    const historyLimit = getSetting("history_limit") || HISTORY_LIMIT_DEFAULT;
 
     const handleRetentionPeriodSelect = async (period: string) => {
       await updateSetting(

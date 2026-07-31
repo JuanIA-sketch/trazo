@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { useSettings } from "../../hooks/useSettings";
+import { VAD_ENABLED_DEFAULT } from "./settingFallbacks";
 
 interface VoiceActivityDetectionProps {
   descriptionMode?: "tooltip" | "inline";
@@ -14,7 +15,7 @@ export const VoiceActivityDetection: React.FC<VoiceActivityDetectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const { getSetting, updateSetting, isUpdating } = useSettings();
-  const enabled = getSetting("vad_enabled") ?? true;
+  const enabled = getSetting("vad_enabled") ?? VAD_ENABLED_DEFAULT;
 
   return (
     <ToggleSwitch

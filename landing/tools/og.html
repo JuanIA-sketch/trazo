@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Plantilla de la tarjeta OG de Trazo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tokens y tipografías del sitio real: si cambia la paleta, cambia la tarjeta -->
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    html,body{margin:0;padding:0;background:var(--bg-deep);overflow:hidden}
+    #tarjeta{
+      position:relative;width:1200px;height:630px;overflow:hidden;
+      background:var(--bg-deep);
+      display:flex;flex-direction:column;justify-content:center;
+      padding:0 76px;
+    }
+    /* mismo lenguaje de fondo que la landing: grid enmascarada + glows */
+    #tarjeta .capa{position:absolute;inset:0;pointer-events:none}
+    .rejilla{
+      background-image:
+        linear-gradient(rgba(148,163,184,.07) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(148,163,184,.07) 1px,transparent 1px);
+      background-size:52px 52px;
+      -webkit-mask-image:radial-gradient(ellipse 80% 75% at 30% 45%,#000 18%,transparent 80%);
+    }
+    .glowA{
+      position:absolute;top:-260px;right:-140px;width:760px;height:760px;border-radius:50%;
+      background:radial-gradient(closest-side,rgba(37,99,235,.34),rgba(37,99,235,.08) 55%,transparent 72%);
+    }
+    .glowB{
+      position:absolute;bottom:-320px;left:-200px;width:820px;height:820px;border-radius:50%;
+      background:radial-gradient(closest-side,rgba(34,211,238,.16),rgba(34,211,238,.04) 55%,transparent 72%);
+    }
+    .vineta{background:radial-gradient(ellipse 120% 100% at 40% 45%,transparent 50%,var(--bg-deep) 100%)}
+
+    .cuerpo{position:relative;max-width:1010px}
+    .marca{display:flex;align-items:center;gap:16px;margin-bottom:38px}
+    .marca img{width:66px;height:66px;border-radius:19px;display:block}
+    .marca span{
+      font-family:var(--font-display);font-weight:700;font-size:46px;
+      letter-spacing:-.03em;color:var(--text);
+    }
+    h1{
+      font-family:var(--font-display);font-weight:700;
+      font-size:60px;line-height:1.08;letter-spacing:-.032em;color:var(--text);
+      margin:0;white-space:nowrap;
+    }
+    h1 em{font-style:italic}
+    h1 .dim{color:var(--text-2)}
+    .sub{
+      margin-top:26px;font-family:var(--font-sans);font-weight:500;
+      font-size:27px;line-height:1.45;color:var(--text-2);max-width:44ch;
+    }
+    .tiras{display:flex;gap:12px;margin-top:40px}
+    .tira{
+      font-family:var(--font-mono);font-size:19px;color:var(--text-2);
+      padding:11px 22px;border-radius:999px;white-space:nowrap;
+      background:linear-gradient(180deg,rgba(22,35,63,.75),rgba(11,18,32,.6));
+      border:1px solid rgba(36,49,75,1);
+      box-shadow:inset 0 1px 0 rgba(248,250,252,.08);
+    }
+    .tira.destacada{
+      color:var(--accent);border-color:rgba(34,211,238,.42);
+      background:linear-gradient(180deg,rgba(34,211,238,.13),rgba(37,99,235,.09));
+    }
+    /* filo inferior, el mismo acento de la marca */
+    .filo{
+      position:absolute;left:0;right:0;bottom:0;height:6px;
+      background:linear-gradient(90deg,var(--primary),var(--accent) 62%,transparent);
+    }
+  </style>
+</head>
+<body>
+  <div id="tarjeta">
+    <div class="capa rejilla"></div>
+    <div class="capa"><div class="glowA"></div><div class="glowB"></div></div>
+    <div class="capa vineta"></div>
+
+    <div class="cuerpo">
+      <div class="marca">
+        <img src="../assets/icons/icon-512.png" alt="">
+        <span>Trazo</span>
+      </div>
+      <h1>Habla como <em>piensas</em>.<br><span class="dim">Envía como si lo hubieras <em>escrito</em>.</span></h1>
+      <p class="sub">Dictado por voz con IA, gratis y en español.</p>
+      <div class="tiras">
+        <span class="tira destacada">100% local</span>
+        <span class="tira">Sin cuenta</span>
+        <span class="tira">Código abierto</span>
+        <span class="tira">Windows · macOS · Linux</span>
+      </div>
+    </div>
+
+    <div class="filo"></div>
+  </div>
+</body>
+</html>

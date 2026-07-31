@@ -1,0 +1,29 @@
+# Lo que NO se sube. Se verifica con curl contra el sitio en vivo (deben dar
+# 404), no confiando en que estas reglas quedaron bien escritas.
+
+# Credenciales que `vercel link` deja dentro de la carpeta que se despliega
+.env
+.env.*
+.vercel
+.gitignore
+
+# Herramientas: generador de la tarjeta OG y arnés de pruebas
+tools/
+
+# Contrato de diseño — es documentación del proyecto, no del sitio
+brand.json
+voice.json
+motion.json
+COMPONENT_RULES.md
+css/
+
+# Fuentes de assets: el master 4K y los PNG de origen pesan 50 MB y no los
+# referencia ninguna página. Se quedan en el repo, no en el CDN.
+assets/hero/hero-4k.mp4
+assets/hero/hero-start.png
+assets/hero/master.png
+assets/brand/
+assets/images/
+
+# Reemplazado por privacy-visual.webp (4 MB -> 12 KB)
+assets/privacy-visual.png

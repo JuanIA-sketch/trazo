@@ -470,3 +470,82 @@ h2 em,h1 em{font-style:italic}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important}
 }
+
+/* ── Marca con isotipo ───────────────────────────────────────── */
+.brand{display:inline-flex;align-items:center;gap:9px}
+.brand-mark{width:24px;height:24px;border-radius:7px;flex:none}
+/* el subrayado de marca se corre para quedar bajo la palabra, no bajo el isotipo */
+.brand::after{left:35px}
+
+/* ── Descargas: botón + ficha técnica ────────────────────────── */
+.dl-row{align-items:flex-start}
+/* ancho fijo: si cada botón se ajusta a su label, los tres quedan disparejos */
+.dl-item{display:flex;flex-direction:column;align-items:center;gap:11px;flex:0 1 264px;width:264px;max-width:100%}
+.dl-item .dl{width:100%}
+
+/* Iconos de sistema operativo (Simple Icons, CC0).
+   Los tamaños son distintos a propósito: el bloque macizo de Windows pesa
+   ópticamente más que la silueta hueca de Tux. A tamaño igual, Linux se ve
+   flaco al lado de los otros dos.
+   Caja de layout IGUAL para los tres (22px) y el dibujo escalado con
+   transform: si cada icono ocupa su tamaño real, el de Linux empuja la altura
+   del botón y las tres píldoras dejan de medir lo mismo. transform no afecta
+   al layout, así que el peso óptico se corrige sin descuadrar nada. */
+.dl-ico{flex:none;display:block;width:22px;height:22px;transform-origin:50% 50%}
+.dl-ico-win{transform:scale(.773)}   /* 17 de 22 */
+.dl-ico-mac{transform:scale(.864)}   /* 19 de 22 */
+.dl-ico-linux{transform:scale(1)}
+.dl-meta{
+  font-family:var(--font-mono);font-size:.72rem;line-height:1.75;
+  color:var(--text-3);text-align:center;
+}
+.dl-meta a{color:var(--text-2);text-decoration:underline;text-decoration-color:rgba(148,163,184,.4);text-underline-offset:3px}
+.dl-meta a:hover{color:var(--accent);text-decoration-color:currentColor}
+
+/* Aviso de build sin firmar — se lee antes de que el sistema asuste */
+.dl-note{
+  margin-top:40px;margin-inline:auto;max-width:640px;text-align:left;
+  padding:22px 24px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(11,18,32,.4));
+  border:1px solid rgba(36,49,75,.9);box-shadow:var(--inner-light);
+}
+.dl-note-h{
+  font-weight:600;color:var(--text);font-size:.98rem;margin-bottom:10px;
+  display:flex;gap:9px;align-items:baseline;
+}
+.dl-note-h::before{content:"!";flex:none;font-family:var(--font-mono);color:var(--accent)}
+.dl-note p{color:var(--text-2);font-size:.9rem;line-height:1.7}
+.dl-note ul{list-style:none;margin-top:14px;display:grid;gap:9px}
+.dl-note li{color:var(--text-2);font-size:.88rem;line-height:1.65;padding-left:16px;position:relative}
+.dl-note li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.7}
+.dl-note strong{color:var(--text);font-weight:600}
+
+/* ── Comprobable: cada afirmación con su enlace ──────────────── */
+.proof-grid{list-style:none;margin-top:52px;display:grid;gap:16px}
+.proof-item{
+  display:flex;flex-direction:column;gap:9px;
+  padding:clamp(22px,3vw,30px);border-radius:20px;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  border:1px solid rgba(36,49,75,.9);
+  box-shadow:var(--inner-light),0 20px 44px -26px rgba(2,6,23,.9);
+  transition:transform .25s var(--ease),border-color .25s var(--ease);
+}
+.proof-item:hover{transform:translateY(-3px);border-color:rgba(59,130,246,.55)}
+.proof-claim{font-family:var(--font-display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;color:var(--text)}
+.proof-desc{color:var(--text-2);font-size:.95rem;line-height:1.65}
+.proof-item a{margin-top:auto;padding-top:6px;font-family:var(--font-mono);font-size:.8rem}
+.proof-item .arr{color:var(--text-3)}
+.proof-item:hover .arr{color:var(--accent)}
+
+/* ── Demo: el video es mejora progresiva sobre el póster ─────── */
+.pitch-video img{width:100%;height:100%;object-fit:cover}
+
+/* ── Reveal por JS (Firefox y Safari, que no tienen view()) ──── */
+/* La clase la pone el script: sin JS el contenido nace visible, nunca al revés */
+.js-reveal .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.js-reveal .reveal.is-in{opacity:1;transform:none}
+
+@media (min-width:760px){
+  .proof-grid{grid-template-columns:repeat(2,1fr)}
+}

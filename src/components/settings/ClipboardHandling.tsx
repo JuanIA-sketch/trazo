@@ -4,6 +4,7 @@ import { Dropdown } from "../ui/Dropdown";
 import { SettingContainer } from "../ui/SettingContainer";
 import { useSettings } from "../../hooks/useSettings";
 import type { ClipboardHandling } from "@/bindings";
+import { resolveClipboardHandling } from "./clipboardHandlingDefault";
 
 interface ClipboardHandlingProps {
   descriptionMode?: "inline" | "tooltip";
@@ -26,8 +27,9 @@ export const ClipboardHandlingSetting: React.FC<ClipboardHandlingProps> =
       },
     ];
 
-    const selectedHandling = (getSetting("clipboard_handling") ||
-      "dont_modify") as ClipboardHandling;
+    const selectedHandling = resolveClipboardHandling(
+      getSetting("clipboard_handling") as ClipboardHandling | null | undefined,
+    );
 
     return (
       <SettingContainer

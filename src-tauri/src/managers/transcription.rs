@@ -1234,8 +1234,16 @@ impl TranscriptionManager {
         let whole = self.transcribe(audio.clone())?;
 
         let speech = crate::audio_toolkit::speech_seconds(&audio, rate);
+        let total = audio.len() as f32 / rate as f32;
         let words = whole.split_whitespace().count();
-        if !crate::audio_toolkit::looks_truncated(words, speech) {
+        // Two nets, OR-ed. The speech-based one is the calibrated primary; the
+        // duration-based one covers its blind spot on quiet recordings, where
+        // `speech_seconds` shrinks and makes a truncated decode look healthy.
+        // Firing when it was not needed only spends decodes: the retry below is
+        // discarded unless it actually recovers words.
+        if !crate::audio_toolkit::looks_truncated(words, speech)
+            && !crate::audio_toolkit::looks_truncated_by_duration(words, total)
+        {
             return Ok(whole);
         }
 
@@ -1245,10 +1253,16 @@ impl TranscriptionManager {
         }
 
         let rate = rate as f32;
+        let trigger = if crate::audio_toolkit::looks_truncated(words, speech) {
+            "speech-rate"
+        } else {
+            "clip-duration"
+        };
         warn!(
-            "Transcript looks truncated ({} words over {:.1}s of speech); retrying as {} speech runs ({})",
+            "Transcript looks truncated [{trigger}] ({} words over {:.1}s of speech / {:.1}s of clip); retrying as {} speech runs ({})",
             words,
             speech,
+            total,
             segments.len(),
             segments
                 .iter()

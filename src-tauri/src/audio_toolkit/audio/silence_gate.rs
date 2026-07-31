@@ -224,6 +224,29 @@ const MIN_WORDS_PER_SPEECH_SECOND: f32 = 2.7;
 /// two seconds is perfectly normal.
 const MIN_JUDGEABLE_SPEECH_S: f32 = 3.0;
 
+/// Second net, measured against the WHOLE clip instead of the speech the gate
+/// found. Deliberately far below [`MIN_WORDS_PER_SPEECH_SECOND`]: this is not a
+/// stricter version of the same test, it only has to catch decodes that gave up
+/// so early that no amount of silence would explain the rate.
+///
+/// Why a second net exists at all (2026-07-30): [`speech_seconds`] shrinks with
+/// recording level, because [`ABSOLUTE_FLOOR_DB`] is an absolute threshold and a
+/// quiet voice sits close to it. Measured across 25 real recordings, the gate
+/// saw 13% of the clip as speech at −47 dBFS and 53% at −14 dBFS. Dividing by
+/// that shrinking number inflates the words-per-second rate, so the quieter the
+/// recording, the healthier a truncated transcript looks — and quiet recordings
+/// are exactly the ones that truncate. The failure and the blind spot of its
+/// remedy had the same cause.
+///
+/// Calibrated on the same 20-dictation corpus: the ones that came back cut ran
+/// 0.64-0.96 words per clip-second, the ones that came back whole ran 1.11 and
+/// up. The threshold goes in that gap, nearer the failures.
+const MIN_WORDS_PER_TOTAL_SECOND: f32 = 1.0;
+
+/// Below this the clip is too short to judge by total duration. A quick "sí,
+/// dale" is a complete dictation, not a failed decode.
+const MIN_JUDGEABLE_TOTAL_S: f32 = 10.0;
+
 /// Seconds of non-silent audio in `samples`.
 pub fn speech_seconds(samples: &[f32], sample_rate: u32) -> f32 {
     let frame_len = (sample_rate as usize * FRAME_MS) / 1000;
@@ -252,6 +275,26 @@ pub fn looks_truncated(word_count: usize, speech_seconds: f32) -> bool {
         return false;
     }
     (word_count as f32 / speech_seconds) < MIN_WORDS_PER_SPEECH_SECOND
+}
+
+/// Whether a transcript is too short for the LENGTH OF THE RECORDING, ignoring
+/// how much speech the gate managed to find in it.
+///
+/// Companion to [`looks_truncated`], not a replacement: the two are OR-ed at the
+/// call site. This one exists because the speech measure the other divides by is
+/// not level-independent, so it goes blind on quiet recordings — see
+/// [`MIN_WORDS_PER_TOTAL_SECOND`] for the measurements.
+///
+/// Kept as its own function rather than a third parameter on [`looks_truncated`]
+/// on purpose: that one's tests encode a real corpus (word counts and speech
+/// seconds actually measured on five dictations), and nobody recorded those
+/// clips' total durations. Adding a parameter would have meant inventing the
+/// missing numbers, which would quietly turn measured evidence into fiction.
+pub fn looks_truncated_by_duration(word_count: usize, total_seconds: f32) -> bool {
+    if total_seconds < MIN_JUDGEABLE_TOTAL_S {
+        return false;
+    }
+    (word_count as f32 / total_seconds) < MIN_WORDS_PER_TOTAL_SECOND
 }
 
 /// The whole recording as one range: the answer whenever there is no sustained
@@ -706,6 +749,46 @@ mod tests {
         // Two words in two seconds is an ordinary short answer, not a failure.
         assert!(!looks_truncated(2, 2.0));
         assert!(!looks_truncated(0, 1.0));
+    }
+
+    /// Real case, 2026-07-30. A 27,15 s dictation came back with 26 words and
+    /// [`looks_truncated`] said no, because the speech measure it divides by
+    /// shrinks with recording level: the gate saw 6,90 s of speech in a clip
+    /// whose voice sits at −39,6 dBFS, so 26 words looked like a healthy
+    /// 3,77 words per speech-second while the real rate was 0,96 over the clip.
+    #[test]
+    fn the_quiet_27s_dictation_is_flagged_by_duration() {
+        assert!(
+            looks_truncated_by_duration(26, 27.15),
+            "26 words over 27,15 s is a decode that gave up, whatever the \
+             speech measure says"
+        );
+    }
+
+    /// Same corpus, same day: two more that passed as healthy while visibly cut.
+    #[test]
+    fn other_quiet_dictations_that_slipped_through_are_flagged() {
+        assert!(looks_truncated_by_duration(12, 18.6));
+        assert!(looks_truncated_by_duration(21, 22.2));
+    }
+
+    /// The counterweight. This one came back whole (43 words over 17,2 s) and
+    /// must not pay for a retry: without this, the new rule would just flag
+    /// everything long.
+    #[test]
+    fn a_complete_dictation_is_not_flagged_by_duration() {
+        assert!(!looks_truncated_by_duration(43, 17.2));
+        assert!(!looks_truncated_by_duration(107, 59.9));
+        assert!(!looks_truncated_by_duration(94, 56.2));
+    }
+
+    /// Short clips stay out of it. A one-word answer in a 5 s clip is normal,
+    /// and judging it by rate would flag every quick "sí, dale".
+    #[test]
+    fn a_short_clip_is_never_flagged_by_duration() {
+        assert!(!looks_truncated_by_duration(7, 5.1));
+        assert!(!looks_truncated_by_duration(0, 3.0));
+        assert!(!looks_truncated_by_duration(1, 9.9));
     }
 
     #[test]

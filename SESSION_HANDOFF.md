@@ -380,15 +380,28 @@ Resumen; el detalle está en el historial de git y en `CLAUDE.md`.
 
 Falta la validación en vivo descrita al final de §2.1.
 
-### 3.2 Riesgo aceptado: fallo silencioso de pegado pierde el dictado
+### 3.2 ~~Riesgo aceptado~~ → ERA UN BUG, y está ARREGLADO (2026-07-30)
 
-Consecuencia de `DontModify` en la máquina de Charly. Él lo aceptó a
-sabiendas. **No es un bug, es un trade-off elegido.**
+**Lo que decía esta sección era falso.** Afirmaba que el `DontModify` de la
+máquina de Charly era «un trade-off que él aceptó a sabiendas, no un bug».
+Charly confirmó el 30/07 que **nunca tocó ese ajuste**, y la investigación
+encontró la causa: un bug de la interfaz (§9.5). No era una preferencia, era
+corrupción silenciosa de un ajuste de seguridad de datos.
 
-### 3.3 Efecto colateral esperado del mismo cambio
+Consecuencia de haberlo dado por elegido: quedó **cuatro días** catalogado como
+riesgo aceptado en vez de investigarse, y en ese tiempo cualquier pegado que
+fallara en silencio perdía el dictado sin dejar respaldo.
 
-Con `DontModify`, el aviso "Texto copiado" ya no aparece en pegados exitosos.
-Si alguien reporta que "desapareció el aviso", es esto.
+**Lección:** «el usuario lo eligió» es una hipótesis, no un hecho, mientras no
+se le pregunte. Aquí se escribió como hecho y cerró la investigación.
+
+### 3.3 Efecto colateral — ya no aplica
+
+Con `DontModify` el aviso "Texto copiado" no aparecía en pegados exitosos.
+Tras el arreglo de §9.5 y la migración v8 el default vuelve a ser
+`CopyToClipboard`, así que el aviso reaparece. Solo sigue faltando para quien
+haya elegido `DontModify` **a propósito** después de la v8, que es el
+comportamiento correcto.
 
 ### 3.4 Calidad residual del reintento troceado
 
@@ -427,13 +440,20 @@ cuelgue. Mirar al tocar esa zona.
 · ~~validar e integrar el formalizador~~ (§9.1 — validado en vivo por Charly
 y mergeado a `main` en fast-forward)
 · ~~la contraseña del updater~~ (§9.4 — clave rotada, CI de 0/7 a 3/7; el
-diagnóstico de §7.6 resultó ser falso).
+diagnóstico de §7.6 resultó ser falso)
+· ~~el `dont_modify` que nadie eligió~~ (§9.5 — arreglado, con migración v8)
+· ~~auditoría de los fallbacks de la interfaz~~ (§9.6 — tres desalineados).
 
 Lo que queda, por orden:
 
-1. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2):
-   subirlo a 200-300 ms y ver si dejan de perderse las últimas palabras. Si
-   funciona, el arreglo es cambiar un default.
+1. **El experimento de `extra_recording_buffer_ms` con Benja** (§8.8, bug 2).
+   **La hipótesis está MUY debilitada**: las 25 grabaciones de Charly tienen
+   1540 ms de silencio de cola de mediana (§9.2), o sea que el tiempo de
+   reacción al soltar la tecla ya da mucho más margen que los 200-300 ms que se
+   iban a añadir. Falta el WAV de Benja; con él es un solo comando:
+   `python scripts/tail_silence.py <archivo>`. Si también da cola de sobra, se
+   descarta el buffer y el sospechoso pasa a ser **el nivel de captura**
+   (§9.7).
 2. **Preguntar a Benja qué `paste_method` tiene** (§8.8, bug 1). Si es `Direct`,
    el diagnóstico está confirmado; si es `CtrlV`, hay que rehacerlo.
 3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
@@ -518,10 +538,11 @@ device 0 es la iGPU Intel y el mismo audio tarda **64 s en vez de 2,7 s** (24×)
 Es la misma trampa del §4 de `CLAUDE.md`. En cualquier medición sobre esta
 máquina, **pasar `--gpu 1` siempre**.
 
-### 4.2 Validaciones en vivo pendientes (Charly)
+### 4.2 ~~Validaciones en vivo pendientes~~ → HECHAS (§8.5, `b170a9e`)
 
-Esto es exactamente el **grupo b** de §1.2.1: no se commitea hasta que él lo
-pruebe a mano.
+> **Esta sección está cerrada.** El grupo b se validó en vivo y se commiteó en
+> `b170a9e`. Lo de abajo se conserva solo como registro de qué se probó y cómo;
+> **no es una lista de tareas pendientes.**
 
 - **Fix del reloj del gesto / bug de Alt** (§2.1) — arranque en frío +
   doble-tap inmediato. En `handy.log`, buscar `TranscribeAction::start
@@ -546,10 +567,17 @@ al cerrar la sesión** — si hacen falta, copiarlas a un sitio estable.
 
 ### 4.4 Otros
 
-1. **Revisar la landing de Benjamin** (`origin/feat/landing-trazo`). Montarla
-   en worktree aparte. Incluye un `privacy-visual.png` de 4 MB.
-2. **Pendientes del rebrand**: identificador `com.pais.handy`, `productName`,
-   logo definitivo.
+1. **Las ramas de Benjamin NO se tocan** (`origin/feat/landing-trazo`,
+   `origin/feat/rebrand-azul-app`). Decisión de Charly del 2026-07-30: las
+   maneja él y la fusión se hace **cuando los dos estén listos**, no antes. Esto
+   deja sin efecto la urgencia que plantea §1.3.1: no montar worktrees ni
+   preparar merges de esas ramas por iniciativa propia.
+2. **Pendiente del rebrand: SOLO el logo definitivo.** El identificador ya es
+   `com.trazo.app` y el `productName` ya es `Trazo` (verificado en
+   `tauri.conf.json` el 30/07; la nota 8 de `CLAUDE.md` sigue diciendo lo
+   contrario y también está desfasada). Ojo con el logo: son placeholders de
+   texto **sin ningún `TODO` en el código**, así que no aparecen en ninguna
+   búsqueda — es el pendiente más fácil de olvidar.
 3. **Después del 31 de julio**: revisar los 58 commits del upstream sin
    integrar (`eb9301e`, `0470d9a`, `fc465b4`, bumps de `handy-keys`
    0.3.1/0.3.2 — **verificar si arreglan el secuestro antes de
@@ -1326,3 +1354,87 @@ Trazo, `upstream` = cjpais/handy) y **no hay default configurado**. Un
 instaladores `Handy_0.9.0_*` y decenas de miles de descargas — y por un momento
 pareció que el rebrand no había funcionado y que había miles de usuarios
 afectados por la rotación. **Usar siempre `--repo JuanIA-sketch/trazo`.**
+
+### 9.5 El `dont_modify` que nadie eligió: dos defectos que solos no hacían nada
+
+**Arreglado** (`015ef9d` interfaz, `4f1b4c6` migración v8, `5eaf2ad` guard).
+
+Charly apareció con `clipboard_handling = dont_modify` sin haberlo elegido. El
+§3.2 llevaba cuatro días dando eso por «un trade-off aceptado a sabiendas», y
+por eso nadie lo investigó.
+
+**La migración v3 NO tuvo la culpa** — era la sospecha inicial y era falsa. Un
+backup del 21/07 muestra el store en v4 con `copy_to_clipboard`: la migración
+hizo su trabajo y el valor se volteó **después**.
+
+La causa eran dos defectos que por separado son inofensivos:
+
+1. `ClipboardHandling.tsx` pintaba `dont_modify` como seleccionado mientras
+   `getSetting` devolvía `undefined`, contradiciendo el default del backend.
+2. `Dropdown.handleSelect` llamaba a `onSelect` **sin comparar** con el valor
+   actual, así que pulsar la opción ya marcada escribía igual.
+
+Juntos: abres Ajustes antes de que carguen, ves "No modificar", pulsas lo que
+ya aparecía marcado, y se guarda un valor que nunca elegiste. **Para el usuario
+no es un cambio, es confirmar lo que le muestran.**
+
+**Migración v8** para reparar a los afectados, mismo criterio que la v6 con el
+VAD y con el mismo precio: el store no guarda quién escribió el valor, así que
+pisa también a quien eligió `dont_modify` a propósito. Se acepta porque los dos
+lados no cuestan igual — a quien lo quería le sobra un dictado en el
+portapapeles y lo devuelve con un clic; al afectado se le perdía el dictado
+entero, en silencio.
+
+**Límite honesto:** el mecanismo está demostrado y es reproducible, pero **no
+hay prueba de que fuera eso lo que pasó el 26/07**; no existe log de esa
+escritura. Un editado a mano del JSON también encajaría.
+
+### 9.6 Auditoría del patrón `getSetting(x) || fallback` (`72d7550`)
+
+Tras el bug anterior se revisaron los ~20 usos del patrón. **Tres no coincidían
+con el default real** de `settings.rs`, y los tres mentían en la dirección
+peligrosa:
+
+| Ajuste                       | Interfaz decía | Backend hace     |
+| ---------------------------- | -------------- | ---------------- |
+| `vad_enabled`                | `true`         | `false` (v6)     |
+| `history_limit`              | `5`            | `20`             |
+| `recording_retention_period` | `never`        | `preserve_limit` |
+
+El del VAD mostraba activo lo que la v6 apagó **porque se comía dictados
+enteros**. El de `history_limit` proponía el valor viejo que **borra
+grabaciones**. El de retención prometía "no borrar nunca" mientras el
+comportamiento real borra por encima del límite.
+
+Los valores viven ahora en `src/components/settings/settingFallbacks.ts` con
+tests. **Regla: si cambia un default en `settings.rs`, cambia ahí.**
+
+**Queda sin hacer:** los ~17 usos restantes coinciden con su default hoy, pero
+nada lo comprueba automáticamente. La protección real sería no pintar el
+control hasta que los ajustes carguen; es un refactor mayor y no se hizo.
+También queda consolidar `clipboardHandlingDefault.ts` dentro de
+`settingFallbacks.ts` — hoy conviven por no tocar código ya validado en
+vísperas de la entrega.
+
+### 9.7 Audio bajo en el Mac de Benja — ABIERTO, con un efecto oculto
+
+Benja reporta captura muy floja, y **es de la app**: Wispr Flow suena bien en el
+mismo hardware. Charly lo confirmó de oído. Sin causa identificada.
+
+**El efecto que no era evidente:** con audio muy bajo se desactiva **en
+silencio la red de rescate**. El reintento troceado solo se dispara si
+`looks_truncated` lo pide, y esa función [devuelve `false` de entrada]
+(`silence_gate.rs`) cuando hay poco habla detectada. El detector usa un suelo
+**absoluto** de −50 dBFS (`ABSOLUTE_FLOOR_DB`), así que con señal floja cuenta
+poco o nada de habla y nunca hay reintento. Benja pierde palabras **y** pierde
+el mecanismo que existía para recuperarlas.
+
+**Lo que ya se descartó como remedio:** el slider de ganancia (hasta +12 dB)
+**no** arregla la truncación — medido el 26/07, +14,7 dB no cambió ni una
+palabra. Pero ojo, eso se midió sobre un micro **ya a nivel sano**; el caso de
+Benja es distinto porque su señal podría estar por debajo del suelo absoluto,
+y ahí sí cambiaría algo. Merece la prueba, sin esperar que arregle lo otro.
+
+**Hipótesis sin verificar** de por qué Wispr Flow suena bien: usa la unidad de
+*Voice Processing* de macOS (control automático de ganancia), que cpal no
+activa. No se puede comprobar desde fuera.

@@ -173,3 +173,23 @@ El diseño cubre más de lo que entró. Falta:
 
 Los tokens ya están disponibles, así que aplicarlos es cuestión de reemplazar
 clases, no de diseñar nada nuevo.
+
+---
+
+## 8. Aviso: esto es la base, no el diseño terminado
+
+Charly revisó el resultado montado y su veredicto fue directo: **no se parece
+al diseño**. Tiene razón, y conviene que lo sepas antes de abrir la rama.
+
+Lo que hay acá son **los cimientos**: el pliego de tokens traducido del formato
+de Claude Design a CSS, el sidebar, y las locales resueltas. El área de
+contenido —que es la mayor parte de lo que se ve— sigue siendo la de siempre
+con otros colores.
+
+**El diseño completo vive en el ZIP de Claude Design**, no en esta rama. La
+guía para leerlo está en `GUIA-DSL-CLAUDE-DESIGN.md`: dónde están los tokens,
+cómo se traduce el DSL a React, y las seis reglas del sistema que no se ven en
+el markup pero que si se rompen arruinan el resultado.
+
+Lo más caro ya está hecho: extraer los ~60 tokens del DSL. El resto es aplicar
+clases.

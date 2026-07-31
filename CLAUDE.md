@@ -12,9 +12,11 @@ El feature-freeze del upstream NO aplica aquí.
   luego implementación mínima hasta verde. Sin excepciones, también en bugfixes.
 - **Nunca `git push`** (ni commit salvo pedido explícito) **sin confirmación
   manual explícita de Charly** en la conversación.
-- **`CARGO_TARGET_DIR=C:\h` es obligatorio en Windows**: con el target dir por
+- **`CARGO_TARGET_DIR=D:\h` es obligatorio en Windows**: con el target dir por
   defecto, el generador de shaders Vulkan de transcribe-cpp-sys revienta el
   límite MAX_PATH (error FTK1011/MSB3491). Ver BUILD.md.
+  ⚠️ Va en **`D:`**, no en `C:`. El build pesa decenas de GB y `C:` está al 93%
+  (quedan ~17 GB): ahí no entra. El build vivo está en `D:\h\debug\handy.exe`.
 - No renombrar nada de `handy-keys`/`HandyKeys`/`handy_keys`: es la crate de
   teclado (ahora vendorizada), no branding.
 - Al editar `%APPDATA%\com.pais.handy\settings_store.json` a mano: **sin BOM**
@@ -27,7 +29,7 @@ El feature-freeze del upstream NO aplica aquí.
 bun install
 mkdir src-tauri/resources/models -Force
 curl -o src-tauri/resources/models/silero_vad_v4.onnx https://blob.handy.computer/silero_vad_v4.onnx
-$env:CARGO_TARGET_DIR = "C:\h"
+$env:CARGO_TARGET_DIR = "D:\h"
 bun run tauri dev
 ```
 
@@ -73,15 +75,20 @@ bun run tauri dev
    `"es"`; logging de `detected_language` + duración en `transcription.rs`;
    test de reproducción `#[ignore]` con el WAV real en
    `src-tauri/tests/fixtures/` (contiene voz del usuario).
-8. **Rebrand parcial**: paleta Trazo en `src/styles/theme.css` (morado #7B2FBE
-   + naranja #F97316), copy "Handy"→"Trazo" en las **21 locales** (en es la
-   referencia; check:translations valida las otras 20), título de ventana,
-   tooltip del tray, CLI e index.html. Repo propio (JuanIA-sketch/trazo) y
-   updater con clave propia: hechos (2026-07-16). Los SVGs del logo
-   (`HandyTextLogo`/`HandyHand`) llevan placeholder de texto "Trazo"/"T" en
-   el morado de marca (2026-07-23) — los nombres de componente se conservan
-   para que el logo final sea drop-in. PENDIENTE (esperan logo/decisión):
-   logo final, iconos de app, identifier `com.pais.handy`, productName.
+8. **Rebrand**: paleta Trazo en `src/styles/theme.css` — **azul eléctrico
+   #2563EB (primario) + cian de señal #22D3EE (acento) sobre navy #0B1220**.
+   ⚠️ Si algún documento dice morado #7B2FBE + naranja #F97316, está
+   desactualizado: esa paleta se descartó y no se restaura. Copy
+   "Handy"→"Trazo" en las **21 locales** (en es la referencia;
+   check:translations valida las otras 20), título de ventana, tooltip del
+   tray, CLI e index.html. Repo propio (JuanIA-sketch/trazo) y updater con
+   clave propia: hechos (2026-07-16). Iconos de app (50 archivos en
+   `src-tauri/icons/`), `productName: Trazo` e `identifier: com.trazo.app`
+   con migración de datos: hechos. Los SVGs del logo
+   (`HandyTextLogo`/`HandyHand`) llevan placeholder en el azul de marca —
+   los nombres de componente se conservan para que el logo final sea
+   drop-in. PENDIENTE: logo definitivo (SVG limpio, sin glow) y los 9
+   glifos monocromos de la bandeja del sistema.
 9. **Bug de overlay invisible (2026-07-08)**: no reproducible tras reinicio;
    diagnóstico completo descartó paleta/CSS/eventos (ventana y webview sanos
    verificados por CDP y captura de píxeles). La fragilidad sospechosa (el
@@ -116,10 +123,10 @@ bun run tauri dev
     `continuous` (badge ∞, `overlay.continuous` en 21 locales). El detector
     es la base reutilizable si algún día se planea Command Mode.
 12. **Rediseño visual del overlay (2026-07-24, validado por Charly)**: pill
-    negro sólido #000 en ambos temas
+    en navy de marca `linear-gradient(180deg,#020617,#0B1220)` en ambos temas
     (objeto de marca fijo; neutrales pinneados, sin bloque dark en el CSS
-    del overlay); borde 1.3px degradado #7B2FBE→#F97316 (padding-box/
-    border-box) + highlight interior "vidrio"; halo partido morado/naranja
+    del overlay); borde 1.3px degradado **#2563EB→#22D3EE** (padding-box/
+    border-box) + highlight interior "vidrio"; halo partido **azul/cian**
     mientras está visible; marca "T" serif itálica 400 con degradado y
     trazo diagonal SVG debajo — reemplaza punto y spinner (el pulso VAD
     ahora vive en la letra; en transcribing el trazo se redibuja en loop

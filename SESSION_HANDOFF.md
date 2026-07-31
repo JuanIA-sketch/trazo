@@ -1,7 +1,7 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-30 · **Rama:** `main` ·
-`main` y `origin/main` **sincronizados** (el formalizador entró en `a9a7918`)
+**Última actualización:** 2026-07-31 · **Rama:** `main` ·
+`main` y `origin/main` **sincronizados**
 **Entrega del hackathon:** 31 de julio de 2026
 
 Documento de continuidad entre sesiones de Claude Code. Léelo antes de tocar
@@ -30,8 +30,19 @@ _porqué_, no las convenciones.
 >    3/7. Los 4 rojos que quedan son macOS y Windows, y **no dependen de
 >    trabajo técnico** sino de una cuenta de Apple ($99/año) y de infra de firma
 >    de Windows. No perder tiempo depurándolos.
-> 7. **Lo siguiente es el experimento de `extra_recording_buffer_ms` con Benja**
->    (§4.0, punto 1; bug 2 de §8.8).
+> 7. **El truncado por silencio largo tiene causa raíz y arreglo** (§9.8). El
+>    experimento de `extra_recording_buffer_ms` quedó **descartado por datos**:
+>    no era pérdida de cola. **No subir ese default.**
+> 8. **Diccionario: Tareas 1-3 hechas y en verde, pero SIN VALIDAR EN VIVO**
+>    (§9.10). Se paró **a propósito** antes de las Tareas 4-5. Lo primero al
+>    retomar es probarlo a mano.
+> 9. **Hay tres frentes NUEVOS sin empezar** (§4.0, puntos 6-8): mapa de
+>    actividad diaria, openWakeWord para "Hey Trazo", y un bug de
+>    reconocimiento en inglés. **Solo existe el enunciado**, no hay diseño ni
+>    investigación: hablarlos antes de tocar código.
+> 10. **No ejecutar `bun run format:frontend` sobre todo el repo** (§9.11): el
+>     proyecto no está formateado según su propio `.prettierrc` y el comando
+>     reescribe ~190 archivos.
 
 ---
 
@@ -466,7 +477,37 @@ Lo que queda, por orden:
 3. **Esperar el resultado de Benja con `vad_survival.rs`** (§7.2). Decide entre
    dos causas incompatibles y no se puede avanzar sin su hardware. Preguntarle
    también con qué prueba concreta descartó el downmix.
-4. **Diccionario de reemplazos — SPEC APROBADO, falta el plan y el código.**
+4. **Validar en vivo el diccionario** (§9.10). Tareas 1-3 hechas y en verde,
+   pero **nadie las ha probado a mano**: abrir Historial → icono de corrección
+   → ver el impacto antes de guardar → comprobar que el **siguiente** dictado
+   sale corregido, y que el dictado guardado **no** cambió.
+5. **Diccionario, Tareas 4 y 5** (siembra y propuestas automáticas). Paradas a
+   propósito. Al retomar la siembra, respetar el guardarraíl del plan: **ninguna
+   regla sembrada puede coincidir con palabras españolas comunes ni nombres de
+   persona** — está medido en el spec por qué (§3 del spec).
+
+### Frentes NUEVOS, sin empezar (anotados el 2026-07-31)
+
+Los pidió Charly al cerrar la sesión. **No hay diseño, ni spec, ni
+investigación previa: solo el enunciado.** Hablarlos antes de tocar código.
+
+6. **Mapa de actividad diaria.** Sin definir: qué mide, dónde se ve y para qué
+   sirve. Los datos que ya existen y podrían alimentarlo son `history.db`
+   (timestamps de cada dictado) y la carpeta `recordings`.
+7. **Investigar openWakeWord para "Hey Trazo".** Palabra de activación por voz.
+   Es **investigación, no implementación**: hoy la app solo se dispara por
+   atajo, y una escucha permanente toca privacidad, CPU y batería. Ojo con
+   `always_on_microphone`, que hoy viene en `false`.
+8. **Bug de reconocimiento en inglés.** Reportado sin detalle. Antes de nada
+   hace falta **un caso reproducible**: qué se dictó, qué salió, y el WAV — que
+   la app guarda solo en `recordings`. Con eso, `scripts/tail_silence.py` y
+   `cargo run --example silence_gate_probe` dicen en un minuto si es captura,
+   truncado o el modelo. Recordar que `selected_language` está fijado a `"es"`
+   (§7 de CLAUDE.md), lo cual es sospechoso de entrada para un dictado inglés.
+
+### Registro del encargo original del diccionario
+
+**Diccionario de reemplazos — SPEC APROBADO, Tareas 1-3 hechas (§9.10).**
    Spec en `docs/superpowers/specs/2026-07-30-diccionario-reemplazos-design.md`
    (`55d871b`), aprobado por Charly el 30/07 incluido el giro de diseño: la
    lista **no** va al motor difuso porque se midió y corrompe (5 de 12 frases:
@@ -1531,3 +1572,57 @@ al menos qué test es — que es exactamente lo que faltó esta vez.
 
 Que la app estuviera corriendo durante la pasada es la única circunstancia
 anómala conocida, pero no se ha establecido ninguna relación causal.
+
+### 9.10 Diccionario: Tareas 1-3 hechas, SIN validar en vivo (`4912e6d`)
+
+**Corregir una palabra desde el Historial, con el radio de impacto a la vista
+antes de guardar.** Tareas 1-3 del plan `2026-07-30-diccionario-reemplazos.md`.
+
+| Qué                                                        | Tests |
+| ---------------------------------------------------------- | ----- |
+| `dictionary.rs` → `rule_impact`                             | 7     |
+| `build_impact_report` + comando `preview_replacement_impact` | 4     |
+| Botón "Corregir palabra" + diálogo (`correctWord.ts`)        | 8     |
+
+**Verde:** 292 tests Rust (desde 281) y 56 de frontend (desde 48). Typecheck,
+eslint y las 21 locales en verde. La app arranca limpia.
+
+> ⚠️ **DOS COSAS QUE FALTAN, no darlas por hechas:**
+>
+> 1. **Sin validar en vivo.** Nadie ha abierto el Historial a comprobar que el
+>    impacto se ve antes de guardar y que la corrección se aplica al **siguiente**
+>    dictado. Es el primer paso de la próxima sesión.
+> 2. Se paró **a propósito antes de las Tareas 4 y 5** (siembra y propuestas
+>    automáticas), por decisión de Charly al quedar poco tiempo.
+
+**Decisiones tomadas durante la implementación** (más detalle en el mensaje de
+`4912e6d`):
+
+- **`rule_impact` delega en `apply_custom_replacements`.** Lo que se enseña
+  antes de guardar tiene que ser exactamente lo que la regla hará después; una
+  segunda implementación "equivalente" divergiría en los bordes y la
+  previsualización mentiría justo en los casos difíciles.
+- **El impacto se mide contra `transcription_text`, NO contra
+  `post_processed_text`**: los reemplazos actúan sobre la transcripción, no
+  sobre la salida del LLM.
+- **`total` cuenta dictados afectados, no apariciones.** Contar apariciones
+  inflaría la cifra con la que el usuario decide.
+- `Input` no reenvía refs (es un `FC` sin `forwardRef`), así que el diálogo usa
+  `autoFocus` en vez de tocar un componente compartido en vísperas de entrega.
+
+### 9.11 ⚠️ El repo NO está formateado según su propio `.prettierrc`
+
+Ejecutar `bun run format:frontend` reescribió **~190 archivos**: workflows de
+CI, `tauri.conf.json`, el README de la crate vendorizada y hasta `.prettierrc`.
+
+Se separó lo real de los fantasmas de CRLF: **solo 38 archivos tenían contenido
+distinto**, y de esos **9 no eran de la feature**. Se revirtió todo lo ajeno y
+los ~150 fantasmas, dejando el árbol limpio.
+
+**Es preexistente, no lo causó esta sesión**, pero significa que **ejecutar el
+formateador del proyecto produce un diff gigantesco**. Si `code-quality.yml`
+corre `format:check`, ya estaría fallando por esto.
+
+**Regla práctica hasta que se decida qué hacer: no ejecutar
+`bun run format:frontend` sobre todo el repo.** Formatear solo los archivos
+tocados, o revisar `git status` a conciencia antes de commitear.

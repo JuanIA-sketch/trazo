@@ -5,6 +5,7 @@ import { SettingContainer } from "../ui/SettingContainer";
 import { ResetButton } from "../ui/ResetButton";
 import { useSettings } from "../../hooks/useSettings";
 import type { AudioDevice } from "@/bindings";
+import { Speaker } from "lucide-react";
 
 interface OutputDeviceSelectorProps {
   descriptionMode?: "inline" | "tooltip";
@@ -46,6 +47,7 @@ export const OutputDeviceSelector: React.FC<OutputDeviceSelectorProps> =
 
       return (
         <SettingContainer
+        icon={Speaker}
           title={t("settings.sound.outputDevice.title")}
           description={t("settings.sound.outputDevice.description")}
           descriptionMode={descriptionMode}

@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../ui/Slider";
 import { useSettings } from "../../hooks/useSettings";
+import { SlidersHorizontal } from "lucide-react";
 
 /**
  * Software gain applied to the captured microphone signal, so a user with a
@@ -23,6 +24,7 @@ export const MicrophoneGain: React.FC<{
 
   return (
     <Slider
+        icon={SlidersHorizontal}
       value={gain}
       onChange={(value: number) => updateSetting("microphone_gain", value)}
       min={0.5}

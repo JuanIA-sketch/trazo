@@ -13,6 +13,7 @@ import { VolumeSlider } from "../VolumeSlider";
 import { MuteWhileRecording } from "../MuteWhileRecording";
 import { RecordingVolume } from "../RecordingVolume";
 import { ModelSettingsCard } from "./ModelSettingsCard";
+import { Keyboard, Volume2 } from "lucide-react";
 
 export const GeneralSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ export const GeneralSettings: React.FC = () => {
   const isWindows = type() === "windows";
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
-      <SettingsGroup title={t("settings.general.title")}>
+      <SettingsGroup title={t("settings.general.title")} icon={Keyboard}>
         <ShortcutInput shortcutId="transcribe" grouped={true} />
         <PushToTalk descriptionMode="tooltip" grouped={true} />
         {/* Cancel shortcut is hidden with push-to-talk (release key cancels) and on Linux (dynamic shortcut instability) */}
@@ -33,7 +34,7 @@ export const GeneralSettings: React.FC = () => {
         )}
       </SettingsGroup>
       <ModelSettingsCard />
-      <SettingsGroup title={t("settings.sound.title")}>
+      <SettingsGroup title={t("settings.sound.title")} icon={Volume2}>
         <MicrophoneSelector descriptionMode="tooltip" grouped={true} />
         <MicrophoneGain descriptionMode="tooltip" grouped={true} />
         {isWindows ? (

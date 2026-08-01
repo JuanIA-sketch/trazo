@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { useSettings } from "../../hooks/useSettings";
+import { Mic } from "lucide-react";
 
 interface PushToTalkProps {
   descriptionMode?: "inline" | "tooltip";
@@ -17,6 +18,7 @@ export const PushToTalk: React.FC<PushToTalkProps> = React.memo(
 
     return (
       <ToggleSwitch
+        icon={Mic}
         checked={pttEnabled}
         onChange={(enabled) => updateSetting("push_to_talk", enabled)}
         isUpdating={isUpdating("push_to_talk")}

@@ -8,6 +8,7 @@ interface ToggleSwitchProps {
   isUpdating?: boolean;
   label: string;
   description: string;
+  icon?: React.ComponentType<{ className?: string }>;
   descriptionMode?: "inline" | "tooltip";
   grouped?: boolean;
   tooltipPosition?: "top" | "bottom";
@@ -20,6 +21,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   isUpdating = false,
   label,
   description,
+  icon,
   descriptionMode = "tooltip",
   grouped = false,
   tooltipPosition = "top",
@@ -28,6 +30,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
     <SettingContainer
       title={label}
       description={description}
+      icon={icon}
       descriptionMode={descriptionMode}
       grouped={grouped}
       disabled={disabled}
@@ -44,7 +47,13 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           disabled={disabled || isUpdating}
           onChange={(e) => onChange(e.target.checked)}
         />
-        <div className="relative w-11 h-6 bg-mid-gray/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-logo-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-background-ui peer-disabled:opacity-50"></div>
+        <span
+          className={`trz-switch ${checked ? "is-on" : ""} ${
+            disabled || isUpdating ? "is-disabled" : ""
+          }`}
+        >
+          <span className="trz-switch__knob" />
+        </span>
       </label>
       {isUpdating && (
         <div className="absolute inset-0 flex items-center justify-center">

@@ -251,6 +251,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onError }) => {
           displayText={getModelDisplayText()}
           isDropdownOpen={showModelDropdown}
           onClick={() => setShowModelDropdown(!showModelDropdown)}
+          className="trz-model-pill"
         />
 
         {/* Model Dropdown */}

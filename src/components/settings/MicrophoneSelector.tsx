@@ -4,6 +4,7 @@ import { Dropdown } from "../ui/Dropdown";
 import { SettingContainer } from "../ui/SettingContainer";
 import { ResetButton } from "../ui/ResetButton";
 import { useSettings } from "../../hooks/useSettings";
+import { Mic } from "lucide-react";
 
 interface MicrophoneSelectorProps {
   descriptionMode?: "inline" | "tooltip";
@@ -43,6 +44,7 @@ export const MicrophoneSelector: React.FC<MicrophoneSelectorProps> = React.memo(
 
     return (
       <SettingContainer
+        icon={Mic}
         title={t("settings.sound.microphone.title")}
         description={t("settings.sound.microphone.description")}
         descriptionMode={descriptionMode}

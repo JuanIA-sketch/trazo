@@ -173,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "Configuración de {{model}}"
+      "title": "Configuración de {{model}}",
+      "meta": "{{size}} MB · {{count}} idiomas",
+      "metaSize": "{{size}} MB"
     },
     "models": {
       "title": "Modelos de Transcripción",
@@ -707,6 +709,31 @@
   "heyTrazo": {
     "idle": "Activar «Hey Trazo»",
     "listening": "Di «Hey Trazo»",
-    "privacy": "Escucha en tu equipo. El audio no se sube."
+    "privacy": "Escucha en tu equipo. El audio no se sube.",
+    "name": "Hey Trazo",
+    "soon": "Próximamente"
+  },
+  "screen": {
+    "general": {
+      "sub": "Atajos, modelo y sonido"
+    },
+    "models": {
+      "sub": "Descarga y elige el motor de transcripción"
+    },
+    "advanced": {
+      "sub": "Ajustes finos del dictado y el pegado"
+    },
+    "history": {
+      "sub": "Tus dictados recientes, en este equipo"
+    },
+    "postprocessing": {
+      "sub": "Reescribe el dictado con tus propias reglas"
+    },
+    "debug": {
+      "sub": "Registros y herramientas de diagnóstico"
+    },
+    "about": {
+      "sub": "Versión, licencias y actualizaciones"
+    }
   }
 }

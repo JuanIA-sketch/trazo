@@ -173,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "{{model}} Ayarları"
+      "title": "{{model}} Ayarları",
+      "meta": "{{size}} MB · {{count}} languages",
+      "metaSize": "{{size}} MB"
     },
     "models": {
       "title": "Transkripsiyon Modelleri",
@@ -707,6 +709,31 @@
   "heyTrazo": {
     "idle": "Turn on \"Hey Trazo\"",
     "listening": "Say \"Hey Trazo\"",
-    "privacy": "Listens on your machine. Audio is never uploaded."
+    "privacy": "Listens on your machine. Audio is never uploaded.",
+    "name": "Hey Trazo",
+    "soon": "Coming soon"
+  },
+  "screen": {
+    "general": {
+      "sub": "Shortcuts, model and sound"
+    },
+    "models": {
+      "sub": "Download and pick the transcription engine"
+    },
+    "advanced": {
+      "sub": "Fine-tuning for dictation and pasting"
+    },
+    "history": {
+      "sub": "Your recent dictations, on this machine"
+    },
+    "postprocessing": {
+      "sub": "Rewrite dictation with your own rules"
+    },
+    "debug": {
+      "sub": "Logs and diagnostic tools"
+    },
+    "about": {
+      "sub": "Version, licences and updates"
+    }
   }
 }

@@ -185,8 +185,174 @@
   --ok-tx: #047857;
 }
 
+/* — Tema oscuro —
+ *
+ * Fuente de verdad de los valores oscuros. Se aplica cuando el tema está
+ * FORZADO a oscuro (`<html data-theme="dark">`).
+ */
+:root[data-theme="dark"] {
+
+    --e0: radial-gradient(
+        1200px 720px at 8% -6%,
+        rgba(37, 99, 235, 0.16),
+        transparent 62%
+      ),
+      radial-gradient(
+        900px 620px at 96% 4%,
+        rgba(34, 211, 238, 0.07),
+        transparent 58%
+      ),
+      radial-gradient(
+        700px 500px at 42% 108%,
+        rgba(37, 99, 235, 0.06),
+        transparent 66%
+      ),
+      linear-gradient(168deg, #0c1424, #0b1220 46%, #080e1b);
+
+    --fr-bd: linear-gradient(
+      150deg,
+      rgba(190, 220, 255, 0.16),
+      rgba(190, 220, 255, 0.05) 42%,
+      rgba(0, 0, 0, 0.2)
+    );
+    --fr-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.09),
+      0 40px 90px -30px rgba(0, 0, 0, 0.9);
+
+    --tb-bg: linear-gradient(180deg, #111c30, #0d1626);
+    --tb-bd: rgba(190, 220, 255, 0.07);
+    --tb-in: inset 0 1px 0 rgba(190, 220, 255, 0.1);
+
+    --sb-bg: linear-gradient(168deg, #101b31, #0c1526 58%, #0b1322);
+    --sb-bd: rgba(190, 220, 255, 0.055);
+    --sb-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.16),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      inset -1px 0 0 rgba(190, 220, 255, 0.045), 0 1px 0 rgba(0, 0, 0, 0.5),
+      0 18px 40px -22px rgba(0, 0, 0, 0.85);
+    --sb-wm: rgba(147, 197, 253, 0.045);
+    --wm-grad: linear-gradient(118deg, #dbeafe, #60a5fa 40%, #22d3ee);
+
+    --nv-on-bg: linear-gradient(
+      100deg,
+      rgba(37, 99, 235, 0.3),
+      rgba(37, 99, 235, 0.13) 52%,
+      rgba(34, 211, 238, 0.05)
+    );
+    --nv-on-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.1), 0 0 22px -6px rgba(37, 99, 235, 0.4);
+    --nv-on-c: #f8fafc;
+    --nv-off-c: #94a3b8;
+    --nv-rail: linear-gradient(180deg, #22d3ee, #2563eb);
+    --nv-rail-sh: 0 0 10px rgba(34, 211, 238, 0.8);
+
+    --p1-bg: linear-gradient(172deg, #101c34, #0e1728);
+    --p1-bd: #22314b;
+    --p1-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.16),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.5),
+      0 8px 20px -14px rgba(0, 0, 0, 0.75);
+    --pl-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.5),
+      0 8px 20px -16px rgba(0, 0, 0, 0.6);
+    --p2-bg: linear-gradient(172deg, #15223c, #111b31);
+    --p2-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.16),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 16px 34px -18px rgba(0, 0, 0, 0.8);
+
+    --pf-bg: linear-gradient(168deg, #16294b, #122038);
+    --pf-bd: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.85),
+      rgba(34, 211, 238, 0.5) 48%,
+      rgba(37, 99, 235, 0.14)
+    );
+    --pf-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.16),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 3px 9px rgba(0, 0, 0, 0.5),
+      0 28px 56px -22px rgba(0, 0, 0, 0.85),
+      0 0 34px -8px rgba(37, 99, 235, 0.28);
+    --pf-ov: radial-gradient(
+      120% 90% at 6% -18%,
+      rgba(37, 99, 235, 0.2),
+      transparent 62%
+    );
+
+    --wl-bg: #0c1424;
+    --wl-bd: #1b2740;
+    --wl-sh:
+      inset 0 1px 2px rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(190, 220, 255, 0.06);
+
+    --rw-ln: rgba(190, 220, 255, 0.055);
+    --rw-hv: rgba(190, 220, 255, 0.035);
+
+    --cg-bg: linear-gradient(140deg, #2563eb, #22d3ee);
+    --cg-sh:
+      0 0 16px -3px rgba(37, 99, 235, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    --cr-bg: linear-gradient(180deg, #1a2941, #152136);
+    --cr-bd: #26364f;
+    --cr-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --cr-gl: #8fb6f5;
+
+    --kb-bg: linear-gradient(180deg, #17253f, #131e33);
+    --kb-sh:
+      inset 0 1px 0 rgba(190, 220, 255, 0.1), 0 2px 6px rgba(0, 0, 0, 0.4);
+
+    --pg-rl: #0c1424;
+    --pg-rs: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    --pg-fl: linear-gradient(90deg, #2563eb, #22d3ee);
+    --pg-sh: 0 0 10px rgba(34, 211, 238, 0.5);
+
+    --bt-bg: linear-gradient(180deg, #17253f, #131e33);
+    --bt-bd: #26364f;
+
+    --dt-bg: linear-gradient(135deg, #2563eb, #22d3ee);
+    --dt-sh: 0 0 7px rgba(34, 211, 238, 0.7);
+
+    --t1: #f8fafc;
+    --t2: #cbd5e1;
+    --t3: #94a3b8;
+    --t4: #64748b;
+
+    --bd-bg: rgba(190, 220, 255, 0.06);
+    --bd-bd: rgba(190, 220, 255, 0.08);
+
+    --ac-sf: rgba(37, 99, 235, 0.18);
+    --ac-tx: #8fb6f5;
+    /* En oscuro el cian sí contrasta y vuelve a ser el de marca. */
+    --cy: #22d3ee;
+
+    --cta-bg: linear-gradient(100deg, #2563eb, #1d4ed8);
+    --cta-sh:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 6px 16px -8px rgba(37, 99, 235, 0.6);
+
+    --sw-on: linear-gradient(100deg, #2563eb, #1d4ed8);
+    --sw-in: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+
+    --tg-bg: #0c1424;
+    --tg-bd: #22314b;
+    --tg-sh: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+
+    --mp-bg: linear-gradient(180deg, #142138, #101a2e);
+
+    --ok-bg: rgba(16, 185, 129, 0.14);
+    --ok-bd: rgba(16, 185, 129, 0.32);
+    --ok-tx: #34d399;
+}
+
+/* Automático: sin tema forzado, manda el sistema.
+ *
+ * OJO: copia espejo del bloque de arriba. CSS no permite compartir
+ * declaraciones entre un selector y una media query, así que los valores están
+ * dos veces a propósito. `themeSwitch.test.ts` falla si se desincronizan —
+ * si tocás una, tocá la otra.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+
     --e0: radial-gradient(
         1200px 720px at 8% -6%,
         rgba(37, 99, 235, 0.16),

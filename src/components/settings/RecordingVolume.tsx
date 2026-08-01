@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { Slider } from "../ui/Slider";
 import { useSettings } from "../../hooks/useSettings";
+import { Volume2 } from "lucide-react";
 
 const DEFAULT_DUCK_LEVEL = 0.2;
 
@@ -29,6 +30,7 @@ export const RecordingVolume: React.FC<RecordingVolumeProps> = React.memo(
     return (
       <>
         <ToggleSwitch
+        icon={Volume2}
           checked={enabled}
           onChange={(on) =>
             updateSetting("recording_volume", on ? DEFAULT_DUCK_LEVEL : null)

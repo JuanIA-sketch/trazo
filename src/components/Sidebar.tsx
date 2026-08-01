@@ -5,6 +5,7 @@ import "./Sidebar.css";
 import HandyTextLogo from "./icons/HandyTextLogo";
 import HandyHand from "./icons/HandyHand";
 import { HeyTrazo } from "./HeyTrazo";
+import ModelSelector from "./model-selector";
 import { useSettings } from "../hooks/useSettings";
 import {
   GeneralSettings,
@@ -16,7 +17,9 @@ import {
   ModelsSettings,
 } from "./settings";
 
-export type SidebarSection = keyof typeof SECTIONS_CONFIG;
+// La lista de secciones vive en `sections.ts` (módulo puro y testeable).
+import type { SidebarSection } from "./sections";
+export type { SidebarSection };
 
 interface IconProps {
   width?: number | string;
@@ -108,10 +111,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .filter(([_, config]) => config.enabled(settings))
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
+  // Alto por `h-full` con margen vertical daba 16px de más y el pie quedaba
+  // cortado; con padding el sidebar mide exactamente lo que su contenedor.
   return (
-    <div className="trz-sidebar flex flex-col w-40 h-full items-center px-2 my-2 ms-2">
+    <div className="trz-sidebar flex h-full w-40 flex-col items-center px-2 py-2 ms-2">
       <HandyTextLogo width={120} className="m-4" />
-      <div className="flex flex-col w-full pt-2">
+      {/* La navegación cede el espacio que necesite el pie: si la lista crece,
+          scrollea ella, no se come la píldora del modelo. */}
+      <div className="trz-nav-scroll flex min-h-0 w-full flex-1 flex-col pt-2">
         {GROUP_ORDER.map((group) => {
           const sections = availableSections.filter((s) => s.group === group);
           // Un grupo cuyas secciones están todas deshabilitadas no deja un
@@ -144,7 +151,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </div>
-      <HeyTrazo />
+      {/* Pie del sidebar: el diseño elimina la franja inferior y trae aquí el
+          modelo activo. */}
+      <div className="flex w-full shrink-0 flex-col gap-2 pb-1">
+        <HeyTrazo />
+        <ModelSelector />
+      </div>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { useSettings } from "../../hooks/useSettings";
 import { VolumeSlider } from "./VolumeSlider";
 import { SoundPicker } from "./SoundPicker";
+import { Volume2 } from "lucide-react";
 
 interface AudioFeedbackProps {
   descriptionMode?: "inline" | "tooltip";
@@ -19,6 +20,7 @@ export const AudioFeedback: React.FC<AudioFeedbackProps> = React.memo(
     return (
       <div className="flex flex-col">
         <ToggleSwitch
+        icon={Volume2}
           checked={audioFeedbackEnabled}
           onChange={(enabled) => updateSetting("audio_feedback", enabled)}
           isUpdating={isUpdating("audio_feedback")}

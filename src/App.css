@@ -1,10 +1,22 @@
 @import "tailwindcss";
+@import "./styles/fuentes.css";
 @import "./styles/theme.css";
 @import "./styles/material.css";
+@import "./styles/pantalla.css";
 
 /* Register the shared color tokens (src/styles/theme.css) as Tailwind
    utilities */
 @theme inline {
+  /* Tipografías del diseño. Registradas como el sans y el mono por defecto de
+     Tailwind, así toda la app las hereda sin tocar clase por clase.
+     Las familias de respaldo cubren los idiomas que Geist no trae (árabe,
+     hebreo, CJK): ahí resuelve el sistema, que es lo que el diseño espera. */
+  --font-sans:
+    "Geist", system-ui, -apple-system, "Segoe UI", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+
   --color-text: var(--color-text);
   --color-background: var(--color-background);
   --color-background-ui: var(--color-background-ui);
@@ -16,6 +28,7 @@
 
 :root {
   /* Typography */
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 24px;
   font-weight: 400;

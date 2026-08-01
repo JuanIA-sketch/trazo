@@ -1,0 +1,158 @@
+{
+  "_generado_por": "criterio · metodologia design-contract, valores pre-decididos en la spec 2026-07-22-landing-trazo-design.md",
+  "_regla_operativa": "Si una decision no tiene consecuencia en tokens, rules o anti_slop, no entra a este JSON.",
+  "schema_version": "1.0",
+  "brand": {
+    "name": "Trazo",
+    "product": "Trazo",
+    "tagline": "Habla como piensas. Envia como si lo hubieras escrito.",
+    "positioning": "Dictado por voz con IA para hispanohablantes que escriben todo el dia y no quieren mandar su voz a la nube.",
+    "audience": [
+      "Profesionales, estudiantes y creadores que dictan en vez de teclear",
+      "Personas que priorizan privacidad y no quieren cuenta ni suscripcion"
+    ],
+    "primary_device": "ambos",
+    "archetype": {
+      "primary": "Creator",
+      "secondary": "Sage",
+      "ui_translation": "Landing tech premium en oscuro: neutros muy oscuros, azul saturado reservado a accion y foco, cian como luz de acento. Mucho aire, tipografia protagonista en el hero.",
+      "allowed_behaviors": [
+        "Es la primera vez que el usuario ve el producto y hay que convencerlo en frio",
+        "El beneficio se demuestra con un antes/despues real, no se promete",
+        "El movimiento del hero es el gancho; el resto es lectura limpia"
+      ],
+      "forbidden_behaviors": [
+        "Vender por hype o superlativos sin evidencia",
+        "Esconder que es local y gratis detras de jerga",
+        "Saturar la pagina de animaciones sin funcion"
+      ]
+    }
+  },
+  "visual_posture": {
+    "_escalas": {
+      "density": "1 = mucho aire · 5 = cada pixel ocupado",
+      "expression": "1 = neutro a proposito · 5 = decisiones visuales que no puedes ignorar",
+      "geometry": "1 = todo redondeado · 5 = angulos rectos",
+      "warmth": "1 = frio, azules · 5 = calido, ambar",
+      "editoriality": "1 = app pura · 5 = revista, tipografia protagonista",
+      "materiality": "1 = plano total · 5 = texturas y profundidad"
+    },
+    "density": 2,
+    "expression": 3,
+    "geometry": 3,
+    "warmth": 2,
+    "editoriality": 3,
+    "materiality": 2,
+    "rationale": {
+      "density": "Es una landing que convierte en frio: el aire deja respirar la promesa y el video del hero manda.",
+      "expression": "Premium tipo Apple/Linear: decisiones visuales notorias pero sin ruido; ni generico ni carnaval.",
+      "geometry": "Esquinas suaves pero no infantiles; radios medios que se sienten de software serio.",
+      "warmth": "La marca es azul-cian tech; el frio comunica precision y privacidad, no calidez de consumo.",
+      "editoriality": "El hero vive de una frase grande y un wordmark que se escribe: la tipografia es el protagonista.",
+      "materiality": "Profundidad sutil (translucidez, luz del trazo) al estilo Apple, sin glassmorphism gratuito."
+    }
+  },
+  "tokens": {
+    "colors": {
+      "primary": { "hex": "#2563EB", "name": "Azul electrico", "role": "Accion principal, foco, estado activo, CTA." },
+      "primary_deep": { "hex": "#1D4ED8", "name": "Azul prensado", "role": "Hover y pressed del primary." },
+      "accent": { "hex": "#22D3EE", "name": "Cian senal", "role": "Luz de acento: el trazo del hero, enlaces, destellos." },
+      "background": { "hex": "#0B1220", "name": "Azul noche", "role": "Fondo de pagina." },
+      "surface": { "hex": "#0F1A30", "name": "Panel nocturno", "role": "Tarjetas y secciones elevadas sobre el fondo." },
+      "surface_elevated": { "hex": "#16233F", "name": "Panel elevado", "role": "Modales, popovers, el panel mas alto." },
+      "border": { "hex": "#24314B", "name": "Contorno tenue", "role": "Lineas de 1px y contornos." },
+      "text": { "hex": "#F8FAFC", "name": "Blanco niebla", "role": "Texto principal." },
+      "text_muted": { "hex": "#94A3B8", "name": "Gris pizarra", "role": "Subtitulos y metadatos." },
+      "text_subtle": { "hex": "#64748B", "name": "Gris tenue", "role": "Placeholders y notas al pie." },
+      "success": { "hex": "#22C55E", "name": "Verde listo", "role": "Confirmacion, descarga completa." },
+      "danger": { "hex": "#EF4444", "name": "Rojo de error", "role": "Fallo o validacion rota." },
+      "warning": { "hex": "#F59E0B", "name": "Ambar de aviso", "role": "Estado degradado." }
+    },
+    "typography": {
+      "display": {
+        "family": "Geist",
+        "weights": [600, 700],
+        "use_for": ["Headline del hero", "Titulos de seccion (H2)"],
+        "avoid_for": ["Parrafos largos"]
+      },
+      "body": {
+        "family": "Geist",
+        "weights": [400, 500],
+        "use_for": ["Cuerpo", "Subtitulos", "Botones", "Navegacion"],
+        "avoid_for": ["Columnas numericas comparables"]
+      },
+      "mono": {
+        "family": "Geist Mono",
+        "weights": [400, 500],
+        "use_for": ["Comandos", "El texto 'antes' del demo", "Etiquetas de codigo"],
+        "avoid_for": ["Prosa", "Titulos"]
+      }
+    },
+    "shape": {
+      "radius_sm": 8,
+      "radius_md": 12,
+      "radius_lg": 20,
+      "border_width": 1
+    },
+    "spacing": {
+      "unit": 8,
+      "section_y": { "sm": 64, "md": 112, "lg": 160 },
+      "component_gap": { "xs": 4, "sm": 8, "md": 16, "lg": 24 }
+    }
+  },
+  "component_rules": {
+    "button": {
+      "variants": ["primary", "secondary", "ghost"],
+      "rules": [
+        "Un solo boton primary visible por seccion. El CTA de descarga es el primary.",
+        "Altura minima 48px (objetivo tactil comodo en landing).",
+        "radius_md. Nunca pill 999px ni cuadrado.",
+        "El label empieza con verbo: 'Descargar gratis', no 'Descarga'.",
+        "El secundario es ghost: mismo tamano, sin fondo, no compite con el primary."
+      ]
+    },
+    "card": {
+      "variants": ["default", "interactive"],
+      "rules": [
+        "Prohibida la tarjeta dentro de tarjeta. Un solo nivel de elevacion por region.",
+        "Fondo surface sobre background. surface_elevated solo en modal/popover.",
+        "Borde de border_width en border. Sombra solo si la tarjeta es clickeable.",
+        "radius_lg en la tarjeta, radius_md en sus elementos internos.",
+        "Las 4 tarjetas de features NO son identicas: cada una lidera con su propio dato."
+      ]
+    },
+    "navigation": {
+      "variants": ["topbar"],
+      "rules": [
+        "Maximo 5 destinos: Como funciona, Features, Privacidad, GitHub, y el CTA Descargar.",
+        "El CTA de descarga vive en la navbar y es el unico primary del navbar.",
+        "La navbar no colapsa de forma brusca al hacer scroll; a lo sumo se condensa suave.",
+        "Cada item lleva label de texto. Iconos solos, prohibidos."
+      ]
+    }
+  },
+  "anti_slop": {
+    "_nota_hue": "Cualquier primary cuyo matiz HSL caiga en [235,285] falla el gate. #2563EB tiene hue ~221, fuera del rango: pasa sin excepcion. NO se declara purple_as_primary.",
+    "forbidden_colors": ["#6366F1", "#8B5CF6", "#A855F7"],
+    "restricted_hue_range_hsl": [235, 285],
+    "forbidden_patterns": [
+      "Hero centrado con titulo enorme, subtitulo gris y dos botones lado a lado identicos",
+      "Fila de exactamente tres tarjetas iguales con icono arriba, titulo y dos lineas",
+      "Texto con degradado (background-clip: text) como recurso principal",
+      "Degradado morado a rosa en cualquier superficie",
+      "Glassmorphism: backdrop-filter blur como muleta en vez de jerarquia real",
+      "Inter como tipografia de titulos",
+      "Emojis usados como iconos de interfaz o de features",
+      "Sombras difusas gigantes (blur mayor a 40px) para simular profundidad",
+      "Buzzwords de landing SaaS: revoluciona, potencia, sin esfuerzo, magico, todo en uno",
+      "Ondas de audio decorativas sin funcion como grafico del hero",
+      "Muro de logos inventados o de marcas reales sin permiso presentado como clientes"
+    ]
+  },
+  "validation": {
+    "min_contrast_body": 4.5,
+    "max_fonts": 2,
+    "max_radius_values": 3,
+    "max_primary_color_usage_percent": 18
+  }
+}

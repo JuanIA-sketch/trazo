@@ -1,0 +1,103 @@
+{
+  "_regla_operativa": "Si una decision de tono no cambia una palabra concreta del producto, no entra aqui.",
+  "schema_version": "1.0",
+  "voice": {
+    "name": "Trazo",
+    "language": "es",
+    "dialect": "Espanol neutro de LATAM, tuteo (tu / tienes / puedes). Evita voseo y evita el 'vosotros' de Espana. Aunque una fuente este en otro registro, el output es tuteo neutro.",
+    "tone_axes": {
+      "_nota": "Cinco ejes de 1 a 5. hype es el eje anti-slop del copy. El gate cruza esto contra brand.archetype (Creator exige hype <= 2).",
+      "directness": 4,
+      "warmth": 3,
+      "technicality": 3,
+      "provocation": 2,
+      "hype": 1,
+      "rationale": {
+        "directness": "La promesa se dice sin rodeos: dictado local, gratis, en espanol.",
+        "warmth": "Cercano y humano, sin ser blando: le habla a una persona, no a una empresa.",
+        "technicality": "Suficiente para que un dev confie, sin que un no-tecnico se pierda.",
+        "provocation": "Un contraste honesto contra la nube de pago, sin agredir.",
+        "hype": "Cero hype: el informe manda demostrar, no prometer. Creator exige <= 2; lo dejamos en 1."
+      }
+    },
+    "principles": [
+      "Demostrar, no prometer: un antes/despues real vale mas que un adjetivo.",
+      "La privacidad se dice en concreto: 'tu voz nunca sale de tu computador', no 'seguro'.",
+      "Numeros concretos: '4x mas rapido', '100% local', no 'mucho mas rapido'.",
+      "El producto nunca se atribuye el merito de lo que el usuario dijo."
+    ],
+    "vibe": "Un colega tecnico que te muestra algo que de verdad funciona y no te vende humo.",
+    "avoid_words": [
+      "revolucionario",
+      "revoluciona",
+      "transformador",
+      "innovador",
+      "disruptivo",
+      "de vanguardia",
+      "cutting-edge",
+      "next-level",
+      "game-changing",
+      "seamless",
+      "effortless",
+      "sin esfuerzo",
+      "supercharge",
+      "potencia tu",
+      "streamline",
+      "world-class",
+      "enterprise-grade",
+      "all-in-one",
+      "todo en uno",
+      "la solucion definitiva",
+      "magico",
+      "empodera",
+      "sinergia",
+      "lleva tu productividad al siguiente nivel",
+      "descubre el poder de",
+      "el futuro del dictado",
+      "imagina un mundo donde",
+      "✨",
+      "🚀"
+    ],
+    "safe_words": [
+      "local",
+      "gratis",
+      "tu voz",
+      "en espanol",
+      "codigo abierto",
+      "sin cuenta",
+      "sin suscripcion",
+      "listo para enviar",
+      "descargar",
+      "tu computador"
+    ],
+    "sentence_rules": {
+      "prefer": [
+        "Frases de 14 palabras o menos en titulos; hasta 22 en cuerpo.",
+        "Voz activa con sujeto explicito: 'Tu voz nunca sale de tu computador'.",
+        "Verbo al principio en botones: 'Descargar gratis', 'Empezar'.",
+        "Cifras en digitos: '4x', '100%', 'USD 12 al mes'."
+      ],
+      "avoid": [
+        "Tricolon: tres elementos en serie como recurso ('rapido, simple y potente'). Prohibido.",
+        "Voz pasiva y 'ha sido'.",
+        "Signos de exclamacion en el cuerpo.",
+        "Title Case en espanol: mayuscula solo en la primera palabra del titulo."
+      ]
+    },
+    "cta_style": "Directo y descriptivo del resultado. Un CTA dice que pasa despues del clic.",
+    "cta_primary": {
+      "channel": "descarga",
+      "examples": ["Descargar gratis", "Empezar a trazar"]
+    },
+    "cta_secondary": {
+      "channel": "info",
+      "examples": ["Ver como funciona"],
+      "rule": "El secundario nunca compite con el primario: variant ghost, mismo tamano, sin fondo."
+    },
+    "code_switching": {
+      "allowed": ["local", "open source", "commit", "deploy", "chat", "app"],
+      "forbidden": ["insight", "onboarding", "workflow", "feature", "engagement", "seamless"],
+      "rule": "Se permite el anglicismo solo cuando ya es la palabra que el usuario dice en voz alta. Ante la duda, se traduce."
+    }
+  }
+}

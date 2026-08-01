@@ -1,8 +1,8 @@
+import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../ui/Slider";
 import { useSettings } from "../../hooks/useSettings";
-import { SlidersHorizontal } from "lucide-react";
 
 /**
  * Software gain applied to the captured microphone signal, so a user with a

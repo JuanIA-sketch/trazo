@@ -1,3 +1,4 @@
+import { CornerDownLeft } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -63,6 +64,7 @@ export const AutoSubmit: React.FC<AutoSubmitProps> = React.memo(
 
     return (
       <SettingContainer
+      icon={CornerDownLeft}
         title={t("settings.advanced.autoSubmit.title")}
         description={t("settings.advanced.autoSubmit.description")}
         descriptionMode={descriptionMode}

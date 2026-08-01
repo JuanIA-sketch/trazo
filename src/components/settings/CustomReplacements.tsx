@@ -1,3 +1,4 @@
+import { Replace } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -125,6 +126,7 @@ export const CustomReplacements: React.FC<CustomReplacementsProps> = React.memo(
     return (
       <>
         <SettingContainer
+      icon={Replace}
           title={t("settings.advanced.customReplacements.title")}
           description={t("settings.advanced.customReplacements.description")}
           descriptionMode={descriptionMode}

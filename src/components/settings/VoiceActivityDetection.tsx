@@ -1,3 +1,4 @@
+import { AudioLines } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -19,6 +20,7 @@ export const VoiceActivityDetection: React.FC<VoiceActivityDetectionProps> = ({
 
   return (
     <ToggleSwitch
+      icon={AudioLines}
       checked={enabled}
       onChange={(enabled) => updateSetting("vad_enabled", enabled)}
       isUpdating={isUpdating("vad_enabled")}

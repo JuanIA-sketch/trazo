@@ -311,60 +311,6 @@
   gap: 10px;
   justify-self: end;
 }
-/* Brand mark: serif italic light "T" in the brand gradient, over the loose
-   diagonal flick (the "trazo"). Replaces the dot and the spinner. */
-.tmark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 16px;
-  flex: none;
-}
-.tmark-letter {
-  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 1;
-  background: var(--t-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.tmark-stroke {
-  width: 14px;
-  height: 6px;
-  margin-top: 1px;
-}
-/* VAD hears voice: the letter glows with the speech — the trust signal that
-   used to live on the recording dot. */
-.tmark.speaking .tmark-letter {
-  animation: tmark-speak 0.8s ease-in-out infinite;
-}
-@keyframes tmark-speak {
-  0%,
-  100% {
-    filter: brightness(1.05) drop-shadow(0 0 1.5px rgba(37, 99, 235, 0.35));
-  }
-  50% {
-    filter: brightness(1.55) drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
-  }
-}
-/* Working (transcribing / polishing): the flick redraws itself in a loop —
-   the trazo IS the progress indicator, replacing the generic spinner. */
-.tmark.working .tmark-stroke path {
-  stroke-dasharray: 15;
-  animation: tstroke-draw 1.1s ease-in-out infinite;
-}
-@keyframes tstroke-draw {
-  from {
-    stroke-dashoffset: 30;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 /* Double-tap latched capture: mic open with no key held. With the gradient
    border on every state, the old accent ring would be ambiguous — instead the
    halo BREATHES (only in this state) and the ∞ badge names it. */
@@ -397,10 +343,6 @@
 /* Reduced motion: keep the continuous state visually distinct (stronger
    static halo) without any animation; still the letter, never a strobe. */
 @media (prefers-reduced-motion: reduce) {
-  .tmark.speaking .tmark-letter,
-  .tmark.working .tmark-stroke path {
-    animation: none;
-  }
   .scard.compact.continuous {
     animation: none;
     box-shadow:
@@ -492,4 +434,76 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ============================================================
+   Borde reactivo — el contorno de la píldora ES el visualizador.
+   Reemplaza a la letra "T": el diseño dice "sin letra adentro: la corona es la
+   marca", y las dos señales que cargaba la letra viven ahora acá (el pulso de
+   voz y, mientras transcribe, el arco que orbita).
+   La onda va hacia ADENTRO a propósito: la ventana solo tiene 36px de holgura
+   lateral y 11px abajo, así que hacia afuera se recortaría.
+   ============================================================ */
+.sborde {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sborde-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sborde-path {
+  stroke: url(#sborde-grad);
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  opacity: 0.85;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Con voz real (VAD, no ruido) el trazo se enciende. */
+.sborde.is-voz .sborde-path {
+  opacity: 1;
+  stroke-width: 1.8;
+}
+
+/* Transcribiendo: sin micrófono que mostrar, el borde deja de ondular y un arco
+   orbita saliendo de debajo de la corona. Es el indicador de progreso. */
+.sborde.is-trabajando .sborde-path {
+  opacity: 1;
+  stroke-dasharray: 46 480;
+  animation: sborde-orbita 1400ms linear infinite;
+}
+
+@keyframes sborde-orbita {
+  from {
+    stroke-dashoffset: 526;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Las barras internas ceden protagonismo: el borde es ahora el visualizador
+   principal y dos visualizadores compitiendo se estorban. Quedan como textura. */
+.swave i {
+  opacity: 0.42;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sin ondulación: borde estático, más grueso y más brillante. */
+  .sborde-path {
+    stroke-width: 2;
+    opacity: 1;
+  }
+  .sborde.is-trabajando .sborde-path {
+    animation: none;
+    stroke-dasharray: none;
+  }
 }

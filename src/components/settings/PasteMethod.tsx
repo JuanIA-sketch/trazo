@@ -1,3 +1,4 @@
+import { ClipboardPaste } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -75,6 +76,7 @@ export const PasteMethodSetting: React.FC<PasteMethodProps> = React.memo(
 
     return (
       <SettingContainer
+      icon={ClipboardPaste}
         title={t("settings.advanced.pasteMethod.title")}
         description={t("settings.advanced.pasteMethod.description")}
         descriptionMode={descriptionMode}

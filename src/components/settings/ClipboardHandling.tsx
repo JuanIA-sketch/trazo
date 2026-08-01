@@ -1,3 +1,4 @@
+import { Clipboard } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -33,6 +34,7 @@ export const ClipboardHandlingSetting: React.FC<ClipboardHandlingProps> =
 
     return (
       <SettingContainer
+      icon={Clipboard}
         title={t("settings.advanced.clipboardHandling.title")}
         description={t("settings.advanced.clipboardHandling.description")}
         descriptionMode={descriptionMode}

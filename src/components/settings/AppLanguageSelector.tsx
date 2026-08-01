@@ -1,3 +1,4 @@
+import { Languages } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -30,6 +31,7 @@ export const AppLanguageSelector: React.FC<AppLanguageSelectorProps> =
 
     return (
       <SettingContainer
+      icon={Languages}
         title={t("appLanguage.title")}
         description={t("appLanguage.description")}
         descriptionMode={descriptionMode}

@@ -1,3 +1,4 @@
+import { Check, Cpu } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsGroup } from "../../ui/SettingsGroup";
@@ -9,7 +10,6 @@ import {
   CHINESE_LANGUAGE_CODE,
   getUniqueCapabilityLanguages,
 } from "@/lib/constants/languages";
-import { Check, Cpu } from "lucide-react";
 
 export const ModelSettingsCard: React.FC = () => {
   const { t } = useTranslation();

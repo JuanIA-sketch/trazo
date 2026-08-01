@@ -1,3 +1,4 @@
+import { SpellCheck } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../../ui/Slider";
@@ -20,6 +21,7 @@ export const WordCorrectionThreshold: React.FC<
 
   return (
     <Slider
+      icon={SpellCheck}
       value={settings?.word_correction_threshold ?? 0.18}
       onChange={handleThresholdChange}
       min={0.0}

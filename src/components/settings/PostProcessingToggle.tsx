@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const PostProcessingToggle: React.FC<PostProcessingToggleProps> =
 
     return (
       <ToggleSwitch
+      icon={Sparkles}
         checked={enabled}
         onChange={(enabled) => updateSetting("post_process_enabled", enabled)}
         isUpdating={isUpdating("post_process_enabled")}

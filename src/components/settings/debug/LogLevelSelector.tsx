@@ -1,3 +1,4 @@
+import { FileText } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { SettingContainer } from "../../ui/SettingContainer";
@@ -38,6 +39,7 @@ export const LogLevelSelector: React.FC<LogLevelSelectorProps> = ({
 
   return (
     <SettingContainer
+      icon={FileText}
       title={t("settings.debug.logLevel.title")}
       description={t("settings.debug.logLevel.description")}
       descriptionMode={descriptionMode}

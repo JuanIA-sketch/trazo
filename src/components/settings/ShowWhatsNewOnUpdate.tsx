@@ -1,3 +1,4 @@
+import { Bell } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -18,6 +19,7 @@ export const ShowWhatsNewOnUpdate: React.FC<ShowWhatsNewOnUpdateProps> = ({
 
   return (
     <ToggleSwitch
+      icon={Bell}
       checked={enabled}
       onChange={(nextEnabled) =>
         updateSetting("show_whats_new_on_update", nextEnabled)

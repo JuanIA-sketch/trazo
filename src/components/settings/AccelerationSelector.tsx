@@ -1,3 +1,4 @@
+import { Cpu } from "lucide-react";
 import { type FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
@@ -135,6 +136,7 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
   return (
     <>
       <SettingContainer
+      icon={Cpu}
         title={t("settings.advanced.acceleration.transcribe.title")}
         description={t("settings.advanced.acceleration.transcribe.description")}
         descriptionMode={descriptionMode}

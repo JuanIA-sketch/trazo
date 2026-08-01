@@ -1,3 +1,4 @@
+import { History } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "../../hooks/useSettings";
@@ -28,6 +29,7 @@ export const HistoryLimit: React.FC<HistoryLimitProps> = ({
 
   return (
     <SettingContainer
+      icon={History}
       title={t("settings.debug.historyLimit.title")}
       description={t("settings.debug.historyLimit.description")}
       descriptionMode={descriptionMode}

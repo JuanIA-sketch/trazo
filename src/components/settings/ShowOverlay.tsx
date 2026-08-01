@@ -1,3 +1,4 @@
+import { Eye } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -51,6 +52,7 @@ export const ShowOverlay: React.FC<ShowOverlayProps> = React.memo(
     return (
       <>
         <SettingContainer
+      icon={Eye}
           title={t("settings.advanced.overlay.style.title")}
           description={t("settings.advanced.overlay.style.description")}
           descriptionMode={descriptionMode}

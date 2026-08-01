@@ -13,6 +13,7 @@ import i18n, { syncLanguageFromSettings } from "@/i18n";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 import { handleShowOverlay, type OverlayState } from "./showOverlayHandler";
 import { barHeightPx } from "./waveform";
+import { ReactiveBorder } from "./ReactiveBorder";
 import coronaUrl from "./corona.png";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
@@ -166,6 +167,16 @@ const RecordingOverlay: React.FC = () => {
   // for the text morph, which would clip the overhang.
   const crown = <img className="scrown" src={coronaUrl} alt="" aria-hidden />;
 
+  // El contorno de la píldora es el visualizador; nace bajo la corona.
+  const borde = (
+    <ReactiveBorder
+      niveles={levels}
+      hablando={speaking}
+      trabajando={phase === "working"}
+      activo={isVisible}
+    />
+  );
+
   const waveform = (
     <div className="swave">
       {levels.map((v, i) => (
@@ -174,33 +185,11 @@ const RecordingOverlay: React.FC = () => {
     </div>
   );
 
-  // Brand mark: serif italic "T" in the brand gradient over a loose diagonal
-  // flick (the "trazo"). Replaces the recording dot and the working spinner:
-  // the VAD speech pulse lives on the letter, and while transcribing the
-  // flick redraws itself in a loop — the stroke IS the progress indicator.
-  const BRAND_INITIAL = "T";
-  const tMark = (working: boolean) => (
-    <span
-      className={`tmark ${speaking ? "speaking" : ""} ${working ? "working" : ""}`}
-      aria-hidden="true"
-    >
-      <span className="tmark-letter">{BRAND_INITIAL}</span>
-      <svg className="tmark-stroke" viewBox="0 0 16 7" fill="none">
-        <defs>
-          <linearGradient id="tmark-grad" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stopColor="#2563EB" />
-            <stop offset="1" stopColor="#22D3EE" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M1.5 5.2 C 5 6.4, 10 2.4, 14.5 1.6"
-          stroke="url(#tmark-grad)"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    </span>
-  );
+  // La letra "T" ya no vive acá: el diseño es explícito —"sin letra adentro:
+  // la corona es la marca"—, y la corona ya está pinada arriba a la izquierda.
+  // Las dos señales que cargaba la letra se mudaron al contorno: el pulso de
+  // voz y, mientras transcribe, el arco que orbita como indicador de progreso.
+  // Ver ReactiveBorder.tsx.
 
   const cancelBtn = (
     <button
@@ -228,7 +217,6 @@ const RecordingOverlay: React.FC = () => {
     continuousBadge = false,
   ) => (
     <div className="sbase">
-      <div className="sbase-l">{tMark(false)}</div>
       {waveform}
       <div className="sbase-r">
         {continuousBadge && (
@@ -251,7 +239,6 @@ const RecordingOverlay: React.FC = () => {
   // listening row, so the label is centered.
   const workingRow = (label: string, showCancel: boolean) => (
     <div className="sbase">
-      <div className="sbase-l">{tMark(true)}</div>
       <span className="swork-label">{label}</span>
       <div className="sbase-r">{showCancel && cancelBtn}</div>
     </div>
@@ -294,6 +281,7 @@ const RecordingOverlay: React.FC = () => {
       <div dir={direction} className={`ov-stage ${position}`}>
         <div key={session} className={`sholder ${isVisible ? "" : "leaving"}`}>
           {crown}
+          {borde}
           <div
             className={`scard ${open ? "open" : ""} ${collapsed ? "working" : ""}`}
           >
@@ -349,6 +337,7 @@ const RecordingOverlay: React.FC = () => {
     >
       <div className="sholder compact">
         {crown}
+        {borde}
         <div
           className={`scard compact ${(working || copied) && isVisible ? "cworking" : ""} ${
             continuous ? "continuous" : ""

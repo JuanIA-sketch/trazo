@@ -1,3 +1,4 @@
+import { EyeOff } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const StartHidden: React.FC<StartHiddenProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={EyeOff}
         checked={startHidden}
         onChange={(enabled) => updateSetting("start_hidden", enabled)}
         isUpdating={isUpdating("start_hidden")}

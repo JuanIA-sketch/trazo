@@ -1,9 +1,10 @@
-import React from "react";
+import isotipo from "../../assets/isotipo-trazo.png";
 
-// Placeholder del wordmark mientras no hay logo final: el nombre "Trazo" en
-// el azul de marca (--color-logo-primary: #2563EB claro / #3B82F6 oscuro).
-// Mantiene nombre, props y viewBox del logo original para ser drop-in; el
-// logo definitivo reemplazará solo el contenido del SVG.
+// Marca del sidebar: el isotipo definitivo del ZIP de Claude Design junto al
+// wordmark. El diseño los cruza por opacidad al colapsar el sidebar; mientras
+// el colapso no exista, se muestran juntos como bloque de marca.
+//
+// Conserva nombre y props del componente original para seguir siendo drop-in.
 const BRAND_NAME = "Trazo";
 
 const HandyTextLogo = ({
@@ -16,27 +17,14 @@ const HandyTextLogo = ({
   className?: string;
 }) => {
   return (
-    <svg
-      width={width}
-      height={height}
-      className={className}
-      viewBox="0 0 930 328"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <div
+      className={`trz-marca ${className ?? ""}`}
+      style={{ width, height }}
+      aria-label={BRAND_NAME}
     >
-      <text
-        x="465"
-        y="178"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="240"
-        fontWeight="700"
-        letterSpacing="4"
-        fill="var(--color-logo-primary)"
-      >
-        {BRAND_NAME}
-      </text>
-    </svg>
+      <img src={isotipo} alt="" aria-hidden="true" className="trz-marca__iso" />
+      <span className="trz-marca__wordmark">{BRAND_NAME}</span>
+    </div>
   );
 };
 

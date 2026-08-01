@@ -10,7 +10,6 @@ import {
 import { ModelStateEvent, RecordingErrorEvent } from "./lib/types/events";
 import "./App.css";
 import AccessibilityPermissions from "./components/AccessibilityPermissions";
-import Footer from "./components/footer";
 import Onboarding, {
   AccessibilityOnboarding,
   AutostartOnboarding,
@@ -20,6 +19,7 @@ import {
   type OnboardingStep,
 } from "./components/onboarding/onboardingFlow";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
+import { screenHeaderKeys } from "./components/screenHeader";
 import { WhatsNewGate } from "./components/whats-new";
 import { useSettings } from "./hooks/useSettings";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -30,6 +30,21 @@ const renderSettingsContent = (section: SidebarSection) => {
   const ActiveComponent =
     SECTIONS_CONFIG[section]?.component || SECTIONS_CONFIG.general.component;
   return <ActiveComponent />;
+};
+
+/** Cabecera de pantalla del diseño: título grande + qué se hace acá. */
+const ScreenHeader: React.FC<{ section: SidebarSection }> = ({ section }) => {
+  const { t } = useTranslation();
+  const { titleKey, subtitleKey } = screenHeaderKeys(section);
+
+  return (
+    <div className="trz-screen__head">
+      <div className="flex flex-col gap-1">
+        <h1 className="trz-screen__title">{t(titleKey)}</h1>
+        <div className="trz-screen__sub">{t(subtitleKey)}</div>
+      </div>
+    </div>
+  );
 };
 
 function App() {
@@ -299,15 +314,18 @@ function App() {
         {/* Scrollable content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
-            <div className="flex flex-col items-center p-4 gap-4">
+            <div className="trz-screen mx-auto w-full max-w-3xl">
+              <ScreenHeader section={currentSection} />
               <AccessibilityPermissions />
-              {renderSettingsContent(currentSection)}
+              <div className="flex flex-col gap-4">
+                {renderSettingsContent(currentSection)}
+              </div>
             </div>
           </div>
         </div>
       </div>
-      {/* Fixed footer at bottom */}
-      <Footer />
+      {/* La franja inferior desaparece por diseño: el modelo pasó al pie del
+          sidebar y el buscador de actualizaciones a "Acerca de". */}
     </div>
   );
 }

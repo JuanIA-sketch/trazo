@@ -1,7 +1,10 @@
+@import "../styles/fuentes.css";
 @import "../styles/theme.css";
 
 :root {
-  --s-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Mismas familias que la app: el overlay es el objeto de marca y no puede ir
+     en otra tipografía que el resto del producto. */
+  --s-font: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* The pill is a fixed brand object: the Trazo night navy in BOTH system
      themes, so every color below is pinned for on-navy legibility (no
      light/dark flip inside the overlay; the app itself is untouched). */
@@ -17,7 +20,7 @@
   --t-glow:
     -10px 3px 26px -9px rgba(37, 99, 235, 0.6),
     10px 3px 26px -9px rgba(34, 211, 238, 0.45);
-  /* Subtle glass: a top inner highlight over the solid black. */
+  /* Subtle glass: a top inner highlight over the navy surface. */
   --t-glass: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   /* Neutrals, pinned for the always-navy surface: near-white primary text over
      the brand's slate secondaries. */
@@ -162,10 +165,10 @@
   margin: 0;
 }
 
-/* Shared base card: solid black under a 1.3px brand-gradient border (the
-   gradient paints the border-box behind a transparent border; the black
-   padding-box covers the middle), a glass top highlight, and the split
-   purple/orange halo — the halo only exists while the pill is on screen,
+/* Shared base card: the navy brand surface under a 1.3px brand-gradient
+   border (the gradient paints the border-box behind a transparent border;
+   the navy padding-box covers the middle), a glass top highlight, and the
+   split blue/cyan halo — the halo only exists while the pill is on screen,
    i.e. while a capture or its aftermath is active. */
 .scard {
   width: var(--ov-pill-w);
@@ -318,7 +321,7 @@
   flex: none;
 }
 .tmark-letter {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
   font-style: italic;
   font-weight: 400;
   font-size: 16px;

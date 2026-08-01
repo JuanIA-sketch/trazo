@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { formatKeyCombination } from "../../lib/utils/keyboard";
 import { ResetButton } from "../ui/ResetButton";
 import { SettingContainer } from "../ui/SettingContainer";
+import { AudioLines, XCircle } from "lucide-react";
 import { useSettings } from "../../hooks/useSettings";
 import { useOsType } from "../../hooks/useOsType";
 import { commands } from "@/bindings";
@@ -258,6 +259,7 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
     <SettingContainer
       title={translatedName}
       description={translatedDescription}
+      icon={shortcutId === "cancel" ? XCircle : AudioLines}
       descriptionMode={descriptionMode}
       grouped={grouped}
       disabled={disabled}
@@ -265,17 +267,11 @@ export const HandyKeysShortcutInput: React.FC<HandyKeysShortcutInputProps> = ({
     >
       <div className="flex items-center space-x-1">
         {isRecording ? (
-          <div
-            ref={shortcutRef}
-            className="px-2 py-1 text-sm font-semibold border border-logo-primary bg-logo-primary/30 rounded-md"
-          >
+          <div ref={shortcutRef} className="trz-key is-recording">
             {formatCurrentKeys()}
           </div>
         ) : (
-          <div
-            className="px-2 py-1 text-sm font-semibold bg-mid-gray/10 border border-mid-gray/80 hover:bg-logo-primary/10 rounded-md cursor-pointer hover:border-logo-primary"
-            onClick={startRecording}
-          >
+          <div className="trz-key cursor-pointer" onClick={startRecording}>
             {formatKeyCombination(binding.current_binding, osType)}
           </div>
         )}

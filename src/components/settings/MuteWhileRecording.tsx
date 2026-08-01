@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { useSettings } from "../../hooks/useSettings";
+import { VolumeX } from "lucide-react";
 
 interface MuteWhileRecordingToggleProps {
   descriptionMode?: "inline" | "tooltip";
@@ -17,6 +18,7 @@ export const MuteWhileRecording: React.FC<MuteWhileRecordingToggleProps> =
 
     return (
       <ToggleSwitch
+        icon={VolumeX}
         checked={muteEnabled}
         onChange={(enabled) => updateSetting("mute_while_recording", enabled)}
         isUpdating={isUpdating("mute_while_recording")}

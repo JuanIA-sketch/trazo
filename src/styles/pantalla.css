@@ -1,0 +1,477 @@
+/* Área de contenido — traducción de `Pantalla.dc.html` del ZIP de Claude Design.
+ *
+ * Los tokens viven en material.css. Acá solo se componen las recetas que el
+ * diseño usa una y otra vez: panel, fila, chip, tecla, control y barra.
+ *
+ * Reglas del sistema que este archivo respeta (GUIA-DSL-CLAUDE-DESIGN.md §4):
+ *   1. El borde en degradado (--pf-bd) marca UNA cosa por pantalla. Vive en
+ *      .trz-panel--destacado y en .trz-key, que nunca compiten en la misma vista.
+ *   5. Una sola curva de movimiento en toda la app.
+ *   6. Solo se animan transform y opacity. Nunca width/height/box-shadow/filter.
+ */
+
+:root {
+  --trz-curva: cubic-bezier(0.22, 1, 0.36, 1);
+  --trz-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* — Marca del sidebar: isotipo + wordmark — */
+
+.trz-marca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.trz-marca__iso {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+/* El wordmark del diseño: serif itálica con el degradado de marca recortado
+   sobre el texto. Misma familia que la "T" del overlay. */
+.trz-marca__wordmark {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 34px;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--wm-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* — Cabecera de pantalla — */
+
+.trz-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  padding: 6px 8px 0 6px;
+}
+
+.trz-screen__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.trz-screen__title {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--t1);
+}
+
+.trz-screen__sub {
+  font-size: 12.5px;
+  color: var(--t4);
+}
+
+/* El contenido se desvanece al llegar abajo en vez de cortarse en seco. */
+.trz-screen__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+}
+
+.trz-screen__foot {
+  padding: 0 2px 4px;
+  font-size: 12px;
+  color: var(--t4);
+}
+
+/* — Panel nivel 1: la tarjeta base — */
+
+.trz-panel {
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--p1-bg);
+  border: 1px solid var(--p1-bd);
+  box-shadow: var(--p1-sh);
+}
+
+.trz-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 17px 14px;
+}
+
+.trz-panel__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--t1);
+}
+
+.trz-panel__desc {
+  padding: 0 17px 12px;
+  margin-top: -8px;
+  font-size: 12px;
+  color: var(--t4);
+}
+
+.trz-panel__count {
+  font-family: var(--trz-mono);
+  font-size: 12px;
+  color: var(--t4);
+}
+
+.trz-panel__sep {
+  height: 1px;
+  background: var(--rw-ln);
+}
+
+/* Chip de ícono de grupo: relleno de marca, ícono blanco. */
+.trz-chip-grupo {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: var(--cg-bg);
+  box-shadow: var(--cg-sh);
+}
+
+/* — Panel destacado: el único con borde en degradado por pantalla — */
+
+.trz-panel--destacado {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1.3px solid transparent;
+  padding: 16px 18px 18px;
+  background:
+    var(--pf-bg) padding-box,
+    var(--pf-bd) border-box;
+  box-shadow: var(--pf-sh);
+}
+
+.trz-panel--destacado > * {
+  position: relative;
+}
+
+.trz-panel--destacado::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--pf-ov);
+}
+
+/* — Fila — */
+
+.trz-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 17px;
+  border-bottom: 1px solid var(--rw-ln);
+  transition: background-color 160ms var(--trz-curva);
+}
+
+.trz-row:last-child {
+  border-bottom: none;
+}
+
+.trz-row:hover {
+  background: var(--rw-hv);
+}
+
+.trz-row--apilada {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.trz-row__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trz-row__title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.trz-row__desc {
+  font-size: 12px;
+  color: var(--t4);
+}
+
+.trz-row__control {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Chip de ícono de fila: hundido, ícono en el azul apagado. */
+.trz-chip-fila {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cr-gl);
+  background: var(--cr-bg);
+  border: 1px solid var(--cr-bd);
+  box-shadow: var(--cr-sh);
+}
+
+/* — Tecla / atajo — */
+
+.trz-key {
+  height: 32px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  font-family: var(--trz-mono);
+  font-size: 12.5px;
+  color: var(--t2);
+  border: 1.3px solid transparent;
+  background:
+    var(--kb-bg) padding-box,
+    var(--pf-bd) border-box;
+  box-shadow: var(--kb-sh);
+}
+
+/* Mientras captura la combinación, la tecla se enciende con el acento. */
+.trz-key.is-recording {
+  background:
+    var(--ac-sf) padding-box,
+    var(--pf-bd) border-box;
+  color: var(--ac-tx);
+}
+
+/* — Botón — */
+
+.trz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+  background: var(--bt-bg);
+  border: 1px solid var(--bt-bd);
+  transition: transform 160ms var(--trz-curva);
+}
+
+.trz-btn:active {
+  transform: translateY(1px);
+}
+
+.trz-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trz-btn--acento {
+  color: var(--ac-tx);
+  background: var(--ac-sf);
+}
+
+/* — Pozo: select, campo, contenedor hundido — */
+
+.trz-well {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--t2);
+  background: var(--wl-bg);
+  border: 1px solid var(--wl-bd);
+  box-shadow: var(--wl-sh);
+}
+
+/* — Barra de progreso — */
+
+.trz-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pg-rl);
+  box-shadow: var(--pg-rs);
+  display: block;
+}
+
+.trz-track__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: var(--pg-fl);
+  box-shadow: var(--pg-sh);
+  display: block;
+}
+
+.trz-metric {
+  font-family: var(--trz-mono);
+  font-size: 12px;
+  color: var(--ac-tx);
+}
+
+.trz-metric__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--t3);
+}
+
+/* — Interruptor — */
+
+.trz-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 3px;
+  background: var(--wl-bg);
+  border: 1px solid var(--wl-bd);
+  box-shadow: var(--wl-sh);
+  cursor: pointer;
+}
+
+.trz-switch__knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  opacity: 0.7;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+  transition: transform 200ms var(--trz-curva), opacity 200ms var(--trz-curva);
+}
+
+.trz-switch.is-on {
+  background: var(--sw-on);
+  border-color: transparent;
+  box-shadow: var(--sw-in);
+}
+
+.trz-switch.is-on .trz-switch__knob {
+  opacity: 1;
+  transform: translateX(20px);
+}
+
+.trz-switch.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* La navegación se desvanece al llegar abajo, igual que el área de contenido,
+   en vez de cortarse contra el pie. */
+.trz-nav-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 22px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 22px),
+    transparent 100%
+  );
+}
+
+/* — Píldora del modelo, al pie del sidebar —
+   Reemplaza a la franja inferior que el diseño elimina. */
+
+.trz-model-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.3px solid transparent;
+  background:
+    var(--mp-bg) padding-box,
+    var(--pf-bd) border-box;
+  font-family: var(--trz-mono);
+  font-size: 11px;
+  color: var(--t2);
+  cursor: pointer;
+}
+
+.trz-model-pill span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.trz-model-pill svg {
+  flex: 0 0 13px;
+  color: var(--t4);
+}
+
+/* — Insignia de estado — */
+
+.trz-badge-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--ok-bg);
+  border: 1px solid var(--ok-bd);
+  color: var(--ok-tx);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trz-row,
+  .trz-btn,
+  .trz-switch__knob {
+    transition: none;
+  }
+}

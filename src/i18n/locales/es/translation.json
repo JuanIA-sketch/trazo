@@ -15,7 +15,12 @@
     "postProcessing": "Post Proceso",
     "history": "Historial",
     "debug": "Depuración",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "group": {
+      "dictation": "Dictado",
+      "voice": "Tu voz",
+      "settings": "Ajustes"
+    }
   },
   "onboarding": {
     "subtitle": "Para comenzar, elige un modelo de transcripción",
@@ -168,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "Configuración de {{model}}"
+      "title": "Configuración de {{model}}",
+      "meta": "{{size}} MB · {{count}} idiomas",
+      "metaSize": "{{size}} MB"
     },
     "models": {
       "title": "Modelos de Transcripción",
@@ -711,5 +718,35 @@
   },
   "whatsNew": {
     "title": "Nuevo en Trazo v{{version}}"
+  },
+  "heyTrazo": {
+    "idle": "Activar «Hey Trazo»",
+    "listening": "Di «Hey Trazo»",
+    "privacy": "Escucha en tu equipo. El audio no se sube.",
+    "name": "Hey Trazo",
+    "soon": "Próximamente"
+  },
+  "screen": {
+    "general": {
+      "sub": "Atajos, modelo y sonido"
+    },
+    "models": {
+      "sub": "Descarga y elige el motor de transcripción"
+    },
+    "advanced": {
+      "sub": "Ajustes finos del dictado y el pegado"
+    },
+    "history": {
+      "sub": "Tus dictados recientes, en este equipo"
+    },
+    "postprocessing": {
+      "sub": "Reescribe el dictado con tus propias reglas"
+    },
+    "debug": {
+      "sub": "Registros y herramientas de diagnóstico"
+    },
+    "about": {
+      "sub": "Versión, licencias y actualizaciones"
+    }
   }
 }

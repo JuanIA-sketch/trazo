@@ -8,6 +8,7 @@ import { Button } from "../../ui/Button";
 import { AppDataDirectory } from "../AppDataDirectory";
 import { AppLanguageSelector } from "../AppLanguageSelector";
 import { ShowWhatsNewOnUpdate } from "../ShowWhatsNewOnUpdate";
+import UpdateChecker from "../../update-checker";
 import { LogDirectory } from "../debug";
 
 export const AboutSettings: React.FC = () => {
@@ -45,8 +46,13 @@ export const AboutSettings: React.FC = () => {
           description={t("settings.about.version.description")}
           grouped={true}
         >
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          <span className="text-sm font-mono">v{version}</span>
+          {/* El buscador de actualizaciones vivía en la franja inferior, que el
+              diseño elimina. Su sitio natural es junto a la versión. */}
+          <div className="flex items-center gap-2">
+            <UpdateChecker />
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            <span className="text-sm font-mono">v{version}</span>
+          </div>
         </SettingContainer>
 
         <ShowWhatsNewOnUpdate descriptionMode="tooltip" grouped={true} />

@@ -10,6 +10,7 @@ interface SliderProps {
   disabled?: boolean;
   label: string;
   description: string;
+  icon?: React.ComponentType<{ className?: string }>;
   descriptionMode?: "inline" | "tooltip";
   grouped?: boolean;
   showValue?: boolean;
@@ -25,6 +26,7 @@ export const Slider: React.FC<SliderProps> = ({
   disabled = false,
   label,
   description,
+  icon,
   descriptionMode = "tooltip",
   grouped = false,
   showValue = true,
@@ -38,6 +40,7 @@ export const Slider: React.FC<SliderProps> = ({
     <SettingContainer
       title={label}
       description={description}
+      icon={icon}
       descriptionMode={descriptionMode}
       grouped={grouped}
       layout="horizontal"

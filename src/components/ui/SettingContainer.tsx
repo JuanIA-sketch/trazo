@@ -4,6 +4,8 @@ import { Tooltip } from "./Tooltip";
 interface SettingContainerProps {
   title: string;
   description: string;
+  /** Chip de ícono a la izquierda de la fila, como en el diseño. */
+  icon?: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   descriptionMode?: "inline" | "tooltip";
   grouped?: boolean;
@@ -15,6 +17,7 @@ interface SettingContainerProps {
 export const SettingContainer: React.FC<SettingContainerProps> = ({
   title,
   description,
+  icon: Icon,
   children,
   descriptionMode = "tooltip",
   grouped = false,
@@ -47,9 +50,10 @@ export const SettingContainer: React.FC<SettingContainerProps> = ({
     setShowTooltip(!showTooltip);
   };
 
+  // Agrupada = fila dentro de un panel. Suelta = panel de una sola fila.
   const containerClasses = grouped
-    ? "px-4 p-2"
-    : "px-4 p-2 rounded-lg border border-mid-gray/20";
+    ? "trz-row trz-row--apilada"
+    : "trz-panel trz-row trz-row--apilada";
 
   if (layout === "stacked") {
     if (descriptionMode === "tooltip") {
@@ -106,11 +110,11 @@ export const SettingContainer: React.FC<SettingContainerProps> = ({
 
     return (
       <div className={containerClasses}>
-        <div className="mb-2">
-          <h3 className={`text-sm font-medium ${disabled ? "opacity-50" : ""}`}>
+        <div className="trz-row__texto mb-2">
+          <h3 className={`trz-row__title ${disabled ? "opacity-50" : ""}`}>
             {title}
           </h3>
-          <p className={`text-sm ${disabled ? "opacity-50" : ""}`}>
+          <p className={`trz-row__desc ${disabled ? "opacity-50" : ""}`}>
             {description}
           </p>
         </div>
@@ -120,17 +124,20 @@ export const SettingContainer: React.FC<SettingContainerProps> = ({
   }
 
   // Horizontal layout (default)
-  const horizontalContainerClasses = grouped
-    ? "flex items-center justify-between min-h-12 px-4 p-2"
-    : "flex items-center justify-between min-h-12 px-4 p-2 rounded-lg border border-mid-gray/20";
+  const horizontalContainerClasses = grouped ? "trz-row" : "trz-panel trz-row";
 
   if (descriptionMode === "tooltip") {
     return (
       <div className={horizontalContainerClasses}>
-        <div className="max-w-2/3">
+        {Icon && (
+          <span className="trz-chip-fila">
+            <Icon className="w-4 h-4" />
+          </span>
+        )}
+        <div className="trz-row__texto">
           <div className="flex items-center gap-2">
             <h3
-              className={`text-sm font-medium ${disabled ? "opacity-50" : ""}`}
+              className={`trz-row__title ${disabled ? "opacity-50" : ""}`}
             >
               {title}
             </h3>
@@ -173,18 +180,23 @@ export const SettingContainer: React.FC<SettingContainerProps> = ({
             </div>
           </div>
         </div>
-        <div className="relative">{children}</div>
+        <div className="trz-row__control">{children}</div>
       </div>
     );
   }
 
   return (
     <div className={horizontalContainerClasses}>
-      <div className="max-w-2/3">
-        <h3 className={`text-sm font-medium ${disabled ? "opacity-50" : ""}`}>
+      {Icon && (
+        <span className="trz-chip-fila">
+          <Icon className="w-4 h-4" />
+        </span>
+      )}
+      <div className="trz-row__texto">
+        <h3 className={`trz-row__title ${disabled ? "opacity-50" : ""}`}>
           {title}
         </h3>
-        <p className={`text-sm ${disabled ? "opacity-50" : ""}`}>
+        <p className={`trz-row__desc ${disabled ? "opacity-50" : ""}`}>
           {description}
         </p>
       </div>

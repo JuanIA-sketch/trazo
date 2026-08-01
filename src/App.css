@@ -1,9 +1,22 @@
 @import "tailwindcss";
+@import "./styles/fuentes.css";
 @import "./styles/theme.css";
+@import "./styles/material.css";
+@import "./styles/pantalla.css";
 
 /* Register the shared color tokens (src/styles/theme.css) as Tailwind
    utilities */
 @theme inline {
+  /* Tipografías del diseño. Registradas como el sans y el mono por defecto de
+     Tailwind, así toda la app las hereda sin tocar clase por clase.
+     Las familias de respaldo cubren los idiomas que Geist no trae (árabe,
+     hebreo, CJK): ahí resuelve el sistema, que es lo que el diseño espera. */
+  --font-sans:
+    "Geist", system-ui, -apple-system, "Segoe UI", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+
   --color-text: var(--color-text);
   --color-background: var(--color-background);
   --color-background-ui: var(--color-background-ui);
@@ -15,6 +28,7 @@
 
 :root {
   /* Typography */
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 24px;
   font-weight: 400;
@@ -41,6 +55,46 @@
   /* Apply colors */
   color: var(--color-text);
   background-color: var(--color-background);
+}
+
+/* El fondo de la app deja de ser un color plano y pasa a ser material: una
+   malla de tres radiales sobre una base en degradado, con la fuente de luz
+   fija arriba a la izquierda. El color plano de arriba queda como respaldo
+   por si el degradado no resuelve. Va en body y no en :root para no pelearse
+   con la ventana del overlay, que tiene su propio fondo transparente. */
+body {
+  min-height: 100vh;
+  background: var(--e0);
+  background-attachment: fixed;
+}
+
+/* Grano: una sola capa fija sobre el fondo y por debajo del contenido. Fija
+   —no dentro del contenedor con scroll— porque si scrollea, el ruido se
+   mueve con el contenido y se lee como interferencia. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.018;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* En oscuro el grano puede subir: sobre fondo claro el mismo valor se lee
+     como artefacto de compresión. */
+  body::before {
+    opacity: 0.038;
+  }
+}
+
+/* El contenido va por encima de la capa de grano. */
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 .container {

@@ -15,7 +15,12 @@
     "postProcessing": "後処理",
     "history": "履歴",
     "debug": "デバッグ",
-    "about": "概要"
+    "about": "概要",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "開始するには、文字起こしのモデルを選択してください",
@@ -168,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "{{model}} の設定"
+      "title": "{{model}} の設定",
+      "meta": "{{size}} MB · {{count}} languages",
+      "metaSize": "{{size}} MB"
     },
     "models": {
       "title": "文字起こしのモデル",
@@ -711,5 +718,35 @@
   },
   "whatsNew": {
     "title": "Trazo v{{version}} の新機能"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded.",
+    "name": "Hey Trazo",
+    "soon": "Coming soon"
+  },
+  "screen": {
+    "general": {
+      "sub": "Shortcuts, model and sound"
+    },
+    "models": {
+      "sub": "Download and pick the transcription engine"
+    },
+    "advanced": {
+      "sub": "Fine-tuning for dictation and pasting"
+    },
+    "history": {
+      "sub": "Your recent dictations, on this machine"
+    },
+    "postprocessing": {
+      "sub": "Rewrite dictation with your own rules"
+    },
+    "debug": {
+      "sub": "Logs and diagnostic tools"
+    },
+    "about": {
+      "sub": "Version, licences and updates"
+    }
   }
 }

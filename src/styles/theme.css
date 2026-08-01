@@ -10,8 +10,31 @@
   --color-mid-gray: #64748b;
 }
 
+/* — Tema oscuro —
+ *
+ * Fuente de verdad de los valores oscuros. Se aplica cuando el tema está
+ * FORZADO a oscuro (`<html data-theme="dark">`).
+ */
+:root[data-theme="dark"] {
+
+    --color-text: #f8fafc;
+    /* Navy premium del rebrand Trazo (mockup #0B1220) */
+    --color-background: #0b1220;
+    /* Azul más claro para mantener contraste sobre el navy */
+    --color-logo-primary: #3b82f6;
+    --color-logo-stroke: #93c5fd;
+}
+
+/* Automático: sin tema forzado, manda el sistema.
+ *
+ * OJO: copia espejo del bloque de arriba. CSS no permite compartir
+ * declaraciones entre un selector y una media query, así que los valores están
+ * dos veces a propósito. `themeSwitch.test.ts` falla si se desincronizan —
+ * si tocás una, tocá la otra.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+
     --color-text: #f8fafc;
     /* Navy premium del rebrand Trazo (mockup #0B1220) */
     --color-background: #0b1220;

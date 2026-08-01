@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../ui/Slider";
 import { useSettings } from "../../hooks/useSettings";
+import { Volume2 } from "lucide-react";
 
 export const VolumeSlider: React.FC<{ disabled?: boolean }> = ({
   disabled = false,
@@ -12,6 +13,7 @@ export const VolumeSlider: React.FC<{ disabled?: boolean }> = ({
 
   return (
     <Slider
+        icon={Volume2}
       value={audioFeedbackVolume}
       onChange={(value: number) =>
         updateSetting("audio_feedback_volume", value)

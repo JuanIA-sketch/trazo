@@ -15,7 +15,12 @@
     "postProcessing": "후처리",
     "history": "히스토리",
     "debug": "디버그",
-    "about": "정보"
+    "about": "정보",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "시작하려면 음성 인식 모델을 선택하세요",
@@ -168,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "{{model}} 설정"
+      "title": "{{model}} 설정",
+      "meta": "{{size}} MB · {{count}} languages",
+      "metaSize": "{{size}} MB"
     },
     "general": {
       "title": "일반",
@@ -711,5 +718,35 @@
   },
   "whatsNew": {
     "title": "Trazo v{{version}}의 새 소식"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded.",
+    "name": "Hey Trazo",
+    "soon": "Coming soon"
+  },
+  "screen": {
+    "general": {
+      "sub": "Shortcuts, model and sound"
+    },
+    "models": {
+      "sub": "Download and pick the transcription engine"
+    },
+    "advanced": {
+      "sub": "Fine-tuning for dictation and pasting"
+    },
+    "history": {
+      "sub": "Your recent dictations, on this machine"
+    },
+    "postprocessing": {
+      "sub": "Rewrite dictation with your own rules"
+    },
+    "debug": {
+      "sub": "Logs and diagnostic tools"
+    },
+    "about": {
+      "sub": "Version, licences and updates"
+    }
   }
 }

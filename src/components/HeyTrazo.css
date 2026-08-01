@@ -1,0 +1,179 @@
+/* ============================================================
+   Hey Trazo — bloque del pie del sidebar
+   ============================================================
+   Trazito no es un ícono al lado de una tarjeta: es la cara de la función.
+   Por eso se monta a caballo sobre el borde superior (el borde se interrumpe
+   detrás de él) y por eso, al encender, se ilumina el BLOQUE ENTERO y no solo
+   el personaje. Que cambien juntos es lo que prueba que son la misma cosa.
+
+   El estado no se comunica con un interruptor sino con el texto: apagado dice
+   qué hacer, encendido dice qué está pasando. Un gris contra un azul se puede
+   leer como decoración; un texto que cambia, no.
+   ============================================================ */
+
+.trz-hey {
+  position: relative;
+  width: 100%;
+  margin-top: 20px;
+  padding: 30px 12px 12px;
+  border-radius: 16px;
+  background: var(--p1-bg);
+  border: 1px solid var(--p1-bd);
+  box-shadow: var(--pl-sh);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* — Estado "Próximamente" —
+   Anuncio, no control: nada que pulsar, ningún gesto prometido. Pero tampoco
+   apagado ni gris, porque no está roto: la marca sigue a color y el personaje
+   entero. Lo único que baja es el peso del texto, para que se lea como algo
+   que viene y no como algo deshabilitado. */
+.trz-hey.is-soon {
+  cursor: default;
+  transition: none;
+}
+
+.trz-hey.is-soon:hover {
+  transform: none;
+  border-color: var(--p1-bd);
+}
+
+.trz-hey-soon {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--bd-bg);
+  border: 1px solid var(--bd-bd);
+  color: var(--t3);
+}
+
+/* Nada en un ícono dice "esto se aprieta". El hover lo dice. */
+.trz-hey:hover {
+  transform: translateY(-1px);
+  border-color: var(--cr-bd);
+}
+
+.trz-hey:active {
+  transform: translateY(0);
+}
+
+.trz-hey:focus-visible {
+  outline: 2px solid var(--ac-tx);
+  outline-offset: 2px;
+}
+
+/* Encendido: el borde toma el degradado de marca y la tarjeta se ilumina
+   desde arriba, con Trazito como fuente de luz. */
+.trz-hey.is-on {
+  background:
+    var(--pf-ov),
+    var(--pf-bg) padding-box,
+    var(--pf-bd) border-box;
+  border: 1.3px solid transparent;
+  box-shadow: var(--pf-sh);
+  /* El padding compensa los 0.3px extra del borde para que no salte. */
+  padding: 29.7px 11.7px 11.7px;
+}
+
+/* — Trazito, montado sobre el borde superior — */
+.trz-hey-pet {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  /* El zócalo del color de la tarjeta interrumpe el borde: sin esto el trazo
+     del borde le pasa por encima y Trazito queda "afuera" otra vez. */
+  background: var(--p1-bg);
+  padding: 4px;
+  display: block;
+  object-fit: contain;
+  filter: grayscale(1) opacity(0.55);
+  transition:
+    filter 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.trz-hey.is-on .trz-hey-pet {
+  background: var(--pf-bg);
+  filter: none;
+  animation: trz-hey-breathe 2200ms ease-in-out infinite;
+}
+
+@keyframes trz-hey-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgba(34, 211, 238, 0.35);
+  }
+}
+
+/* — Textos — */
+.trz-hey-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--t3);
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.trz-hey.is-on .trz-hey-title {
+  color: var(--ac-tx);
+}
+
+/* La línea de privacidad aparece solo al encender: apagado no hay micrófono
+   abierto, así que no hay nada que aclarar. Encendido sí, y ahí es justo
+   donde el usuario se lo pregunta. */
+.trz-hey-privacy {
+  margin-top: 6px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--t4);
+}
+
+/* — Colapsado: solo Trazito — */
+.trz-hey.is-compact {
+  padding: 0;
+  margin-top: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trz-hey.is-compact .trz-hey-pet {
+  position: static;
+  transform: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trz-hey,
+  .trz-hey-pet {
+    transition: none;
+  }
+  .trz-hey.is-on .trz-hey-pet {
+    /* Sin respiración, pero el halo se queda fijo: es información de estado,
+       no adorno, así que no se puede apagar del todo. */
+    animation: none;
+    box-shadow: 0 0 16px 2px rgba(34, 211, 238, 0.3);
+  }
+}

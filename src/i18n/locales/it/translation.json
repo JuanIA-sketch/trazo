@@ -15,7 +15,12 @@
     "postProcessing": "Post-Elaborazione",
     "history": "Cronologia",
     "debug": "Debug",
-    "about": "Informazioni"
+    "about": "Informazioni",
+    "group": {
+      "dictation": "Dictation",
+      "voice": "Your voice",
+      "settings": "Settings"
+    }
   },
   "onboarding": {
     "subtitle": "Per cominciare, scegli un modello di riconoscimento vocale",
@@ -168,7 +173,9 @@
   },
   "settings": {
     "modelSettings": {
-      "title": "Impostazioni di {{model}}"
+      "title": "Impostazioni di {{model}}",
+      "meta": "{{size}} MB · {{count}} languages",
+      "metaSize": "{{size}} MB"
     },
     "models": {
       "title": "Modelli di Trascrizione",
@@ -711,5 +718,35 @@
   },
   "whatsNew": {
     "title": "Novità in Trazo v{{version}}"
+  },
+  "heyTrazo": {
+    "idle": "Turn on \"Hey Trazo\"",
+    "listening": "Say \"Hey Trazo\"",
+    "privacy": "Listens on your machine. Audio is never uploaded.",
+    "name": "Hey Trazo",
+    "soon": "Coming soon"
+  },
+  "screen": {
+    "general": {
+      "sub": "Shortcuts, model and sound"
+    },
+    "models": {
+      "sub": "Download and pick the transcription engine"
+    },
+    "advanced": {
+      "sub": "Fine-tuning for dictation and pasting"
+    },
+    "history": {
+      "sub": "Your recent dictations, on this machine"
+    },
+    "postprocessing": {
+      "sub": "Rewrite dictation with your own rules"
+    },
+    "debug": {
+      "sub": "Logs and diagnostic tools"
+    },
+    "about": {
+      "sub": "Version, licences and updates"
+    }
   }
 }

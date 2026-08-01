@@ -7,6 +7,7 @@ import {
 } from "../../lib/utils/keyboard";
 import { ResetButton } from "../ui/ResetButton";
 import { SettingContainer } from "../ui/SettingContainer";
+import { AudioLines, XCircle } from "lucide-react";
 import { useSettings } from "../../hooks/useSettings";
 import { useOsType } from "../../hooks/useOsType";
 import { commands } from "@/bindings";
@@ -262,10 +263,14 @@ export const GlobalShortcutInput: React.FC<GlobalShortcutInputProps> = ({
     binding.description,
   );
 
+  // El diseño da un glifo distinto al atajo que dicta y al que cancela.
+  const iconoAtajo = shortcutId === "cancel" ? XCircle : AudioLines;
+
   return (
     <SettingContainer
       title={translatedName}
       description={translatedDescription}
+      icon={iconoAtajo}
       descriptionMode={descriptionMode}
       grouped={grouped}
       disabled={disabled}
@@ -275,13 +280,13 @@ export const GlobalShortcutInput: React.FC<GlobalShortcutInputProps> = ({
         {editingShortcutId === shortcutId ? (
           <div
             ref={(ref) => setShortcutRef(shortcutId, ref)}
-            className="px-2 py-1 text-sm font-semibold border border-logo-primary bg-logo-primary/30 rounded-md"
+            className="trz-key is-recording"
           >
             {formatCurrentKeys()}
           </div>
         ) : (
           <div
-            className="px-2 py-1 text-sm font-semibold bg-mid-gray/10 border border-mid-gray/80 hover:bg-logo-primary/10 rounded-md cursor-pointer hover:border-logo-primary"
+            className="trz-key cursor-pointer"
             onClick={() => startRecording(shortcutId)}
           >
             {formatKeyCombination(binding.current_binding, osType)}

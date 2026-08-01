@@ -1,0 +1,112 @@
+/* ============================================================
+   Sidebar — material
+   ============================================================
+   Los tokens viven en src/styles/material.css. Acá solo se componen.
+
+   Cambio de fondo respecto de la versión plana: el sidebar deja de ser un
+   rectángulo pegado al borde del mismo color que la app y pasa a ser una
+   superficie propia, despegada, con brillo interior arriba y sombra que la
+   separa del fondo. Se tiene que leer POR ENCIMA, no al lado.
+   ============================================================ */
+
+.trz-sidebar {
+  position: relative;
+  border-radius: 20px;
+  background: var(--sb-bg);
+  border: 1px solid var(--sb-bd);
+  box-shadow: var(--sb-sh);
+  overflow: hidden;
+}
+
+/* Marca de agua: la "t" sobredimensionada sangrando por el borde izquierdo.
+   Es lo que ancla la composición y resuelve el vacío entre la navegación y
+   los controles de abajo, sin agregar un widget que después haya que
+   mantener. Decorativa: nunca interactiva, nunca leída. */
+.trz-sidebar::after {
+  content: "t";
+  position: absolute;
+  left: -58px;
+  bottom: 56px;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-size: 210px;
+  line-height: 0.72;
+  color: var(--sb-wm);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* El contenido va por encima de la marca de agua. */
+.trz-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* — Categorías —
+   El encabezado ordena sin competir: versalitas chicas en el color de
+   decoración. Sin línea divisoria; el aire hace el trabajo. */
+.trz-nav-group + .trz-nav-group {
+  margin-top: 18px;
+}
+
+.trz-nav-cat {
+  padding: 0 8px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.trz-nav-group > .trz-nav-item + .trz-nav-item {
+  margin-top: 2px;
+}
+
+/* — Ítem de navegación — */
+.trz-nav-item {
+  position: relative;
+  border-radius: 12px;
+  color: var(--nv-off-c);
+  font-weight: 500;
+  transition:
+    background 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.trz-nav-item:hover {
+  background: var(--rw-hv);
+}
+
+.trz-nav-item.is-active {
+  background: var(--nv-on-bg);
+  box-shadow: var(--nv-on-sh);
+  color: var(--nv-on-c);
+  font-weight: 600;
+}
+
+/* El riel lateral: 3px en degradado con glow en oscuro. Es lo que reemplaza
+   al rectángulo azul sólido de cualquier dashboard. */
+.trz-nav-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--nv-rail);
+  box-shadow: var(--nv-rail-sh);
+}
+
+/* El ícono del ítem activo toma el azul de marca; el inactivo hereda el gris
+   del texto. */
+.trz-nav-item.is-active svg {
+  color: var(--cr-gl);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trz-nav-item {
+    transition: none;
+  }
+}

@@ -1,10 +1,37 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-31 (sesión de tarde) · **Rama:** `main` =
-**`f64400b`**, sincronizado con `origin/main`
+**Última actualización:** 2026-08-02 · **Rama:** `main` = **`56e0ed6`**,
+sincronizado con `origin/main`
 **Entrega del hackathon:** 31 de julio de 2026
 
-> **⚠️ LO PRIMERO AL RETOMAR — estado del 2026-07-31 por la tarde (§10)**
+> **⚠️ LO PRIMERO AL RETOMAR — cierre del 2026-08-02 (§13)**
+>
+> 1. **`feat/rebrand-material` está LISTA PARA FUSIONAR a `main`.** Pusheada
+>    hasta `b4caae3`, al día con main, fusión comprobada en seco **sin
+>    conflictos**, 84 tests en verde. **No se fusionó a propósito** — es la
+>    primera decisión pendiente (§13.5).
+> 2. **RUST VUELVE A COMPILAR** sin haber tocado el pagefile: bastó con cerrar
+>    Chrome. **Pero eso NO deroga §11.1** — los builds de hoy fueron
+>    incrementales; uno completo probablemente siga sin entrar (§13.1).
+> 3. **HAY UN SEGUNDO WORKTREE Y ES EL QUE CORRE**: `C:\trazo-material`. El Vite
+>    del 1420 sirve **ese**, no `C:\Handy`. Los dos comparten `target-dir=C:/h`,
+>    así que compilar en uno pisa el binario del otro (§12.6, §13.2).
+> 4. **El overlay está verificado en vivo**: sin letra "T", píldora sin cortar y
+>    capas arregladas. Lo que Charly veía mal **era la corona misma, no el
+>    centrado** — y se deja así a propósito hasta que llegue el SVG definitivo,
+>    que `CLAUDE.md` sigue dando por `PENDIENTE` sin fecha (§13.3).
+> 5. **Wispr Flow impide grabar**: 11 procesos reteniendo el micrófono, arranca
+>    solo. Charly pidió no tocarlo; para verificar sin micro, forzar el overlay
+>    por CDP (§13.4).
+> 6. **El WIP de wakeword de Charly sigue sin commitear** e intacto. Bloquea
+>    commitear el selector de tema y la ventana 1100x880, que están **hechos y
+>    probados** pero enredados con él en los mismos archivos (§13.5).
+> 7. **`gh` apunta al repo equivocado por defecto** (`cjpais/handy`, el
+>    upstream). Usar siempre `--repo JuanIA-sketch/trazo` (§11.5).
+>
+> Orden sugerido: **§13.6**. Estado de la máquina: **§12.9**.
+>
+> **Estado del 2026-07-31 por la tarde (§10)**
 >
 > 1. **Release [v0.9.1](https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.1)
 >    publicada** con los 7 instaladores, y **validada con instalación limpia
@@ -1971,3 +1998,693 @@ verificar que _lo que se sube_ compila solo: `git add <rutas>` +
   bastante más que el patrón del F9.**
 - **El atajo ES→EN no se commitea** por ahora: está bien construido y es un no-op
   con turbo.
+
+---
+
+## 11. Sesión 2026-07-31 (noche) → 2026-08-01 (madrugada)
+
+Sesión larga con un único hilo: **montar el diseño de Trazo de Benja sobre la
+app y publicarlo**. Terminó con el diseño fusionado en `main`, una release
+publicada, y un bloqueo de máquina que impide seguir con lo que toca Rust.
+
+### 11.1 BLOQUEO ACTIVO — el pagefile (hacer esto primero)
+
+**Ningún build de Rust entra en esta máquina hasta subir el pagefile y
+reiniciar.** Se intentó tres veces y falló tres veces, siempre por la misma
+causa aunque con tres síntomas distintos:
+
+| Intento | Commit libre | Dónde murió |
+| --- | --- | --- |
+| 1 | 1,6 GB | `error[E0786]` al mapear `libwindows-*.rlib` — `os error 1455` (ERROR_COMMITMENT_LIMIT) |
+| 2 | 2,9 GB | `memory allocation of 2129936 bytes failed` en MIR (`elaborate_drops`) |
+| 3 | 7,0 GB | `rustc-LLVM ERROR: out of memory` en codegen |
+
+Cada intento llegó más lejos, lo que confirma que es memoria y no un bug.
+
+⚠️ **Corrección a un diagnóstico previo:** durante la sesión se afirmó que el
+pagefile estaba "en su tope de 20 GB, ya asignado por completo". **Es falso.**
+La lectura real era `InitialSize 2048 MB / MaximumSize 20480 MB` con un límite
+de commit de 28,9 GB: el archivo solo había crecido a ~5 GB. El fallo no era
+chocar contra el tope, **era que el pagefile no crecía lo bastante rápido
+durante el pico de asignación del compilador**. Por eso lo que arregla el
+problema es subir el **tamaño inicial** (pre-asignado), no tanto el máximo.
+
+```powershell
+# PowerShell COMO ADMINISTRADOR
+$pf = Get-CimInstance Win32_PageFileSetting
+$pf.InitialSize = 12288    # 12 GB pre-asignados - esto es lo que arregla el pico
+$pf.MaximumSize = 24576    # 24 GB de tope (32 NO entra: C: tiene ~30 GB libres)
+Set-CimInstance -InputObject $pf
+Restart-Computer           # el cambio NO surte efecto sin reiniciar
+```
+
+No se pudo aplicar en la sesión: **acceso denegado** (el agente no corre
+elevado), y además 32 GB fue rechazado por rango porque no cabe en disco.
+
+Después de reiniciar, comprobar que subió de verdad antes de compilar:
+
+```powershell
+(Get-CimInstance Win32_OperatingSystem).TotalVirtualMemorySize / 1MB
+Get-CimInstance Win32_PageFileSetting | Select-Object InitialSize, MaximumSize
+```
+
+Dos consumidores que vuelven solos y hay que vigilar: **Chrome** (llegó a 10 GB
+en 42 procesos) y **rust-analyzer** (~3,2 GB; VS Code lo relanza al recargar).
+
+### 11.2 Lo que se fusionó y se publicó
+
+- **Merge `daef7e1`**: `feat/rebrand-material` hacia `main`. Limpio, sin conflictos.
+- **`main` = `56e0ed6`** (bump de versión), empujado a `origin/main`.
+- **Release v0.9.5** publicada como pre-release sin firmar, con 7 instaladores,
+  tag sobre `56e0ed6`:
+  https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.5
+- Se saltó 0.9.3 y 0.9.4 a propósito: esos tags y sus releases ya existían,
+  heredados del fork de cjpais/Handy.
+- ⚠️ **`src-tauri/Cargo.toml` sigue en 0.9.2**, a propósito: está dentro del WIP
+  de wakeword sin commitear y no correspondía meter un bump de release en ese
+  diff. El bundle y el updater leen `tauri.conf.json`, así que la release salió
+  como 0.9.5 igualmente. **Alinearlo al commitear el wakeword.**
+
+**La release v0.9.2 fue sobrescrita a petición de Charly**: se borraron sus 7
+instaladores, se subieron los de 0.9.5 y se reemplazó su descripción. Quedan
+tres incoherencias conocidas y aceptadas: el título sigue diciendo v0.9.2, su
+tag sigue apuntando a `37e97dc` (anterior a la fusión), y la descripción empieza
+con una frase que se compara consigo misma. Los binarios originales son
+recuperables de los artefactos del run `30667493544` **hasta el 30 de agosto**.
+
+### 11.3 Punto 1 — completado y verificado
+
+**Desplegables con la receta de pozo.** `Dropdown` pasa a superficie hundida
+(`--wl-bg`, borde `--wl-bd`, sombra interior), chevron que gira con la curva
+única, y menú desplegado como panel con la opción activa en el acento.
+
+**Chips de fila en 31 componentes** de Avanzado, Depuración y Acerca de.
+
+Medido en vivo por CDP: General 8 chips / 2 pozos · Avanzado **18 de 20 filas**
+/ 9 pozos · Acerca de 2 de 8 filas / 1 pozo.
+
+**Aplazado por Charly, no olvidado:** faltan chips en 6 filas de Acerca de, 2 de
+Avanzado, y **las cabeceras de panel fuera de General siguen sin su chip de
+grupo** (solo se cablearon las dos de General).
+
+### 11.4 Punto 3 — completado y verificado
+
+**La letra "T" del overlay ya no existe.** El diseño es explícito: *Sin letra
+adentro: la corona es la marca.* La corona (`.scrown`) **ya estaba montada**
+desde antes; lo único que faltaba era quitar la letra.
+
+**El contorno de la píldora es ahora el visualizador.** Geometría pura en
+`src/overlay/borderWave.ts` con **7 tests escritos primero**, que garantizan las
+dos reglas del diseño: la onda va **siempre hacia adentro**, y la amplitud decae
+con la distancia angular a la corona.
+
+- Decisión de Charly: **onda hacia adentro** y **las barras internas ceden**
+  (quedan a opacidad 0,42 como textura, sin competir).
+- **Indicador de progreso de transcripción** (que vivía en el trazo diagonal de
+  la "T"): durante `phase === "working"` el borde deja de ondular y un arco
+  orbita por `stroke-dashoffset`. Cero elementos nuevos, cero Rust.
+- **Nunca corre en reposo**: el `requestAnimationFrame` solo existe con el
+  overlay visible. Verificado: oculto, el path viene vacío.
+- `prefers-reduced-motion`: borde estático, más grueso, sin órbita.
+
+⚠️ **Sin validar por un humano:** nadie ha visto el borde ondular con voz real.
+**El desplazamiento máximo son 6 px hacia adentro** (parámetro `maximo` de
+`deformarHaciaAdentro`) y es el número más probable de tener que calibrar.
+
+**Dato que contradice al documento del diseño:** el documento avisa de que "la
+ventana del overlay es del tamaño de la píldora" y que una onda hacia afuera se
+recortaría. **No es exacto**: la ventana mide 256x64 (`OVERLAY_WIDTH` /
+`OVERLAY_HEIGHT` en `overlay.rs:50-51`) y la píldora 184 de ancho, así que hay
+**36 px de holgura a cada lado** y ~11 px abajo. Hacia afuera en horizontal
+cabría sin tocar Rust; en vertical no.
+
+### 11.5 Trampas de entorno descubiertas
+
+1. **`gh` resuelve por defecto al repo padre del fork.** El primer intento de
+   disparar la release fue contra `cjpais/handy` y falló con 403. **Usar siempre
+   `--repo JuanIA-sketch/trazo`.**
+2. **`release.yml` no puede funcionar en este fork**: exige firma y no hay
+   secretos. macOS muere importando un `APPLE_CERTIFICATE` vacío; Windows
+   compila entero y muere en `trusted-signing-cli`. **Los instaladores salen de
+   `cross-platform-check.yml`**, que deja `sign-binaries` en `false`.
+3. **La instancia instalada de Trazo bloquea el binario de desarrollo** por
+   instancia única. Cerrarla antes de levantar el de dev.
+4. **Subir artefactos grandes a una release se corta por tiempo**: los tres de
+   Linux (70-150 MB) hay que subirlos por separado con `gh release upload`.
+5. **Capturar la app**: `PrintWindow` devuelve negro (WebView2 compone por
+   DirectComposition) y capturar por pantalla fotografía lo que haya delante. La
+   vía buena es **CDP**, relanzando con
+   `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222`.
+
+### 11.6 El WIP de wakeword de Charly — intacto
+
+**37 archivos sin commitear**: 35 modificados más 2 directorios sin trackear
+(`src-tauri/src/wakeword/` y `src-tauri/resources/models/wakeword/`).
+
+Sobrevivió a la fusión: se guardó en `git stash` con respaldo adicional en
+parche, y volvió **sin un solo conflicto**. Verificado que conviven los dos
+lados (su `transcribe_to_english` y las claves nuevas del diseño en el mismo
+`translation.json`) y que sus añadidos a `ModelSettingsCard.tsx` siguen ahí.
+
+El diff actual difiere del respaldo previo solo en hashes de blob y en los
+desplazamientos de línea de dos archivos (`ModelSettingsCard.tsx` y
+`bindings.ts`), porque la fusión cambió su base — que es exactamente lo que
+debía pasar. **0 stashes pendientes.**
+
+### 11.7 Qué queda, por orden
+
+1. **Punto 2 — BLOQUEADO hasta el pagefile (11.1).** Dos cosas, ambas con TDD y
+   verificando que cada build pase antes de seguir:
+   - **Ventana 1100x880 + maximizable**: tres valores en `lib.rs:840`
+     (`inner_size`, `min_inner_size`, `maximizable`). El diseño asume el ancho
+     grande; a 680 px queda apretado por definición.
+   - **Selector de tema de tres segmentos** (claro / oscuro / automático en
+     vivo). **El CSS ya está listo**: los valores oscuros son conmutables por
+     `data-theme`, con `themeSwitch.test.ts` vigilando que las dos copias
+     (forzada y automática) no se desincronicen. Falta el control y el ajuste
+     persistido, que es lo que toca Rust.
+     ⚠️ **Contradicción sin resolver**: `05-DETALLES-UX.md` dice que va en
+     Ajustes → General; el tablero `Sidebar.dc.html` lo dibuja **en el pie del
+     sidebar**, entre HeyTrazo y la píldora del modelo. Hay que decidir.
+2. **Fondos a WebP — NO empezado.** Son ~70 MB en 4 PNG del ZIP
+   (`bg-onboarding` 19,7 · `bg-acerca` 19,6 · `bg-error` 15,5 ·
+   `bg-empty-historial` 14,9) más `corona.png` (1,45 MB para un elemento de
+   38 px). No es bloqueante para la entrega.
+3. **Sidebar colapsable**: borde arrastrable + botón chevron. El DSL ya trae la
+   propiedad `colapsado` y los estados compactos de cada pieza.
+4. **Huecos menores del punto 1** (11.3).
+
+### 11.8 Dónde está el material de diseño
+
+El ZIP **APP TRAZO REBRAND OFICIAL.zip** (169 MB, 81 archivos) está en
+`~/Downloads`. Contiene los componentes del DSL (`Pantalla.dc.html`,
+`Shell.dc.html`, `Sidebar.dc.html`, `HeyTrazo.dc.html`, `Tablero.dc.html`), los
+seis tableros de presentación, los assets, y **dos documentos de especificación
+que no aparecen en la guía**: `uploads/05-DETALLES-UX.md` (selector de tema) y
+`uploads/06-OVERLAY-BORDE-REACTIVO.md` (el borde reactivo).
+
+Los `.dc.html` **no renderizan solos**: `support.js` es el runtime del DSL y
+espera `window.React` y `window.ReactDOM` del anfitrión. Para verlos hay que
+inyectar los builds UMD de React antes de `support.js`.
+
+---
+
+## 12. Sesión 2026-08-01
+
+Punto 2 (selector de tema) y fondos a WebP. Todo el frontend en verde; **nada
+commiteado, a propósito**. El WIP de wakeword sigue intacto.
+
+### 12.1 ⚠️ EL PAGEFILE SIGUE SIN SUBIR — verificado, no supuesto
+
+Se comprobó al arrancar la sesión y **no se aplicó el cambio de §11.1**:
+
+```
+InitialSize 2048 / MaximumSize 20480    ← idéntico a §11.1
+Último arranque: 31/07/2026 23:41       ← no hubo reinicio
+```
+
+Durante la sesión el **commit libre llegó a bajar a 0,73 GB** (Chrome solo:
+47 procesos / 8,3 GB; más 44 procesos de node). Es *peor* que el intento 1 de
+§11.1, que ya murió con 1,6 GB. No es solo Rust: **hasta Chromium headless
+falló** — Playwright lanzó el proceso (pid 20464) y se colgó 180 s sin
+completar el handshake, intentando capturar el control. Los huérfanos se
+cerraron; no quedó nada corriendo.
+
+**Sigue vigente el comando de §11.1 (PowerShell como administrador + reinicio).**
+
+### 12.2 Selector de tema — decisión tomada y frontend completo
+
+**La contradicción de §11.7 se resolvió: va en el PIE DEL SIDEBAR**, como lo
+dibuja `Sidebar.dc.html`, no en Ajustes → General como dice
+`05-DETALLES-UX.md` §1. Decisión de Charly. Razón: es visible desde cualquier
+pantalla, no engorda General (que ya carga 20 controles, §5 del mismo
+documento) y sale siempre en el video de demo. Queda entre `HeyTrazo` y
+`ModelSelector`.
+
+Confirmado que la contradicción **era real**: el tablero dibuja de verdad una
+píldora de 3 segmentos (sol / auto / luna) con `title`, no era el prop `tema`
+de previsualización.
+
+**Lo que se construyó (TDD, test en rojo visto fallar primero):**
+
+- `src/lib/utils/theme.ts` — lógica pura, **11 tests** en
+  `theme.test.ts`. La sutileza que justifica los tests: **"automático" no es
+  un valor de `data-theme`, es su AUSENCIA**, porque el CSS escribe la media
+  query como `:root:not([data-theme="light"]):not([data-theme="dark"])`.
+  Escribir `data-theme="auto"` dejaría al usuario clavado en claro y
+  *parecería* correcto al inspeccionar el DOM. Hay un test dedicado a que
+  volver a automático BORRE el atributo.
+- `src/components/ThemeToggle.{tsx,css}` — `role="radiogroup"` + 3 `radio`.
+  Glifos calcados del tablero (`ic-sun`/`ic-auto`/`ic-moon`).
+- `src/hooks/useTheme.ts` — persistencia.
+- Tokens `--tgs-tx/-bg/-sh` (segmento elegido) añadidos a los **tres** bloques
+  de `material.css`. Los `--tg-*` del carril **ya existían** del merge de Benja.
+- Arranque en `main.tsx`: el tema se aplica **antes** del primer render y las
+  transiciones se habilitan recién tras el primer pintado (doble `rAF`), que es
+  lo que evita el flash. Hay test del orden.
+- Claves `theme.*` en las **21 locales** (`check:translations` 20/20).
+
+**Bug colateral encontrado y arreglado:** `App.css` ajustaba la opacidad del
+grano solo por `@media (prefers-color-scheme: dark)`. Forzar el tema claro con
+el sistema en oscuro habría dejado el grano de oscuro (0.038) sobre fondo
+claro — justo el artefacto que ese valor existe para evitar. Ahora va por
+duplicado, forzado + automático, como los tokens.
+
+⚠️ **La persistencia vive hoy en `localStorage`, no en `settings.rs`.** Es
+deliberado y temporal: `settings.rs` tiene el WIP de wakeword encima (+103
+líneas) y la máquina no compila Rust. El comportamiento visible ya es el
+definitivo. **Al migrar solo cambian las dos líneas de lectura/escritura de
+`useTheme.ts`**; la lógica pura y el control no se enteran.
+
+⚠️ **Sin validar por un humano.** El intento de captura headless murió por
+memoria (§12.1). Nadie ha visto el control renderizado.
+
+### 12.3 Fondos a WebP — hechos
+
+**68,08 MB → 566 KB.** Los 4 PNG del ZIP eran de 5504x3072 y 4096x4096, o sea
+que el grueso del ahorro es el reescalado, no el formato.
+
+| archivo | destino | tamaño | SSIM |
+| --- | --- | --- | --- |
+| `bg-onboarding.webp` | 2560 px | 81 KB | 0,9921 |
+| `bg-acerca.webp` | 2560 px | 465 KB | 0,9885 |
+| `bg-error.webp` | 1024 px | 10 KB | 0,9953 |
+| `bg-empty-historial.webp` | 1024 px | 11 KB | 0,9956 |
+
+Calidad **90**, elegida con datos: se midió SSIM contra el original reescalado
+a q82/q90/q95/sin-pérdida. De q90 a sin-pérdida el SSIM sube ~0,003 y el peso
+casi se triplica. `bg-acerca` es el caso caro y el de peor SSIM porque **no es
+un degradado suave sino un campo denso de líneas finas de cian** — se
+inspeccionó un recorte al 100 % y q90 es indistinguible del original.
+
+Herramienta: `ffmpeg` con `libwebp` (no hay `cwebp` ni `magick` en la máquina).
+
+⚠️ **Están en `src/assets/` pero NO los referencia nadie todavía** — no
+aparecen en el `dist` del build. Cablearlos a las pantallas de vacío/error es
+el trabajo de "estados que hoy no existen" (`05-DETALLES-UX.md` §2), que no se
+tocó. `corona.png` **no hacía falta**: el repo ya tiene una de 25,6 KB, no la
+de 1,45 MB que decía §11.7.
+
+### 12.4 Ventana 1100x880 — editada pero SIN COMPILAR
+
+`lib.rs`: `inner_size` 680x570 → **1100x880** y `maximizable` false → **true**.
+
+**`min_inner_size` se dejó en 680x570 a propósito**, contra lo que sugería
+§11.7 ("tres valores"): 880 px de alto **no entran en un portátil de
+1366x768**, y un mínimo que no entra en la pantalla deja la ventana sin poder
+encogerse. El tamaño de arranque es una recomendación; el mínimo es un límite
+duro.
+
+⚠️ **No se compiló** (§12.1). Son tres literales dentro de una cadena de
+métodos, pero nadie lo verificó. Es lo primero que hay que probar tras el
+reinicio. El cambio está dentro de `lib.rs`, que también tiene WIP de
+wakeword; el diff propio son solo esas dos líneas más comentarios.
+
+### 12.5 Verificación
+
+`bun test src/` → **86 pass / 0 fail** (75 previos + 11 nuevos) ·
+`bunx eslint src` → exit 0 · `bun run build` → ✓ ·
+`check:translations` → 20/20.
+
+`prettier` se corrió **solo sobre los archivos que se tocaron**, nunca sobre el
+repo (§9.11). Ojo: `App.css` y `material.css` **ya estaban sin formatear en
+HEAD** — se comprobó contra la versión commiteada antes de concluirlo, y se
+dejaron como estaban para no generar ruido.
+
+### 12.6 ⚠️ HALLAZGO GORDO: hay un SEGUNDO worktree y es el que corre
+
+**`C:\trazo-material` es un worktree de este mismo repo**, en la rama
+`feat/rebrand-material` (`f56515e`, que `main` ya contiene por el merge
+`daef7e1`). No aparece mencionado en ningún sitio de este documento hasta hoy.
+
+```
+git worktree list
+C:/Handy          56e0ed6 [main]
+C:/trazo-material f56515e [feat/rebrand-material]
+```
+
+**Tiene 52 archivos sin commitear** (49 modificados + 3 sin trackear), y entre
+ellos está **todo el trabajo de §11.4 que este documento daba por hecho**:
+
+```
+?? src/overlay/borderWave.ts        ?? src/overlay/borderWave.test.ts
+?? src/overlay/ReactiveBorder.tsx    M src/overlay/RecordingOverlay.{tsx,css}
+```
+
+Fechados el 1/08 entre 01:08 y 01:15. **En `C:\Handy` no existe ninguno de esos
+archivos** y `git log --all` no los conoce: el borde reactivo **nunca se
+commiteó ni se trajo a `main`**. §11.4 lo describe como terminado y verificado;
+lo que hay en `main` es el overlay viejo, con la letra "T" todavía en el markup
+(`RecordingOverlay.tsx:187`), que es justo lo que §11.4 dice haber quitado.
+
+**Y es el worktree el que sirve la app.** El Vite del puerto 1420 es
+`node C:\trazo-material\node_modules\vite\bin\vite.js`, así que
+`C:\h\debug\handy.exe` viene cargando **el frontend del worktree, no el del
+repo**. Por eso una corrección hecha en `C:\Handy` no se ve en la app corriendo:
+se comprobó pidiendo el CSS a Vite y venía la versión vieja.
+
+**Trampa nueva, y explica cosas raras:** cualquier verificación visual contra la
+app de dev está mirando `C:\trazo-material`. Antes de creerse un "no se ve el
+cambio", comprobar quién escucha en 1420:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "ProcessId = $((Get-NetTCPConnection -LocalPort 1420 -State Listen).OwningProcess)" | Select-Object CommandLine
+```
+
+✅ **RESUELTO el mismo día: los 52 archivos ya están commiteados.** Charly dio
+permiso sobre el directorio y se commitearon en su propia rama,
+`feat/rebrand-material`:
+
+```
+980aca6 chore(wip): respalda el diseno de material que vivia solo en el disco
+        49 modificados + 3 nuevos · árbol de trabajo limpio
+```
+
+Se commiteó **tal cual estaba**, sin revisar ni tocar nada: el objetivo era
+sacarlo de un directorio de trabajo, no juzgarlo. Se comprobó antes que los 49
+modificados tenían contenido distinto de verdad (`git diff --numstat` = 49, sin
+fantasmas de CRLF) y que los 3 sin trackear eran fuente legítima. Se stageó por
+ruta explícita, **nunca `git add -A`**.
+
+⚠️ **No está pusheado** (nadie lo pidió): el respaldo es local. Si la máquina se
+pierde, se pierde. `git -C C:\trazo-material push -u origin feat/rebrand-material`
+cuando se quiera respaldo fuera del disco.
+
+**Sigue pendiente y es decisión de Charly:** revisar ese commit e integrarlo a
+`main`. Se dejó a propósito para mañana.
+
+### 12.7 Fallo visual del overlay — causa raíz y arreglo
+
+Charly reportó un fallo visual sin poder describirlo. Se reprodujo en vivo:
+CDP contra la ventana del overlay + `--toggle-transcription` para grabar de
+verdad, y captura a 4x.
+
+**Lo que se veía: la píldora cortada en seco por abajo.** El halo sobrevivía a
+izquierda y derecha pero desaparecía debajo, y el borde inferior quedaba
+recto contra el canto de la ventana.
+
+**Causa raíz, medida (no deducida):**
+
+| dato | valor |
+| --- | --- |
+| ventana | 256x64 (`OVERLAY_HEIGHT`, constante de Rust) |
+| tarjeta | top 22.4 · bottom **64.0** |
+| hueco debajo | **0 px** |
+| hueco encima | 22.4 px (de sobra) |
+| halo `--t-glow` | `offsetY 3px, blur 26px, spread -9px` → se derrama **7 px** |
+
+`.ov-stage` usa `align-items: flex-end`, que pega la tarjeta al borde inferior.
+La variante `.ov-stage.top` **sí** tenía `padding-top: var(--ov-crown-up)` para
+que la corona no se saliera; **a la de abajo nunca le pusieron el equivalente
+para el halo**. Todo el sobrante vertical estaba arriba y no hacía falta ahí.
+
+**El presupuesto no daba**: corona (13) + tarjeta (40) + halo (7) = 60 px de
+contenido para 64 px de ventana, sin aire para el resplandor de la corona. Se
+probaron cuatro variantes en vivo inyectando CSS por CDP y capturando cada una;
+mover solo el hueco dejaba la corona cortada por arriba. La que funciona
+reparte el ajuste en tres:
+
+- `.ov-stage { padding-bottom: 5px }` — el espejo del `padding-top` de `.top`.
+- `--t-glow` con `offsetY: 3px → 0` — el halo es partido izquierda/derecha, el
+  desplazamiento hacia abajo no aportaba al efecto y costaba 3 px.
+- `--ov-crown-up: 13px → 10px` — los 3 px que le devuelven aire a la corona.
+
+Verificado a 4x: corona entera y píldora con su borde redondeado y su halo.
+
+**Test de regresión**: `src/overlay/overlayFit.test.ts`, escrito primero y
+visto fallar con el número exacto del bug (`Expected: >= 7, Received: 0`).
+Calcula el derrame del halo desde el propio CSS y exige que `.ov-stage` reserve
+al menos eso, más que corona + tarjeta + hueco entren en los 64 px.
+
+✅ **Aplicado en los DOS árboles**, con el mismo cambio y el mismo test, para
+que no vuelvan a divergir:
+
+| árbol | estado |
+| --- | --- |
+| `C:\Handy` (main) | `RecordingOverlay.css` modificado + `overlayFit.test.ts` |
+| `C:\trazo-material` (`feat/rebrand-material`) | ídem |
+
+**Verificado en vivo sobre el worktree**, que es el que sirve la app de dev
+(§12.6). Números después del arreglo, medidos por CDP con una grabación real:
+
+```
+huecoAbajo: 0 -> 5      coronaTop: 6.6 -> 4.6 (sin recortar)
+cardBottom: 64 -> 59    halo offsetY: 3px -> 0
+```
+
+Captura a 4x: píldora con su borde inferior redondeado y su halo completo,
+corona entera. Es la primera vez que alguien mira este overlay renderizado
+desde que se rediseñó.
+
+⚠️ **El arreglo NO está commiteado en ninguno de los dos árboles.** En
+`C:\Handy` es coherente con el resto de la sesión (nada se commitea sin pedirlo);
+en el worktree quedó fuera del `980aca6`, que se cortó antes de aplicarlo. No es
+trabajo en riesgo —está duplicado en los dos sitios y son cuatro líneas—, pero
+conviene no olvidarlo.
+
+### 12.8 ⚠️ ABIERTO: el overlay «no está centrado»
+
+**Charly reportó que el overlay se ve descentrado.** Queda anotado para mirarlo
+con calma; no se investigó.
+
+⚠️ **Aviso de honestidad:** esa observación no llegó con detalle en la
+conversación de esta sesión (Charly la mencionó al cerrar, remitiéndose a algo
+dicho antes). **No hay descripción de en qué sentido está descentrado** —
+horizontal, vertical, respecto a la pantalla o respecto a su propia ventana.
+Lo primero mañana es preguntárselo, no suponerlo.
+
+Lo que sí hay son **medidas de esta sesión**, que acotan el terreno. Ventana de
+256x64, tarjeta de 173,6 px de ancho:
+
+| eje | medida | lectura |
+| --- | --- | --- |
+| horizontal | 41,2 px a cada lado | centrada **dentro de su ventana** |
+| vertical (antes) | 22,4 arriba · 0 abajo | pegada al borde inferior |
+| vertical (ahora) | 17,4 arriba · 5 abajo | sigue anclada abajo, con hueco |
+
+O sea que **dentro de la ventana está centrada en horizontal**, y en vertical
+está anclada abajo **a propósito** (`align-items: flex-end`). Dos pistas para
+mañana:
+
+1. **La corona rompe la simetría óptica.** Sobresale 9 px por la IZQUIERDA
+   (`--ov-crown-left`) y nada por la derecha. La caja está centrada, pero la
+   figura que se ve no lo está: pesa más a la izquierda. Es el candidato más
+   probable si lo que se ve es «tira hacia la izquierda».
+2. **La posición de la VENTANA en pantalla la decide Rust** (`overlay.rs`), no
+   el CSS. Si lo descentrado es respecto al monitor, el CSS no tiene nada que
+   ver y el arreglo es Rust.
+
+**No confundir con el arreglo de §12.7**, que era otra cosa (recorte del halo).
+
+### 12.9 Cierre de la sesión — estado exacto de la máquina
+
+Sesión cerrada a las 03:30. Lo que quedó corriendo y dónde:
+
+| | estado |
+| --- | --- |
+| Trazo instalado (`%LOCALAPPDATA%\Trazo\Trazo.exe`) | **corriendo**, PID 26664, normal |
+| Trazo de desarrollo (`C:\h\debug\handy.exe`) | cerrado |
+| Servidor Vite (puerto 1420) | parado |
+| Autostart | apunta al **instalado**, verificado tras rearranque |
+
+Para volver al entorno de desarrollo mañana: cerrar el Trazo instalado (bloquea
+al de dev por instancia única), `bun run dev` **desde `C:\trazo-material`** —
+ojo, no desde `C:\Handy`, ver §12.6— y luego `C:\h\debug\handy.exe`.
+
+**Marca de build de desarrollo (nueva).** El de dev ahora se anuncia con una
+franja ámbar a rayas en el borde superior: *«BUILD DE DESARROLLO — no es tu
+Trazo instalado»*. Vive en `src/main.tsx` del worktree, bajo
+`import.meta.env.DEV`, así que en producción no existe. Se hizo en el DOM y no
+en el título de la ventana porque **`setTitle` está vetado por los permisos de
+Tauri** (`core:window:allow-set-title`) y las capabilities se compilan dentro
+del binario: habilitarlo exigiría recompilar Rust.
+
+**Autostart: arreglado, pero NO es duradero.** Apuntaba a
+`C:\h\debug\handy.exe`; ahora apunta al instalado (respaldo completo de la clave
+en el scratchpad, que se borra al cerrar la sesión — si hace falta, `reg export`
+otra vez). La causa de fondo sigue viva: `lib.rs:318-330` llama a
+`autostart_manager.enable()` **en cada arranque** si `autostart_enabled` es
+`true`, y `enable()` registra **el ejecutable que está corriendo**. O sea que
+la entrada apunta a la última build que arrancó, y **levantar el de dev la
+vuelve a torcer**. Se autocorrige al abrir el instalado.
+
+→ **Arreglo de raíz para mañana, con Rust ya compilando:** envolver ese bloque
+en `#[cfg(not(debug_assertions))]`. Tres líneas y la build de dev deja de
+secuestrar el autostart para siempre.
+
+**Push hecho** (autorizado explícitamente): `f56515e..980aca6` a
+`origin/feat/rebrand-material`. Local y remoto coinciden. `main` ya estaba
+sincronizado y **no se tocó**; no se fusionó nada.
+
+### 12.10 Lo que sigue SIN COMMITEAR (a propósito)
+
+| árbol | qué |
+| --- | --- |
+| `C:\Handy` | selector de tema (5 archivos nuevos), 4 fondos WebP, ventana 1100x880 en `lib.rs`, arreglo de la píldora, este documento |
+| `C:\trazo-material` | arreglo de la píldora, `overlayFit.test.ts`, franja de dev en `main.tsx` |
+
+Más el WIP de wakeword de Charly en `C:\Handy`, **intacto** en toda la sesión
+(37 archivos; se verificó que sus 4 líneas de `transcribe_to_english` conviven
+con las 6 del bloque `theme` en cada `translation.json`).
+
+### 12.11 Orden sugerido para mañana
+
+1. **Pagefile** (§11.1) — sigue bloqueando todo lo de Rust. Admin + reinicio.
+2. Compilar y **probar la ventana 1100x880**, que está escrita sin verificar.
+3. **Preguntar a Charly en qué sentido ve el overlay descentrado** (§12.8) antes
+   de tocar nada.
+4. `#[cfg(not(debug_assertions))]` en el autostart (§12.9).
+5. Persistir el tema en `settings.rs` y quitar el `localStorage` de
+   `useTheme.ts` (§12.2).
+6. Revisar `980aca6` y decidir cómo entra `feat/rebrand-material` en `main`.
+
+### 12.12 Detalle de entorno (sigue vigente)
+
+`CLAUDE.md` dice que `CARGO_TARGET_DIR` va en **`D:\h`**, pero
+`.cargo/config.toml` (con `skip-worktree`) apunta a **`C:/h`**, y ahí está el
+build vivo (`C:\h\debug\handy.exe`, 83 MB, del 31/07). **No coinciden**: antes
+de compilar conviene decidir cuál vale, porque §3.5 avisa de que C: está justo.
+
+---
+
+## 13. Sesión 2026-08-02
+
+### 13.1 RUST VUELVE A COMPILAR (sin haber tocado el pagefile)
+
+**Tres builds seguidos en verde**, de 1m57s a 2m52s. El pagefile **sigue en
+`InitialSize 2048`** y no hubo reinicio: lo que cambió fue que Charly cerró
+Chrome y todo lo demás, y el commit libre subió de 0,73 GB a ~3-5 GB.
+
+⚠️ **Matiz importante para no sacar la conclusión equivocada:** esto **no
+deroga §11.1**. Los builds de hoy fueron incrementales (744/746 unidades ya
+compiladas). Un `cargo clean` o un rebuild completo probablemente siga sin
+entrar. El pagefile sigue mereciendo arreglarse; lo que se aprendió es que
+**con la máquina despejada los builds incrementales pasan**.
+
+**De paso quedó verificado lo que estaba escrito sin compilar:** la ventana
+**1100x880 + maximizable compila** (§12.4), y el WIP de wakeword de Charly
+también.
+
+### 13.2 ⚠️ La rama estaba 7 commits DETRÁS de main — y eso la rompía
+
+Al hacer `bun run tauri dev` desde `C:\trazo-material`, la app compiló y
+**entró en pánico al arrancar**:
+
+```
+panicked at src\lib.rs:190:50
+Failed to initialize history manager: MigrationDefinition(DatabaseTooFarAhead)
+```
+
+| | migraciones |
+| --- | --- |
+| `history.db` real | **v6** |
+| `feat/rebrand-material` | **4** |
+| `main` | **6** |
+
+`history.rs` difería en **−220 líneas**: la rama no conocía las dos últimas
+migraciones y se negaba a abrir la base de datos que ya había migrado el Trazo
+instalado. **Los dos árboles comparten `target-dir = C:/h`**, así que compilar
+desde el worktree sobrescribió `handy.exe` con una build vieja y dejó el
+entorno inservible hasta darse cuenta.
+
+**Resuelto fusionando `main` dentro de la rama** (`b4caae3`, sin conflictos).
+La rama pasó a 0 commits de retraso, define 6 migraciones, **arranca sin
+pánico** y registra los atajos. Verificado compilando y ejecutando.
+
+### 13.3 El overlay: verificado en vivo, con un arreglo más
+
+Charly pidió comprobarlo de verdad. Resultado:
+
+| | |
+| --- | --- |
+| Letra "T" | **eliminada** — no está en el TSX, el DOM da `letraT_presente: false`, y no aparece en la captura |
+| Píldora cortada | **arreglada** — `huecoAbajo` 0 → 5 |
+| Capas | **arreglado hoy** (abajo) |
+| Encaje de la corona | **se deja como está**, decisión de Charly |
+
+**Bug nuevo encontrado y arreglado: el contorno partía la corona en dos.**
+`.scrown` estaba en `z-index: 1` y `.sborde` en `2`, así que el trazo del borde
+reactivo cruzaba por encima del emblema. Contradecía la intención que describe
+el propio CSS del arco — *«orbita saliendo de DEBAJO de la corona»*: para salir
+de debajo, la corona tiene que ir delante. Ahora `z-index: 3`. Verificado
+ampliando a 4x: el arco pasa por detrás y desaparece donde la corona lo tapa.
+
+**Lo del "descentrado" era otra cosa.** Se midió: la caja de la tarjeta está
+**perfectamente centrada** (41,2 px por lado) y la figura visible cae 11,2 px a
+la izquierda por el vuelo de la corona. Pero al preguntarle, Charly dijo que
+**no es el centrado: es la corona misma**. La hipótesis de §12.8 era plausible
+y estaba equivocada — preguntar ahorró arreglar lo que no era.
+
+**El encaje NO se arregló, y es geometría, no descuido:**
+
+```
+ventana 64 − halo 5 − tarjeta 41,6 = 17,4 px libres arriba
+corona = 30,5 px  →  solape mínimo inevitable = 13,1 px (43%)
+para bajarlo a ~6 px haría falta una ventana de 71 px (OVERLAY_HEIGHT, Rust)
+```
+
+Charly decidió **dejarlo**: el emblema es un provisional y `CLAUDE.md` sigue
+dando el logo definitivo (**SVG limpio, sin glow**) por `PENDIENTE`, sin fecha.
+Se comprobó que no hay ningún `.svg` en ninguno de los dos árboles. Cuando
+llegue el SVG, esto se revisa entero — probablemente con otra proporción.
+
+### 13.4 ⚠️ Wispr Flow impide grabar
+
+A media sesión el overlay dejó de aparecer. No era el CSS:
+
+```
+Failed to start recording: Recorder not available
+Start for 'transcribe' did not begin recording; staying idle
+```
+
+**Wispr Flow estaba corriendo con 11 procesos** y retiene el micrófono. Es
+dictado siempre-a-la-escucha, o sea el competidor directo, y **mientras esté
+activo Trazo no puede grabar**. Arranca solo: tiene un acceso directo en la
+carpeta de Inicio.
+
+Charly pidió **no tocarlo**. Para verificar cosas visuales sin micrófono, se
+fuerza la visibilidad del overlay por CDP:
+
+```js
+document.querySelector(".ov-stage").style.setProperty("opacity","1","important")
+```
+
+Ojo: **añadir la clase `show` no sirve** — React reconcilia el `className` y la
+quita. Hay que ir por estilo inline.
+
+### 13.5 Qué se commiteó y qué NO
+
+**`feat/rebrand-material` — pusheada y LISTA PARA FUSIONAR** (sin fusionar, a
+propósito):
+
+```
+b4caae3 Merge branch 'main' into feat/rebrand-material
+9eec416 chore(dev): franja que identifica la build de desarrollo
+74dca13 fix(overlay): la pildora deja de cortarse y la corona de partirse
+980aca6 chore(wip): respalda el diseno de material que vivia solo en el disco
+```
+
+Fusión a `main` comprobada en seco: **limpia, sin conflictos**. 84 tests en
+verde, traducciones 20/20.
+
+**`main` (C:\Handy) — solo lo independiente**, por decisión de Charly. El resto
+choca con su WIP:
+
+| queda SIN commitear | por qué |
+| --- | --- |
+| Selector de tema (5 archivos + `Sidebar.tsx`, `main.tsx`, `App.css`, `material.css`) | **no funciona sin sus claves i18n**, y los 21 `translation.json` tienen mezcladas las 4 líneas de `transcribe_to_english` del wakeword |
+| Ventana 1100x880 (`lib.rs`) | el mismo archivo lleva su `mod wakeword;` |
+
+**Al retomar el wakeword, esos dos se desbloquean solos.** El trabajo está
+hecho y probado (11 tests del tema en verde); solo espera a poder separarse.
+
+### 13.6 Orden sugerido para la próxima
+
+1. **Decidir cómo entra `feat/rebrand-material` en `main`.** Está lista, la
+   fusión es limpia y ya no arrastra el desfase de migraciones.
+2. **Pagefile** (§11.1) — sigue pendiente pese a §13.1. Es lo que separa
+   "builds incrementales con la máquina despejada" de "builds fiables".
+3. Cuando aterrice el wakeword: commitear el selector de tema y la ventana
+   1100x880, y persistir el tema en `settings.rs` quitando el `localStorage`.
+4. `#[cfg(not(debug_assertions))]` en el autostart (§12.9).
+5. Cuando llegue el SVG del logo: rehacer el encaje de la corona (§13.3).

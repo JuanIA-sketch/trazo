@@ -1,3 +1,4 @@
+import { Mic } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const AlwaysOnMicrophone: React.FC<AlwaysOnMicrophoneProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={Mic}
         checked={alwaysOnMode}
         onChange={(enabled) => updateSetting("always_on_microphone", enabled)}
         isUpdating={isUpdating("always_on_microphone")}

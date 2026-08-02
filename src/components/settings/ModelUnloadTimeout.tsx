@@ -1,3 +1,4 @@
+import { Timer } from "lucide-react";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "../../hooks/useSettings";
@@ -75,6 +76,7 @@ export const ModelUnloadTimeoutSetting: React.FC<ModelUnloadTimeoutProps> = ({
 
   return (
     <SettingContainer
+      icon={Timer}
       title={t("settings.advanced.modelUnload.title")}
       description={t("settings.advanced.modelUnload.description")}
       descriptionMode={descriptionMode}

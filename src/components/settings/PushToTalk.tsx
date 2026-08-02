@@ -1,8 +1,8 @@
+import { Mic } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
 import { useSettings } from "../../hooks/useSettings";
-import { Mic } from "lucide-react";
 
 interface PushToTalkProps {
   descriptionMode?: "inline" | "tooltip";

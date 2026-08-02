@@ -1,3 +1,4 @@
+import { AudioLines, XCircle } from "lucide-react";
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,7 +8,6 @@ import {
 } from "../../lib/utils/keyboard";
 import { ResetButton } from "../ui/ResetButton";
 import { SettingContainer } from "../ui/SettingContainer";
-import { AudioLines, XCircle } from "lucide-react";
 import { useSettings } from "../../hooks/useSettings";
 import { useOsType } from "../../hooks/useOsType";
 import { commands } from "@/bindings";

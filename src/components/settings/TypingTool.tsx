@@ -1,3 +1,4 @@
+import { Type } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
@@ -62,6 +63,7 @@ export const TypingToolSetting: React.FC<TypingToolProps> = React.memo(
 
     return (
       <SettingContainer
+      icon={Type}
         title={t("settings.advanced.typingTool.title")}
         description={t("settings.advanced.typingTool.description")}
         descriptionMode={descriptionMode}

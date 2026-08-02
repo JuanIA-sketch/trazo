@@ -1,3 +1,4 @@
+import { Timer } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../../ui/Slider";
@@ -21,6 +22,7 @@ export const PasteDelay: React.FC<PasteDelayProps> = ({
 
   return (
     <Slider
+      icon={Timer}
       value={settings?.paste_delay_ms ?? 60}
       onChange={handleDelayChange}
       min={10}

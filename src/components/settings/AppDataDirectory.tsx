@@ -1,3 +1,4 @@
+import { Folder } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "@/bindings";
@@ -69,6 +70,7 @@ export const AppDataDirectory: React.FC<AppDataDirectoryProps> = ({
 
   return (
     <SettingContainer
+      icon={Folder}
       title={t("settings.about.appDataDirectory.title")}
       description={t("settings.about.appDataDirectory.description")}
       descriptionMode={descriptionMode}

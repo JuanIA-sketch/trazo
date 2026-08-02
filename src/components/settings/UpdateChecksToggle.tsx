@@ -1,3 +1,4 @@
+import { RefreshCw } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -18,6 +19,7 @@ export const UpdateChecksToggle: React.FC<UpdateChecksToggleProps> = ({
 
   return (
     <ToggleSwitch
+      icon={RefreshCw}
       checked={updateChecksEnabled}
       onChange={(enabled) => updateSetting("update_checks_enabled", enabled)}
       isUpdating={isUpdating("update_checks_enabled")}

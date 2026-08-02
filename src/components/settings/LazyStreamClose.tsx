@@ -1,3 +1,4 @@
+import { Timer } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const LazyStreamClose: React.FC<LazyStreamCloseProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={Timer}
         checked={enabled}
         onChange={(enabled) => updateSetting("lazy_stream_close", enabled)}
         isUpdating={isUpdating("lazy_stream_close")}

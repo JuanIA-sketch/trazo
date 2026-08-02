@@ -1,3 +1,4 @@
+import { Laptop } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "@/bindings";
@@ -69,6 +70,7 @@ export const ClamshellMicrophoneSelector: React.FC<ClamshellMicrophoneSelectorPr
 
     return (
       <SettingContainer
+      icon={Laptop}
         title={t("settings.debug.clamshellMicrophone.title")}
         description={t("settings.debug.clamshellMicrophone.description")}
         descriptionMode={descriptionMode}

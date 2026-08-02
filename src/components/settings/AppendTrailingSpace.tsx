@@ -1,3 +1,4 @@
+import { Pilcrow } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const AppendTrailingSpace: React.FC<AppendTrailingSpaceProps> =
 
     return (
       <ToggleSwitch
+      icon={Pilcrow}
         checked={enabled}
         onChange={(enabled) => updateSetting("append_trailing_space", enabled)}
         isUpdating={isUpdating("append_trailing_space")}

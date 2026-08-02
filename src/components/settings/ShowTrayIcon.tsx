@@ -1,3 +1,4 @@
+import { AppWindow } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const ShowTrayIcon: React.FC<ShowTrayIconProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={AppWindow}
         checked={showTrayIcon}
         onChange={(enabled) => updateSetting("show_tray_icon", enabled)}
         isUpdating={isUpdating("show_tray_icon")}

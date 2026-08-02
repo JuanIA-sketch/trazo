@@ -1,3 +1,4 @@
+import { Keyboard } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { SettingContainer } from "../../ui/SettingContainer";
@@ -53,6 +54,7 @@ export const KeyboardImplementationSelector: React.FC<
 
   return (
     <SettingContainer
+      icon={Keyboard}
       title={t("settings.debug.keyboardImplementation.title")}
       description={t("settings.debug.keyboardImplementation.description")}
       descriptionMode={descriptionMode}

@@ -1,3 +1,4 @@
+import { Database } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Slider } from "../../ui/Slider";
@@ -21,6 +22,7 @@ export const RecordingBuffer: React.FC<RecordingBufferProps> = ({
 
   return (
     <Slider
+      icon={Database}
       value={settings?.extra_recording_buffer_ms ?? 0}
       onChange={handleBufferChange}
       min={0}

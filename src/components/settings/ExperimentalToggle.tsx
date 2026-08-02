@@ -1,3 +1,4 @@
+import { FlaskConical } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const ExperimentalToggle: React.FC<ExperimentalToggleProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={FlaskConical}
         checked={enabled}
         onChange={(enabled) => updateSetting("experimental_enabled", enabled)}
         isUpdating={isUpdating("experimental_enabled")}

@@ -1,3 +1,4 @@
+import { SpellCheck } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -56,6 +57,7 @@ export const CustomWords: React.FC<CustomWordsProps> = React.memo(
     return (
       <>
         <SettingContainer
+      icon={SpellCheck}
           title={t("settings.advanced.customWords.title")}
           description={t("settings.advanced.customWords.description")}
           descriptionMode={descriptionMode}

@@ -323,6 +323,66 @@
   box-shadow: var(--wl-sh);
 }
 
+.trz-well.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trz-well__chevron {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--t4);
+  transition: transform 200ms var(--trz-curva);
+}
+
+.trz-well__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* — Menú desplegable — */
+
+.trz-menu {
+  border-radius: 12px;
+  padding: 4px;
+  background: var(--p1-bg);
+  border: 1px solid var(--p1-bd);
+  box-shadow: var(--p1-sh);
+}
+
+.trz-menu__item {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  text-align: start;
+  color: var(--t2);
+  cursor: pointer;
+  transition: background-color 140ms var(--trz-curva);
+}
+
+.trz-menu__item:hover {
+  background: var(--rw-hv);
+}
+
+.trz-menu__item.is-selected {
+  background: var(--ac-sf);
+  color: var(--ac-tx);
+  font-weight: 600;
+}
+
+.trz-menu__item.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trz-well__chevron,
+  .trz-menu__item {
+    transition: none;
+  }
+}
+
 /* — Barra de progreso — */
 
 .trz-track {

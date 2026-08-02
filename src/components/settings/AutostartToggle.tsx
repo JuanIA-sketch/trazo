@@ -1,3 +1,4 @@
+import { Power } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ui/ToggleSwitch";
@@ -17,6 +18,7 @@ export const AutostartToggle: React.FC<AutostartToggleProps> = React.memo(
 
     return (
       <ToggleSwitch
+      icon={Power}
         checked={autostartEnabled}
         onChange={(enabled) => updateSetting("autostart_enabled", enabled)}
         isUpdating={isUpdating("autostart_enabled")}

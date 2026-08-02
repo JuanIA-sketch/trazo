@@ -1,3 +1,4 @@
+import { Keyboard, Volume2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { type } from "@tauri-apps/plugin-os";
@@ -13,7 +14,6 @@ import { VolumeSlider } from "../VolumeSlider";
 import { MuteWhileRecording } from "../MuteWhileRecording";
 import { RecordingVolume } from "../RecordingVolume";
 import { ModelSettingsCard } from "./ModelSettingsCard";
-import { Keyboard, Volume2 } from "lucide-react";
 
 export const GeneralSettings: React.FC = () => {
   const { t } = useTranslation();

@@ -1,3 +1,4 @@
+import { FolderOpen } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "@/bindings";
@@ -52,6 +53,7 @@ export const LogDirectory: React.FC<LogDirectoryProps> = ({
 
   return (
     <SettingContainer
+      icon={FolderOpen}
       title={t("settings.debug.logDirectory.title")}
       description={t("settings.debug.logDirectory.description")}
       descriptionMode={descriptionMode}

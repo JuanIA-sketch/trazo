@@ -879,6 +879,14 @@ async previewReplacementImpact(from: string, to: string) : Promise<Result<Impact
     else return { status: "error", error: e  as any };
 }
 },
+async getActivityMap(days: number) : Promise<Result<ActivityMap, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_activity_map", { days }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getHistoryEntries(cursor: number | null, limit: number | null) : Promise<Result<PaginatedHistory, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_history_entries", { cursor, limit }) };
@@ -993,6 +1001,11 @@ device_name: string | null;
  * to a CPU device.
  */
 is_cpu_fallback: boolean }
+/**
+ * El mapa de actividad tal como lo pinta la interfaz: la ventana pedida, las
+ * filas con actividad dentro de ella, y la racha en curso.
+ */
+export type ActivityMap = { from_day: string; to_day: string; days: DailyActivity[]; streak: number }
 export type AppSettings = { 
 /**
  * Internal settings schema marker for one-time migrations. Fresh installs
@@ -1061,6 +1074,10 @@ export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"
  */
 export type CustomReplacement = { from: string; to: string }
 export type CustomSounds = { start: boolean; stop: boolean }
+/**
+ * Una fila del mapa, tal como la consume la interfaz.
+ */
+export type DailyActivity = { day: string; dictations: number; failed: number; words: number; words_added: number; post_processed: number; max_words: number; profile_hist: Partial<{ [key in string]: number }> }
 export type EngineType = 
 /**
  * Any GGML/GGUF model loaded through transcribe-cpp (Whisper, Parakeet,

@@ -1,8 +1,28 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-07-31 · **Rama:** `main` ·
-`main` y `origin/main` **sincronizados**
+**Última actualización:** 2026-07-31 (sesión de tarde) · **Rama:** `main` =
+**`f64400b`**, sincronizado con `origin/main`
 **Entrega del hackathon:** 31 de julio de 2026
+
+> **⚠️ LO PRIMERO AL RETOMAR — estado del 2026-07-31 por la tarde (§10)**
+>
+> 1. **Release [v0.9.1](https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.1)
+>    publicada** con los 7 instaladores, y **validada con instalación limpia
+>    real**: instala, arranca, carga el modelo en la GPU y dicta de punta a
+>    punta (§10.4). Es la primera vez que alguien prueba el paquete final.
+> 2. **Tres cambios en la máquina de Charly** que hay que conocer antes de
+>    trabajar: su `bun run tauri dev` está PARADO, el autostart apunta al
+>    binario instalado, y su store está en `settings_schema_version: 9`.
+>    Cómo revertir cada uno en **§10.5**.
+> 3. **A v0.9.1 le faltan dos cosas** (§10.6): el fix del toggle
+>    (`f64400b` es posterior al commit que compiló) y el ejecutable dentro del
+>    bundle sigue llamándose `handy.exe`.
+> 4. **Hey Trazo: el Colab NO ha entregado el `.onnx`.** La integración está
+>    hecha y funcionando con un modelo preentrenado, pero **sin commitear** y
+>    con `FORCE_ALWAYS_ON = true`, que **mantiene el micrófono abierto** (§10.7).
+> 5. **whisper-large-v3-turbo NO traduce.** Medido. Eso convirtió el atajo
+>    ES→EN en un no-op y destapó que el toggle "Translate to English" llevaba
+>    roto desde siempre (§10.3).
 
 Documento de continuidad entre sesiones de Claude Code. Léelo antes de tocar
 nada. Complementa a `CLAUDE.md` (convenciones del fork) y a
@@ -55,6 +75,14 @@ tocó hoy y se revisa después del 31 de julio (§4.4).
 
 ### 1.1 Commits clave (orden cronológico inverso)
 
+Los 3 de la sesión de tarde del 2026-07-31 (§10), todos pusheados:
+
+| Commit    | Qué es                                         |
+| --------- | ---------------------------------------------- |
+| `f64400b` | Fix: turbo deja de anunciar traducción (§10.3) |
+| `a48fc8d` | Versión 0.9.1 para cortar instaladores nuevos  |
+| `125e9cf` | Mapa de actividad diaria (§10.1)               |
+
 Los 12 de hoy (2026-07-28), del más nuevo al más viejo:
 
 | Commit    | Qué es                                                             | Pusheado |
@@ -91,7 +119,14 @@ Anteriores:
 | `13b039c` | Red de seguridad del portapapeles                                                                            |
 | `e836a0b` | Perfiles de dictado en español                                                                               |
 
-### 1.2 Sin commitear (al cerrar el 2026-07-28)
+### 1.2 Sin commitear
+
+> **⚠️ La tabla de abajo es del 2026-07-28 y está OBSOLETA.** El grupo b se
+> commiteó en `b170a9e` y el grupo c en `019207e`. **Lo que hay sin commitear
+> ahora mismo está en §10.9** (Hey Trazo, atajo ES→EN y el flag `--translate`
+> del harness). Se conserva la tabla como registro histórico.
+
+#### Registro histórico (al cerrar el 2026-07-28)
 
 | Archivo                                      | Δ         | Grupo | Qué                                               |
 | -------------------------------------------- | --------- | ----- | ------------------------------------------------- |
@@ -468,6 +503,7 @@ Lo que queda, por orden:
    `speech_seconds` sigue midiendo de menos y esa medida la usan también
    `speech_segments` y el troceado. Con el WAV de Benja:
    `cargo run --example silence_gate_probe -- <wav> [palabras]`.
+
 2. **~~Preguntar a Benja qué `paste_method` tiene~~ → RESPONDIDO: `ctrl_v`.**
    La predicción era `Direct`, así que **el diagnóstico del bug 1 en §8.8 queda
    refutado**. La causa real resultó ser otra y ya está arreglada: no era el
@@ -486,10 +522,21 @@ Lo que queda, por orden:
    regla sembrada puede coincidir con palabras españolas comunes ni nombres de
    persona** — está medido en el spec por qué (§3 del spec).
 
-### Frentes NUEVOS, sin empezar (anotados el 2026-07-31)
+### Frentes NUEVOS — ESTADO ACTUALIZADO el 2026-07-31 por la tarde
 
-Los pidió Charly al cerrar la sesión. **No hay diseño, ni spec, ni
-investigación previa: solo el enunciado.** Hablarlos antes de tocar código.
+> **⚠️ Los tres puntos de abajo YA SE TRABAJARON.** Resumen y punteros:
+>
+> 6. **Mapa de actividad diaria** → **HECHO y pusheado** en `125e9cf` (§10.1).
+> 7. **openWakeWord / "Hey Trazo"** → investigado **e integrado**, funcionando
+>    con un modelo preentrenado. **Sin commitear** y esperando el `.onnx` del
+>    Colab (§10.7).
+> 8. **Bug de reconocimiento en inglés** → reproducido y acotado con el WAV real
+>    (§10.2). **No estaba resuelto**: falta una muestra de más de 6-7 s marcada
+>    con estrella. Y por el camino apareció algo más gordo: turbo **no traduce**,
+>    lo que dejó muerto el toggle "Translate to English" (§10.3, arreglado en
+>    `f64400b`).
+>
+> Lo de abajo es el enunciado original, conservado como registro.
 
 6. **Mapa de actividad diaria.** Sin definir: qué mide, dónde se ve y para qué
    sirve. Los datos que ya existen y podrían alimentarlo son `history.db`
@@ -508,20 +555,20 @@ investigación previa: solo el enunciado.** Hablarlos antes de tocar código.
 ### Registro del encargo original del diccionario
 
 **Diccionario de reemplazos — SPEC APROBADO, Tareas 1-3 hechas (§9.10).**
-   Spec en `docs/superpowers/specs/2026-07-30-diccionario-reemplazos-design.md`
-   (`55d871b`), aprobado por Charly el 30/07 incluido el giro de diseño: la
-   lista **no** va al motor difuso porque se midió y corrompe (5 de 12 frases:
-   "flujo"→"Flux", "Claudia"→"Claude"). Las reglas se proponen desde el
-   historial del propio usuario, con previsualización del radio de impacto.
-   Decidido también: **quitar `custom_words: ["Claude"]`** de los ajustes de
-   Charly y cubrirlo con la regla exacta `cloud → Claude` (2 aciertos, 0 roturas
-   en su corpus). **Pendiente de ejecutar**, requiere cerrar la app.
-   Registro histórico del encargo original:
-   junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
-   (a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
-   desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
-   construido (`apply_custom_replacements`, `audio_toolkit/text.rs:113`), no es
-   infraestructura nueva. **No empezada.**
+Spec en `docs/superpowers/specs/2026-07-30-diccionario-reemplazos-design.md`
+(`55d871b`), aprobado por Charly el 30/07 incluido el giro de diseño: la
+lista **no** va al motor difuso porque se midió y corrompe (5 de 12 frases:
+"flujo"→"Flux", "Claudia"→"Claude"). Las reglas se proponen desde el
+historial del propio usuario, con previsualización del radio de impacto.
+Decidido también: **quitar `custom_words: ["Claude"]`** de los ajustes de
+Charly y cubrirlo con la regla exacta `cloud → Claude` (2 aciertos, 0 roturas
+en su corpus). **Pendiente de ejecutar**, requiere cerrar la app.
+Registro histórico del encargo original:
+junto al formalizador y se decidió hacerlas en secuencia, con spec propio:
+(a) lista precargada de términos de la comunidad de IA, (b) corrección rápida
+desde el Historial que alimente `custom_replacements`. Reutiliza el motor ya
+construido (`apply_custom_replacements`, `audio_toolkit/text.rs:113`), no es
+infraestructura nueva. **No empezada.**
 
 **Backlog explícito de Charly (post-hackathon):** cancelación de ruido (no
 priorizar antes del viernes) · aprendizaje "puro" — usar la confianza interna del
@@ -1022,9 +1069,10 @@ personal en archivos trackeados. **El WAV con la voz de Charly
 
 **Consecuencias aceptadas a sabiendas:** los emails de commit quedan expuestos
 (`juancharly.ia@gmail.com`, 39 commits; el de Benjamin), y `SESSION_HANDOFF.md`
-+ `CLAUDE.md` son públicos — incluida la §1.3.1 sobre la rama de Benjamin.
-Sacarlos del árbol no serviría: seguirían en la historia. **Ojo al escribir aquí
-de ahora en adelante.**
+
+- `CLAUDE.md` son públicos — incluida la §1.3.1 sobre la rama de Benjamin.
+  Sacarlos del árbol no serviría: seguirían en la historia. **Ojo al escribir aquí
+  de ahora en adelante.**
 
 ### 8.2 Release v0.9.0 publicado
 
@@ -1188,11 +1236,11 @@ mensaje "Saved lockfile").
 **Nunca falló por el código.** Eran tres causas distintas; **la del updater se
 resolvió el 30/07** (§9.4) y con ella los 3 jobs de Linux:
 
-| Jobs       | Error literal                                                                                      | Estado                     |
-| ---------- | -------------------------------------------------------------------------------------------------- | -------------------------- |
-| Linux ×3   | ~~`incorrect updater private key password: Wrong password for that key`~~                          | **VERDE** desde §9.4       |
-| macOS ×2   | `security: SecKeychainItemImport: One or more parameters passed to a function were not valid`        | rojo — falta Apple (§7.5)  |
-| Windows ×2 | `failed to bundle project 'failed to run trusted-signing-cli'` (variables AZURE vacías)             | rojo — falta Azure (§7.5)  |
+| Jobs       | Error literal                                                                                 | Estado                    |
+| ---------- | --------------------------------------------------------------------------------------------- | ------------------------- |
+| Linux ×3   | ~~`incorrect updater private key password: Wrong password for that key`~~                     | **VERDE** desde §9.4      |
+| macOS ×2   | `security: SecKeychainItemImport: One or more parameters passed to a function were not valid` | rojo — falta Apple (§7.5) |
+| Windows ×2 | `failed to bundle project 'failed to run trusted-signing-cli'` (variables AZURE vacías)       | rojo — falta Azure (§7.5) |
 
 **La pista que descartó el código:** los jobs de Linux **compilaron 12-21 minutos
 enteros** y morían al firmar el artefacto del updater; Windows corrió 30 min. Si
@@ -1368,12 +1416,12 @@ en un gestor habría sido tiempo tirado.
 
 **Cómo se demostró, porque el control es lo que hace válida la conclusión:**
 
-| Prueba                                             | Resultado                          |
-| -------------------------------------------------- | ---------------------------------- |
-| Clave con contraseña real, firmar con ella (control) | ✅ firma generada                  |
-| Clave con `-p ""`, firmar con `-p ""`               | ❌ `Wrong password for that key`   |
-| Clave con `-p ""`, firmar con la env vacía          | ❌ `Wrong password for that key`   |
-| Clave con `-p ""`, sin contraseña ninguna           | ⏳ se cuelga pidiéndola por teclado |
+| Prueba                                               | Resultado                           |
+| ---------------------------------------------------- | ----------------------------------- |
+| Clave con contraseña real, firmar con ella (control) | ✅ firma generada                   |
+| Clave con `-p ""`, firmar con `-p ""`                | ❌ `Wrong password for that key`    |
+| Clave con `-p ""`, firmar con la env vacía           | ❌ `Wrong password for that key`    |
+| Clave con `-p ""`, sin contraseña ninguna            | ⏳ se cuelga pidiéndola por teclado |
 
 Sin el control, el fallo parecería "contraseña incorrecta". Con él queda claro
 que la ruta de firma funciona y lo que no existe es la contraseña vacía.
@@ -1493,7 +1541,7 @@ Benja es distinto porque su señal podría estar por debajo del suelo absoluto,
 y ahí sí cambiaría algo. Merece la prueba, sin esperar que arregle lo otro.
 
 **Hipótesis sin verificar** de por qué Wispr Flow suena bien: usa la unidad de
-*Voice Processing* de macOS (control automático de ganancia), que cpal no
+_Voice Processing_ de macOS (control automático de ganancia), que cpal no
 activa. No se puede comprobar desde fuera.
 
 ### 9.8 El truncado por silencio largo: causa raíz y arreglo (`015aca3`)
@@ -1511,11 +1559,11 @@ nivel de grabación**: `ABSOLUTE_FLOOR_DB` es un suelo absoluto de −50 dBFS y 
 voz está a −39,6, así que las sílabas átonas caen por debajo y cuentan como
 silencio.
 
-| Medida                    | Valor      |
-| ------------------------- | ---------- |
-| Duración real             | 27,15 s    |
-| Habla según el gate       | **6,90 s** |
-| 26 palabras sobre habla   | 3,77 p/s → "sano", no dispara |
+| Medida                    | Valor                            |
+| ------------------------- | -------------------------------- |
+| Duración real             | 27,15 s                          |
+| Habla según el gate       | **6,90 s**                       |
+| 26 palabras sobre habla   | 3,77 p/s → "sano", no dispara    |
 | 26 palabras sobre el clip | **0,96 p/s** → truncado evidente |
 
 **Medido sobre las 25 grabaciones reales**, la correlación es limpia: el gate ve
@@ -1578,9 +1626,9 @@ anómala conocida, pero no se ha establecido ninguna relación causal.
 **Corregir una palabra desde el Historial, con el radio de impacto a la vista
 antes de guardar.** Tareas 1-3 del plan `2026-07-30-diccionario-reemplazos.md`.
 
-| Qué                                                        | Tests |
-| ---------------------------------------------------------- | ----- |
-| `dictionary.rs` → `rule_impact`                             | 7     |
+| Qué                                                          | Tests |
+| ------------------------------------------------------------ | ----- |
+| `dictionary.rs` → `rule_impact`                              | 7     |
 | `build_impact_report` + comando `preview_replacement_impact` | 4     |
 | Botón "Corregir palabra" + diálogo (`correctWord.ts`)        | 8     |
 
@@ -1626,3 +1674,300 @@ corre `format:check`, ya estaría fallando por esto.
 **Regla práctica hasta que se decida qué hacer: no ejecutar
 `bun run format:frontend` sobre todo el repo.** Formatear solo los archivos
 tocados, o revisar `git status` a conciencia antes de commitear.
+
+---
+
+## 10. Sesión 2026-07-31 (tarde)
+
+Estado al cerrar: `main` = **`f64400b`**, sincronizado con `origin/main`.
+`cargo test --lib` sobre lo commiteado: **320 passed / 0 failed / 1 ignored**.
+Con el trabajo sin commitear aplicado: **337 passed**. Frontend: 66 tests.
+
+### 10.1 Mapa de actividad diaria — `125e9cf`
+
+Tabla propia `insights_daily`, migración 5→6 de `rusqlite_migration`, más el
+índice `idx_history_timestamp`. Heatmap de 13 semanas al principio de Ajustes →
+Historial, con racha, dictados, palabras y días activos.
+
+**El porqué del diseño, que es lo que no se puede perder:** el historial se poda
+en cada dictado (20 entradas), así que cualquier métrica derivada de
+`transcription_history` daría un mapa de dos días. Los contadores se congelan al
+escribir, dentro de la misma llamada que inserta la fila del historial y **antes**
+de `cleanup_old_entries()`.
+
+Tres reglas, cada una con el test que cae si se rompe:
+
+| Regla                               | Test                                                              |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| El contador sobrevive a la poda     | `the_activity_map_survives_the_history_being_pruned`              |
+| No depende de que el WAV verifique  | `a_dictation_whose_wav_failed_still_counts_without_a_history_row` |
+| Un dictado sin palabras es `failed` | `a_dictation_without_words_is_a_failure_not_a_dictation`          |
+
+El primero mete 25 dictados, poda a 20 como hace `cleanup_by_count` y exige que
+el mapa siga diciendo 25: **cae si alguien reescribe el mapa como una consulta al
+historial**, que es exactamente el error que se quería prevenir.
+
+`profile_hist` necesita el **id** del perfil y el historial solo guardaba el
+_texto_ del prompt, así que `ProcessedTranscription` lleva ahora
+`post_process_prompt_id` — el que corrió de verdad, no la selección global.
+
+Decisión de producto: **la racha no se rompe si hoy aún no se ha dictado.** A las
+nueve de la mañana nadie ha dictado y un cero castigaría al que madruga.
+Cualquier otro hueco sí la rompe. Está en `current_streak`, con test.
+
+**Validado en vivo**: el mapa registró dictados reales, incluidos los del build
+instalado (§10.4).
+
+### 10.2 El bug de inglés: acotado, y no era lo que parecía
+
+`selected_language` está en `"es"`, y el selector de idioma **sí existe** (Ajustes
+→ General → "Ajustes de \<modelo\>", con opción Auto). Pero cambiar a Auto **no
+es la solución**, y eso se midió sobre el WAV real del dictado inglés de Charly
+(`handy-1785518377.wav`, 4,7 s con solo 2,4 s de habla):
+
+| Idioma       | Salida                          | Detectado           |
+| ------------ | ------------------------------- | ------------------- |
+| `es` (hoy)   | `Sípor for arma meirnin saggi.` | —                   |
+| `en` forzado | `Sipur Thor arma meilin sagði.` | —                   |
+| Auto         | `Síbúð fór arma meilinn sagði.` | **`is`** (islandés) |
+
+Las tres son basura. Es el fallo de clips cortos + auto que **ya tiene test de
+reproducción** (`short_spanish_clip_misdetected_on_auto_is_fixed_by_forcing_es`,
+transcription.rs). Cambiar a Auto cambiaría un bug por otro.
+
+**Dos conclusiones que hay que mantener separadas:**
+
+1. El pin a `es` **sí** rompe el inglés: con idioma forzado Whisper escribe
+   fonética inglesa con ortografía española. Es determinista, no aleatorio.
+2. **Este clip no lo demuestra**, porque falla igual en las tres. 2,4 s de habla
+   es territorio de alucinación pura.
+
+**Falta la muestra buena, y hay que pedírsela a Charly:** 2-3 frases en inglés de
+**más de 6-7 segundos**, marcadas con la **estrella** en el Historial para que la
+poda no se las lleve. Las pruebas de inglés del 30/07 **ya se perdieron** — el
+historial solo guarda 20 entradas y ninguna estaba marcada.
+
+**Recomendación de diseño (no construida):** un usuario bilingüe no quiere entrar
+a Ajustes cada vez. El patrón ya resuelto en el repo es el atajo propio del
+formalizador (F9). Ver §10.3 para por qué eso resultó ser más complicado de lo
+que parecía.
+
+### 10.3 whisper-large-v3-turbo NO traduce — y el toggle llevaba roto siempre
+
+**Hallazgo de la sesión, y el que más consecuencias tuvo.**
+
+Al construir el atajo ES→EN se probó con audio real (un dictado de 35 s en
+español) por la tarea `translate` del motor:
+
+| Variante                              | Salida             |
+| ------------------------------------- | ------------------ |
+| `--lang es` + `target_language: "en"` | español, sin tocar |
+| sin `--lang`, target `en`             | español, sin tocar |
+| `--lang es`, sin target (**control**) | español, sin tocar |
+
+**No es el código: es el checkpoint.** Turbo se destiló excluyendo datos de
+traducción y devuelve el idioma de origen aunque se le pida `translate`. Lo
+documenta OpenAI en `openai/whisper#2363`. La medición y la documentación
+coinciden.
+
+**Consecuencia que importa más que el atajo:** el toggle **"Translate to English"
+llevaba sin hacer nada** para cualquiera con turbo — que es el default en toda
+máquina con GPU dedicada. Bug preexistente, no introducido.
+
+**Arreglado en `f64400b`.** La corrección vive en `checkpoint_translates`
+(`model_capabilities.rs`) y hay que aplicarla en **DOS sitios**, porque olvidar el
+segundo deshace el primero en silencio:
+
+1. **La conversión del catálogo.** `catalog.json` declara `translate: true` para
+   turbo, y **no se puede arreglar en el JSON**: se genera en build time con
+   `scripts/gen_catalog.py` desde las fichas de Hugging Face, así que la
+   siguiente regeneración se lo llevaría.
+2. **`set_runtime_capabilities`**, que sobrescribe la capacidad con la que
+   reporta el motor en cuanto el modelo carga. El motor dice `true` porque
+   informa de la **familia** Whisper, no del checkpoint. Sin este segundo punto
+   el toggle desaparecía al abrir Ajustes y **reaparecía tras el primer
+   dictado** — intermitente, que es peor que dejarlo visible.
+
+Detalle revelador: `model.rs:572` **ya sabía esto**
+(`supports_translation: false, // Turbo doesn't support translation`, en la tabla
+heredada), pero el catálogo se siembra primero y gana, así que ese conocimiento
+no llegaba al camino que se usa.
+
+La coincidencia es **por repo exacto, jamás por "contiene turbo"**. Hay test de
+control sobre `large-v3` (que sí traduce y es el reemplazo natural) para que la
+regla no se ensanche: ese control **cayó en la primera pasada** y evitó apagar la
+traducción en el modelo bueno.
+
+### 10.4 v0.9.1: release y **validación de instalación limpia**
+
+Release: <https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.1> —
+pre-release con los **7 instaladores**, matrix 5/5 en verde
+([run 30658845257](https://github.com/JuanIA-sketch/trazo/actions/runs/30658845257)).
+
+**Dos premisas que había que corregir antes de cortarla:**
+
+- **Ningún workflow se dispara con un tag.** `release.yml` es `workflow_dispatch`
+  y saca la versión de `tauri.conf.json`.
+- **`release.yml` corre con `sign-binaries: true`**, así que sus jobs de Windows
+  y macOS mueren firmando (§8.7). El workflow llamado "Release" es justo el que
+  **no puede** producir los instaladores de Windows y Mac. El camino bueno es
+  `cross-platform-check.yml`, que omite la firma — el mismo que produjo v0.9.0.
+
+**El tag apunta a `a48fc8d`**, el commit del que compiló el matrix, no al HEAD.
+
+**Validación de instalación limpia — nadie había probado el paquete final:**
+
+| Comprobación                        | Resultado                                                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Descarga pública sin token          | 20.993.165 bytes, SHA256 `3FDA5C71…`                                                                     |
+| Firma                               | `NotSigned` (esperado)                                                                                   |
+| Instalación `/S`                    | exit 0, en `%LOCALAPPDATA%\Trazo`, **sin admin**                                                         |
+| Bundle                              | `ggml-vulkan.dll` (70 MB), 9 variantes CPU, `onnxruntime.dll`, `transcribe.dll`, Silero, sonidos, iconos |
+| Arranque                            | 3 dispositivos (Vulkan0 Intel, Vulkan1 GTX 1650, CPU), `Shortcuts initialized successfully`              |
+| Transcripción del binario instalado | 35,19 s de audio en 6,29 s (**5,59× tiempo real**), texto correcto                                       |
+| Camino completo con micrófono       | Entrada de historial creada + texto en el portapapeles                                                   |
+| Mapa de actividad                   | Vivo en el build de release                                                                              |
+| Clave de API en el log              | `[REDACTED]` (§8.9 confirmado en release)                                                                |
+
+**Cómo se probó el dictado, y su límite honesto:** un agente **no tiene voz**. Se
+hizo un **bucle acústico** — reproducir un WAV por los altavoces mientras la app
+instalada grababa, con Notepad enfocado para que el pegado cayera en sitio
+inofensivo. Funcionó: se creó la entrada y el texto llegó al portapapeles. El
+texto salió degradado (`"que me ayudes a hacer un guion y Atún Chelos loES"`) por
+el propio montaje: altavoz→micrófono ya degrada, y encima `recording_volume: 0.33`
+bajó la reproducción al 33% mientras grababa (el ducking funcionando, contra la
+prueba).
+
+> **Lo que sigue SIN probar: la calidad de dictado con la voz de Charly sobre el
+> build instalado.** Eso solo lo puede hacer él.
+
+### 10.5 ⚠️ Tres cambios en la máquina de Charly, y cómo revertirlos
+
+Hechos para poder probar la instalación limpia. **Leer antes de trabajar.**
+
+1. **`bun run tauri dev` está PARADO.** Había que matarlo: el watcher relanzaba
+   la app de dev y el plugin de instancia única hacía que la instalada cediera y
+   saliera. El servidor de Vite sigue levantado.
+   → **Revertir:** `bun run tauri dev` desde `C:\Handy`.
+2. **El autostart apunta al binario instalado.** La clave
+   `HKCU:\...\CurrentVersion\Run\Trazo` pasó a `%LOCALAPPDATA%\Trazo\handy.exe`.
+   En el próximo login arranca la versión instalada, no la de dev.
+   → **Revertir:** desinstalar con `%LOCALAPPDATA%\Trazo\uninstall.exe`, o
+   reescribir esa clave a mano.
+3. **El store está en `settings_schema_version: 9`**, con el binding
+   `transcribe_to_english` dentro. Lo migró una ejecución de dev con el atajo
+   ES→EN **sin commitear**. El build de release lo lee sin problema y lo ignora
+   (F10 no hace nada ahí), pero es un residuo de trabajo no commiteado dentro de
+   su configuración real. **Si el atajo ES→EN se descarta, hay que decidir qué
+   hacer con ese binding huérfano.**
+
+**Respaldo completo** de `%APPDATA%\com.trazo.app` (30 archivos) antes de
+instalar, en `~\trazo-backup-preinstall-20260731`.
+
+La instalación sigue en disco a propósito, por si se quiere inspeccionar.
+
+### 10.6 Lo que le falta a v0.9.1
+
+1. **No lleva el fix del toggle.** `f64400b` es posterior a `a48fc8d`, del que
+   compiló el matrix. Quien instale esta build **sigue viendo "Translate to
+   English" muerto**. Para arreglarlo hace falta relanzar el matrix y sacar
+   **v0.9.2**.
+2. **El ejecutable dentro del bundle sigue llamándose `handy.exe`**, no
+   `Trazo.exe`. Es el pendiente de §8.3, y su coste está medido: `build.yml`
+   tiene **8 asserts** que exigen ese nombre. Tocar solo el config pone el matrix
+   rojo en los cinco jobs.
+
+### 10.7 Hey Trazo — integración hecha, modelo pendiente
+
+**El Colab NO ha entregado el `.onnx`.** No hay `hey_trazo.onnx` en
+`src-tauri/resources/models/wakeword/`. **Un agente no puede vigilar el Colab**
+(sin navegador ni cuenta Google): solo puede mirar si aparece el archivo en
+disco, y ese archivo lo tiene que bajar Charly.
+
+**Lo que sí está hecho y funcionando** (sin commitear):
+
+- Cadena ONNX completa en Rust: `melspectrogram.onnx` → `embedding_model.onnx` →
+  clasificador, sobre el `ort 2.0.0-rc.12` que **ya estaba en el árbol** vía
+  transcribe-rs/vad-rs → **cero DLLs nuevas**.
+- **El tap de audio** (`recorder.rs`): `with_wake_callback` corre **antes** del
+  `if !recording { return; }`. Ese return era justo lo que hacía que el modo
+  always-on no sirviera para nada más que ahorrar latencia de apertura.
+- Inferencia **fuera del hilo de captura** (canal acotado de 32 con `try_send`):
+  si el detector se atrasa se pierde audio de escucha, nunca se estrangula la
+  captura.
+- El disparo llama a `send_transcription_input(app, "transcribe", "wake-word")` —
+  el mismo camino que el atajo de teclado.
+- Validado en vivo con el preentrenado `hey_jarvis`: el listener procesa audio
+  real (`input peak 0.0147`) y puntúa 0.000 sobre ruido de sala, o sea que no se
+  autodispara.
+
+**Cuando llegue el modelo:** dejarlo en `resources/models/wakeword/hey_trazo.onnx`
+y cambiar **una constante**, `ACTIVE_CLASSIFIER`. El melspectrograma y el
+embedding son compartidos por cualquier palabra.
+
+> **⚠️ `FORCE_ALWAYS_ON = true` mantiene el micrófono abierto de forma
+> permanente.** Es temporal y a propósito (sin eso el grabador no entrega tramas
+> fuera de la grabación). **Debe convertirse en un ajuste con toggle antes de
+> distribuirse.** Revertirlo es una línea en `wakeword/mod.rs`.
+
+**Calibración del refractario, que costó un test:** dos tests se contradijeron y
+**el fixture era el equivocado**, no la lógica. Una frase mantiene la puntuación
+alta mientras siga dentro de la ventana del clasificador (~1,3 s), así que el
+refractario tiene que ser **mayor** que esa ventana o una sola "Hey Trazo"
+arranca varias grabaciones. Quedó en 25 trozos (2 s).
+
+**Investigación de openWakeWord (lo que decide el futuro):**
+
+- **Licencia**: el código es Apache 2.0 y el backbone también (el embedding es de
+  Google, Apache-2.0). Pero **los modelos preentrenados son CC-BY-NC-SA**, no
+  comerciales. La restricción viene de los **datos de entrenamiento**, así que un
+  modelo propio hereda la licencia de los negativos que se usen (ACAV100M, Free
+  Music Archive, impulsos del MIT). **Auditarlos antes de distribuir.**
+- **El riesgo técnico del español**: el generador multi-hablante de
+  `piper-sample-generator` es **solo inglés**. El atajo práctico es sembrar la
+  palabra con grafías fonéticas inglesas (`hey trasso`, `hey trahso`,
+  `hey tratho`, `hey tratzo`) para cubrir el /s/ latinoamericano y el /θ/
+  peninsular sin pelearse con voces Piper en español.
+
+### 10.8 Cosas que NO hay que volver a construir
+
+- **El segundo disparador del rescate por duración YA EXISTE**, desde `015aca3`
+  (30/07), con estos números exactos: `MIN_WORDS_PER_TOTAL_SECOND = 1.0` y
+  `MIN_JUDGEABLE_TOTAL_S = 10.0`, combinados con OR sin tocar el umbral 2,7. Se
+  pidió construirlo en esta sesión y **ya estaba hecho**. La sonda
+  `silence_gate_probe` lo imprime: `sobre duración : X palabras/s (umbral 1.00)`.
+- **El diccionario (Tareas 1-3) ya estaba pusheado** en `4912e6d`. También se
+  pidió subirlo y ya estaba arriba.
+
+**Lección de proceso:** antes de construir algo "ya diseñado y aprobado",
+comprobar si ya está en el árbol. Dos de dos en esta sesión.
+
+### 10.9 Trabajo SIN COMMITEAR al cerrar
+
+| Archivo / grupo                                                                                                                    | Qué                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `src-tauri/src/wakeword/` (**nuevo**, 5 archivos)                                                                                  | Hey Trazo completo (§10.7)                                              |
+| `src-tauri/resources/models/wakeword/` (3 `.onnx`)                                                                                 | Backbone + `hey_jarvis` preentrenado. **No están gitignored**           |
+| `recorder.rs`, `managers/audio.rs`                                                                                                 | Tap de audio + `FORCE_ALWAYS_ON`                                        |
+| `Cargo.toml` / `Cargo.lock`                                                                                                        | `ort` + `ndarray`                                                       |
+| `settings.rs`, `actions.rs`, `transcription.rs`, `transcription_coordinator.rs`, `shortcut/*`, `ModelSettingsCard.tsx`, 21 locales | Atajo ES→EN en F10, con migración v9. **Es un no-op con turbo** (§10.3) |
+| `examples/es_model_eval.rs`                                                                                                        | Flag `--translate` (diagnóstico, útil)                                  |
+
+**Nunca `git add -A`**: metería los tres `.onnx` (3,7 MB) y los fantasmas de
+CRLF. Usar rutas explícitas, y `git diff --numstat` para ver qué cambió de verdad.
+
+**Truco que funcionó tres veces esta sesión** para commitear un subconjunto y
+verificar que _lo que se sube_ compila solo: `git add <rutas>` +
+`git stash push --keep-index` + correr la suite + commit + `git stash pop`.
+**Ojo:** el pop falla si `Cargo.lock` se regeneró mientras tanto
+(`git checkout -- src-tauri/Cargo.lock` antes de hacer pop).
+
+### 10.10 Backlog explícito, decidido con Charly
+
+- **EN→ES (Canary): NO empezar sin decidirlo con él.** Whisper solo traduce
+  **hacia** el inglés. Para EN→ES hace falta un modelo any-to-any; el catálogo ya
+  trae Canary (`canary-1b-flash`: en/de/es/fr; `canary-1b-v2`: 25 idiomas), pero
+  eso significa un segundo modelo residente, con coste de RAM y de carga. **Es
+  bastante más que el patrón del F9.**
+- **El atajo ES→EN no se commitea** por ahora: está bien construido y es un no-op
+  con turbo.

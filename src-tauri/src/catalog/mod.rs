@@ -67,6 +67,7 @@ impl From<CatalogModel> for ModelDescriptor {
         let default_filename = default_quant_file(&m.files, m.default_quant.as_deref())
             .map(|f| f.filename.clone())
             .unwrap_or_default();
+        let descriptor_repo = m.id.clone();
 
         ModelDescriptor {
             id: format!("{}/{}", m.id, default_filename),
@@ -84,7 +85,14 @@ impl From<CatalogModel> for ModelDescriptor {
                 variant: None,
                 languages: Some(m.languages),
                 supports_streaming: Some(m.capabilities.streaming),
-                supports_translation: Some(m.capabilities.translate),
+                // Ver `checkpoint_translates`: catalog.json se GENERA desde las
+                // fichas de HF, asi que la correccion no puede vivir en el JSON.
+                supports_translation: Some(
+                    crate::managers::model_capabilities::checkpoint_translates(
+                        &descriptor_repo,
+                        m.capabilities.translate,
+                    ),
+                ),
                 supports_language_detect: Some(m.capabilities.lang_detect),
             },
             files: m.files,
@@ -125,6 +133,40 @@ mod tests {
     use super::*;
     use crate::managers::model_capabilities::KNOWN_ARCHES;
     use std::collections::BTreeSet;
+
+    /// whisper-large-v3-turbo anuncia traduccion en su ficha y NO traduce: se
+    /// destilo excluyendo datos de traduccion y devuelve el idioma de origen
+    /// aunque se le pida la tarea `translate`. Medido el 2026-07-31 sobre un
+    /// dictado real de 35 s en espanol con tres variantes (con target "en", sin
+    /// target, y con y sin idioma fijado): las tres devolvieron espanol.
+    ///
+    /// Sin esta correccion el toggle "Translate to English" aparece en Ajustes y
+    /// no hace absolutamente nada, que es justo lo que llevaba pasando.
+    #[test]
+    fn turbo_is_not_advertised_as_translating() {
+        // El id del descriptor lleva pegado el fichero de cuantizacion por
+        // defecto, asi que se busca por el repo.
+        let turbo = CATALOG
+            .iter()
+            .find(|d| {
+                d.id.starts_with("handy-computer/whisper-large-v3-turbo-gguf/")
+            })
+            .expect("turbo esta en el catalogo");
+
+        assert_eq!(turbo.caps.supports_translation, Some(false));
+    }
+
+    /// La correccion tiene que ser quirurgica: large-v3 (el no destilado) SI
+    /// traduce, y es el reemplazo natural si alguien quiere traducir.
+    #[test]
+    fn plain_large_v3_still_translates() {
+        let large = CATALOG
+            .iter()
+            .find(|d| d.id.starts_with("handy-computer/whisper-large-v3-gguf/"))
+            .expect("large-v3 esta en el catalogo");
+
+        assert_eq!(large.caps.supports_translation, Some(true));
+    }
 
     #[test]
     fn catalog_parses_and_is_nonempty() {

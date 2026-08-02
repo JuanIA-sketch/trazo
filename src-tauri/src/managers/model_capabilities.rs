@@ -213,6 +213,41 @@ fn read_header_metadata(path: &Path) -> Result<GgufMetadata, GgufError> {
     }
 }
 
+/// Corrige checkpoints que ANUNCIAN traduccion y no traducen.
+///
+/// Acepta tanto el id completo del registro (`repo/fichero.gguf`) como el repo
+/// pelado que usa el catalogo.
+///
+/// Hoy hay un solo caso y esta medido: **whisper-large-v3-turbo**. Se destilo
+/// dejando fuera los datos de traduccion y devuelve el idioma de origen aunque
+/// se le pida la tarea `translate` — comprobado el 2026-07-31 sobre un dictado
+/// real de 35 s en espanol con tres variantes (target "en", sin target, y con y
+/// sin idioma fijado): las tres devolvieron espanol. OpenAI lo documenta en
+/// openai/whisper#2363.
+///
+/// Hay que aplicarlo en DOS sitios, y olvidar el segundo deshace el primero en
+/// silencio: la conversion del catalogo (`crate::catalog`) y
+/// `ModelManager::set_runtime_capabilities`, que sobrescribe la capacidad con
+/// lo que reporta el motor en cuanto el modelo se carga — y el motor dice
+/// `true`, porque la familia Whisper traduce aunque este checkpoint no.
+///
+/// La coincidencia es por repo exacto, nunca por "contiene turbo": un modelo
+/// futuro con esa palabra en el nombre no tiene por que heredar la limitacion.
+pub fn checkpoint_translates(model_id: &str, advertised: bool) -> bool {
+    const CANNOT_TRANSLATE: &[&str] = &["handy-computer/whisper-large-v3-turbo-gguf"];
+
+    let blocked = CANNOT_TRANSLATE.iter().any(|repo| {
+        model_id == *repo
+            || model_id
+                .strip_prefix(*repo)
+                .is_some_and(|rest| rest.starts_with('/'))
+    });
+    if blocked {
+        return false;
+    }
+    advertised
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::gguf_meta::{GgufMetadata, GgufValue};
@@ -252,6 +287,30 @@ mod tests {
         assert_eq!(probe.languages, Some(vec!["en".to_string()]));
         // Absent key stays unknown rather than defaulting to false.
         assert_eq!(probe.supports_translation, None);
+    }
+
+    #[test]
+    fn turbo_never_counts_as_translating_whatever_the_engine_says() {
+        // El id completo (repo + fichero de cuantizacion) es el que llega desde
+        // el registro de modelos...
+        assert!(!checkpoint_translates(
+            "handy-computer/whisper-large-v3-turbo-gguf/whisper-large-v3-turbo-Q8_0.gguf",
+            true
+        ));
+        // ...y el repo pelado es el que usa el catalogo.
+        assert!(!checkpoint_translates(
+            "handy-computer/whisper-large-v3-turbo-gguf",
+            true
+        ));
+    }
+
+    #[test]
+    fn other_models_keep_what_they_advertise() {
+        assert!(checkpoint_translates(
+            "handy-computer/whisper-large-v3-gguf/whisper-large-v3-Q8_0.gguf",
+            true
+        ));
+        assert!(!checkpoint_translates("handy-computer/parakeet-v3", false));
     }
 
     #[test]

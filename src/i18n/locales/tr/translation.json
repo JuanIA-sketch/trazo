@@ -512,6 +512,19 @@
         "cancel": "Cancel",
         "close": "Close",
         "saved": "Rule saved. It will apply to your next dictation."
+      },
+      "activity": {
+        "title": "Etkinlik",
+        "streak": "Seri",
+        "dictations": "Dikteler",
+        "words": "Kelimeler",
+        "activeDays": "Etkin günler",
+        "less": "Az",
+        "more": "Çok",
+        "error": "Etkinlik haritası yüklenemedi.",
+        "cellTooltip": "{{day}}: {{dictations}} dikte, {{words}} kelime",
+        "cellFailedTooltip": "{{day}}: {{failed}} başarısız",
+        "cellEmptyTooltip": "{{day}}: dikte yok"
       }
     },
     "debug": {

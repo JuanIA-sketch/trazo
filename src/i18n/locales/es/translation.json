@@ -512,6 +512,19 @@
         "cancel": "Cancelar",
         "close": "Cerrar",
         "saved": "Regla guardada. Se aplicará en tu próximo dictado."
+      },
+      "activity": {
+        "title": "Actividad",
+        "streak": "Racha",
+        "dictations": "Dictados",
+        "words": "Palabras",
+        "activeDays": "Días activos",
+        "less": "Menos",
+        "more": "Más",
+        "error": "No se pudo cargar el mapa de actividad.",
+        "cellTooltip": "{{day}}: {{dictations}} dictados, {{words}} palabras",
+        "cellFailedTooltip": "{{day}}: {{failed}} fallidos",
+        "cellEmptyTooltip": "{{day}}: sin dictados"
       }
     },
     "debug": {

@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Trazo",
-  "version": "0.9.0",
+  "mainBinaryName": "Trazo",
+  "version": "0.9.5",
   "identifier": "com.trazo.app",
   "build": {
     "beforeDevCommand": "bun run dev",

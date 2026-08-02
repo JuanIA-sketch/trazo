@@ -17,9 +17,13 @@
   --s-accent: #22d3ee;
   --s-accent-soft: color-mix(in srgb, var(--s-accent) 20%, transparent);
   /* Split glow: deep blue bleeding left, cyan right — the pill's halo. */
+  /* Sin desplazamiento vertical: el halo es partido IZQUIERDA/DERECHA, así que
+     el 3px que antes lo empujaba hacia abajo no aportaba nada al efecto y sí
+     costaba 3px del presupuesto vertical, que en una ventana de 64px no
+     sobran. Ver overlayFit.test.ts. */
   --t-glow:
-    -10px 3px 26px -9px rgba(37, 99, 235, 0.6),
-    10px 3px 26px -9px rgba(34, 211, 238, 0.45);
+    -10px 0 26px -9px rgba(37, 99, 235, 0.6),
+    10px 0 26px -9px rgba(34, 211, 238, 0.45);
   /* Subtle glass: a top inner highlight over the navy surface. */
   --t-glass: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   /* Neutrals, pinned for the always-navy surface: near-white primary text over
@@ -34,7 +38,10 @@
      so overlay.rs reserves this much headroom above the card and slack on the
      left — keep the three in sync. */
   --ov-crown-w: 30px;
-  --ov-crown-up: 13px; /* how far it rises above the card's top edge */
+  /* 13px -> 10px: al reservarle sitio al halo por abajo, la tarjeta sube, y
+     con 13px la corona se salía por arriba de la ventana. Los 3px que cede
+     son los que le faltaban al halo. */
+  --ov-crown-up: 10px; /* how far it rises above the card's top edge */
   --ov-crown-left: 9px; /* how far it juts past the card's left edge */
 
   /* Card geometry — single source of truth for the visible overlay sizes. The
@@ -68,6 +75,11 @@
   display: flex;
   justify-content: center; /* horizontal centering, kept for both forms */
   align-items: flex-end; /* bottom placement: flush to the bottom edge */
+  /* Sitio para el halo, que se derrama por DEBAJO de la caja de la tarjeta.
+     `flex-end` la pega al borde, así que sin este hueco el halo se recorta y
+     la píldora se ve cortada en seco por abajo (bug del 2026-08-01). Es el
+     espejo del `padding-top` que `.ov-stage.top` ya tenía para la corona. */
+  padding-bottom: 5px;
   font-family: var(--s-font);
 }
 .ov-stage.top {
@@ -114,7 +126,12 @@
   filter: drop-shadow(0 0 9px rgba(34, 211, 238, 0.55));
   pointer-events: none;
   user-select: none;
-  z-index: 1;
+  /* Por ENCIMA del borde reactivo (`.sborde`, z-index 2).
+     Estaba en 1, así que el trazo del contorno cruzaba por encima del emblema y
+     lo partía en dos — se ve al ampliar. Contradecía además la intención que
+     describe el propio CSS del arco: «orbita saliendo de DEBAJO de la corona».
+     Para que salga de debajo, la corona tiene que estar delante. */
+  z-index: 3;
 }
 /* RTL: mirror the emblem to the other corner so it never covers the text. */
 [dir="rtl"] .scrown {

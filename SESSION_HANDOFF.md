@@ -6,10 +6,11 @@ sincronizado con `origin/main`
 
 > **⚠️ LO PRIMERO AL RETOMAR — cierre del 2026-08-02 (§13)**
 >
-> 1. **`feat/rebrand-material` está LISTA PARA FUSIONAR a `main`.** Pusheada
->    hasta `b4caae3`, al día con main, fusión comprobada en seco **sin
->    conflictos**, 84 tests en verde. **No se fusionó a propósito** — es la
->    primera decisión pendiente (§13.5).
+> 1. **`feat/rebrand-material` YA ESTÁ FUSIONADA en `main`** (`8d83fcc`,
+>    autorizado por Charly el 2026-08-02). El rediseño de material y el overlay
+>    reactivo están en `origin/main`. ⚠️ **`main` local en `C:\Handy` se quedó en
+>    `eafbf8d`, un commit por detrás**, a propósito: ponerlo al día toca dos
+>    archivos que el WIP de wakeword tiene sucios (§13.7).
 > 2. **RUST VUELVE A COMPILAR** sin haber tocado el pagefile: bastó con cerrar
 >    Chrome. **Pero eso NO deroga §11.1** — los builds de hoy fueron
 >    incrementales; uno completo probablemente siga sin entrar (§13.1).
@@ -2654,8 +2655,7 @@ quita. Hay que ir por estilo inline.
 
 ### 13.5 Qué se commiteó y qué NO
 
-**`feat/rebrand-material` — pusheada y LISTA PARA FUSIONAR** (sin fusionar, a
-propósito):
+**`feat/rebrand-material` — pusheada y YA FUSIONADA en `main`** (§13.7):
 
 ```
 b4caae3 Merge branch 'main' into feat/rebrand-material
@@ -2680,11 +2680,42 @@ hecho y probado (11 tests del tema en verde); solo espera a poder separarse.
 
 ### 13.6 Orden sugerido para la próxima
 
-1. **Decidir cómo entra `feat/rebrand-material` en `main`.** Está lista, la
-   fusión es limpia y ya no arrastra el desfase de migraciones.
+1. **Poner al día `main` local en `C:\Handy`** (§13.7). Hoy está un commit por
+   detrás de `origin/main` y no se puede avanzar sin mover el WIP de wakeword.
 2. **Pagefile** (§11.1) — sigue pendiente pese a §13.1. Es lo que separa
    "builds incrementales con la máquina despejada" de "builds fiables".
 3. Cuando aterrice el wakeword: commitear el selector de tema y la ventana
    1100x880, y persistir el tema en `settings.rs` quitando el `localStorage`.
 4. `#[cfg(not(debug_assertions))]` en el autostart (§12.9).
 5. Cuando llegue el SVG del logo: rehacer el encaje de la corona (§13.3).
+
+
+### 13.7 La fusión a `main` — hecha, y por qué `main` local va por detrás
+
+Charly autorizó la fusión el 2026-08-02. **`origin/main` = `8d83fcc`.**
+
+**El ensayo en seco que decía «sin conflictos» se había quedado viejo:** se hizo
+cuando `main` estaba en `56e0ed6`, y después entraron tres commits más. Al
+repetirlo aparecieron dos problemas:
+
+1. **Conflicto** en `src/overlay/RecordingOverlay.css` — `main` llevaba el
+   arreglo del recorte sobre el overlay VIEJO y la rama sobre el NUEVO.
+2. **El árbol de `C:\Handy` estaba sucio en dos archivos que la fusión toca**:
+   `src/main.tsx` (el arranque del tema, sin commitear) y
+   `src/components/settings/general/ModelSettingsCard.tsx` (**WIP de wakeword**).
+   `git merge` habría abortado, y forzarlo se habría llevado por delante ese WIP.
+
+**Solución: fusionar en un worktree aparte** creado desde `main`, y empujar el
+resultado a `origin/main` sin tocar nunca el árbol de `C:\Handy`. El worktree
+temporal ya se borró.
+
+El conflicto se resolvió **a favor de la rama**: su `RecordingOverlay.css` es el
+overlay rediseñado, que sustituye al viejo. Verificado sobre el resultado —
+cero `.tmark-letter`, 11 apariciones de `.sborde`, el arreglo de la píldora una
+sola vez y `z-index: 3` intacto. Después: 84 tests, traducciones 20/20, build ✓.
+
+⚠️ **Consecuencia viva: `main` local (`C:\Handy`) está en `eafbf8d`, un commit
+por detrás de `origin/main`.** No es un error, es la única forma de no tocar el
+WIP. Para ponerlo al día hay que resolver antes qué se hace con
+`src/main.tsx` y `ModelSettingsCard.tsx`; hasta entonces, **no hacer `git pull`
+a ciegas en `C:\Handy`**.

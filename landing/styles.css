@@ -963,3 +963,1186 @@ h2.display{letter-spacing:-.03em}
 @media (min-width:760px){
   .proof-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* =========================================================================
+   ANILLO DE COMETAS DE LA TARJETA DE CIERRE                    (2026-08-01)
+   Portado de la versión nueva. Dos cometas a 180° recorriendo el borde de
+   .cta-card. El anillo se recorta con máscara de dos capas; una copia
+   desenfocada detrás se lee como luz proyectada sobre el fondo.
+   El ángulo lo mueve un muelle en main.js: una sola custom property por
+   cuadro, así que no repinta nada más.
+   ========================================================================= */
+
+/* inherits:true es obligatorio: el muelle escribe en .beam y lo leen los
+   hijos. Con inherits:false el anillo se queda clavado en el valor inicial. */
+@property --beam-a{ syntax:'<angle>'; inherits:true; initial-value:137deg; }
+
+.beam{ position:relative; border-radius:28px }
+
+.beam__ring,
+.beam__glow{
+  position:absolute; pointer-events:none; border-radius:inherit;
+  background:conic-gradient(from var(--beam-a,137deg),
+    transparent 0deg,
+    rgba(37,99,235,.04)  18deg,
+    rgba(37,99,235,.60)  46deg,
+    var(--accent)        56deg,
+    #B6EEFB             60deg,
+    transparent          63deg,
+    transparent         198deg,
+    rgba(96,165,250,.04) 216deg,
+    rgba(96,165,250,.55) 244deg,
+    #60A5FA             254deg,
+    #BFD7FE             258deg,
+    transparent         261deg,
+    transparent         360deg);
+}
+
+/* El anillo: encima de la tarjeta, recortado a 2px de grosor. */
+.beam__ring{
+  inset:0; z-index:3; padding:2px;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+          mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite:exclude;
+}
+
+/* El resplandor: detrás, desenfocado. Es luz proyectada, no un velo encima. */
+.beam__glow{
+  inset:-16px; z-index:0; filter:blur(26px); opacity:.5;
+}
+
+.beam > .cta-card{ position:relative; z-index:2 }
+
+/* Sin movimiento: el anillo se queda quieto en un ángulo bonito, no se apaga. */
+@media (prefers-reduced-motion:reduce){
+  .beam__ring,.beam__glow{ --beam-a:40deg }
+  .beam__glow{ opacity:.35 }
+}
+
+/* =========================================================================
+   SECCIÓN «HEY TRAZO» — activación por voz                     (2026-08-01)
+   Portada de la versión nueva y traducida a los tokens de esta hoja.
+   ========================================================================= */
+
+.svg-defs{ position:absolute; width:0; height:0; overflow:hidden }
+
+#hey{ padding-top:max(96px, 7vw) }
+.hey-copy{ display:flex; flex-direction:column; gap:18px; max-width:660px }
+
+/* El subrayado que se traza. Es un trazo ABIERTO, así que stroke-dashoffset
+   lo dibuja de verdad — al revés que el glifo del logo, que es relleno. */
+.hey-mark{ position:relative; white-space:nowrap; color:var(--text) }
+.hey-sub{ position:absolute; left:-2px; right:-2px; bottom:-.34em; height:.4em; overflow:visible }
+.hey-sub path{
+  fill:none; stroke:url(#subrayadoLuz); stroke-width:2.5; stroke-linecap:round;
+  vector-effect:non-scaling-stroke;
+  stroke-dasharray:1; stroke-dashoffset:1;
+}
+/* Esta página hace los reveals con scroll-driven CSS y deja .is-in solo para
+   el respaldo. El subrayado se cuelga de lo mismo, o en un navegador moderno
+   no se dibujaría nunca. */
+.hey-sub path{
+  animation:traza-sub 700ms var(--ease-out) both;
+  animation-timeline:view();
+  animation-range:entry 18% entry 58%;
+}
+@supports not (animation-timeline: view()){
+  .hey-sub path{ animation:none }
+  .reveal.is-in .hey-sub path{ animation:traza-sub 700ms var(--ease-out) forwards }
+}
+@keyframes traza-sub{ to{ stroke-dashoffset:0 } }
+
+.hey-note{
+  max-width:48ch; margin-top:6px; padding-top:18px;
+  border-top:1px solid var(--border);
+  font-size:.92rem; line-height:1.55; color:var(--text-3); text-wrap:pretty;
+}
+
+/* Dos mitades del mismo peso. El teclado NO lleva marco: trae su propia
+   viñeta, y su negro se disuelve con mix-blend-mode:screen para que no se
+   note el rectángulo contra el fondo azul de la página. */
+.hey-halves{
+  display:grid; grid-template-columns:1fr 1fr;
+  align-items:center; gap:32px; margin-top:64px;
+}
+.hey-half{ margin:0; display:flex; flex-direction:column; align-items:center; gap:16px }
+.hey-half-kb{ align-items:stretch }
+.hey-half-kb img{
+  width:100%; height:auto; display:block;
+  mix-blend-mode:screen;
+  /* Los CUATRO cantos, no dos: aquí la imagen vive dentro del contenedor,
+     así que el borde superior y el izquierdo también quedan a la vista. */
+  mask-image:
+    linear-gradient(to right,  transparent 0%, #000 13%, #000 60%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 15%, #000 70%, transparent 100%);
+  mask-composite:intersect;
+  -webkit-mask-image:
+    linear-gradient(to right,  transparent 0%, #000 13%, #000 60%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 15%, #000 70%, transparent 100%);
+  -webkit-mask-composite:source-in;
+}
+/* La máscara borra el 30% inferior de la imagen, pero el <img> sigue
+   ocupando su alto completo. Sin este tirón la etiqueta queda huérfana. */
+.hey-half-kb .hey-tag{ align-self:flex-start; padding-left:24px; margin-top:-16% }
+.hey-half-char{ margin-top:-4% }
+.hey-half-char{ justify-content:center; gap:24px }
+.hey-tag{ font-family:var(--font-mono); font-size:.8rem; letter-spacing:.2px; color:var(--text-3) }
+.hey-char{
+  width:clamp(150px,22vw,270px); height:auto; aspect-ratio:1; object-fit:contain;
+  animation:respira-leve 4s ease-in-out infinite;
+}
+@keyframes respira-leve{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.02) } }
+
+@media (max-width:860px){
+  .hey-halves{ grid-template-columns:1fr; gap:48px; margin-top:44px }
+  .hey-half-kb .hey-tag{ align-self:center; padding-left:0 }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .hey-sub path{ animation:none !important; stroke-dashoffset:0 }
+  .hey-char{ animation:none !important }
+}
+
+/* Marca sin wordmark: solo el isotipo.                          (2026-08-01)
+   El <a> pierde su texto, así que el nombre accesible va en aria-label.
+   El subrayado de ::after estaba calibrado para la palabra «Trazo»; con el
+   isotipo solo, se ajusta a su ancho y queda centrado bajo él. */
+.brand--solo{ gap:0 }
+.brand--solo .brand-mark{ width:28px; height:28px; border-radius:8px }
+.brand--solo::after{ left:50%; transform:translateX(-50%); width:18px; bottom:-6px }
+
+/* =========================================================================
+   «TRAZO POR DENTRO» — galería de capturas de la app          (2026-08-01)
+   Rellena el hueco que dejaba el slot de demo, con material real.
+   ========================================================================= */
+.dentro-grid{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:18px; margin-top:40px;
+}
+.dentro-item{ margin:0; display:flex; flex-direction:column; gap:10px }
+.dentro-item--wide{ grid-column:1 / -1 }
+
+.dentro-item img{
+  width:100%; height:auto; display:block;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  box-shadow:var(--shadow-lg);
+  transition:transform .5s var(--ease-out), border-color .5s var(--ease-out);
+}
+.dentro-item:hover img{ transform:scale(1.015); border-color:rgba(34,211,238,.4) }
+
+.dentro-item figcaption{
+  font-family:var(--font-mono); font-size:.78rem; letter-spacing:.2px;
+  color:var(--text-3); padding-left:2px;
+}
+
+@media (max-width:760px){
+  .dentro-grid{ grid-template-columns:1fr; gap:22px; margin-top:28px }
+  .dentro-item--wide{ grid-column:auto }
+}
+@media (prefers-reduced-motion:reduce){
+  .dentro-item img{ transition:none }
+  .dentro-item:hover img{ transform:none }
+}
+
+/* =========================================================================
+   MINIJUEGO DEL FOOTER — el gato                               (2026-08-01)
+   Portado de la versión nueva y traducido a los tokens de esta hoja.
+   La rejilla son CUATRO trazos, no nueve cajas: el tablero se dibuja, que
+   es lo que hace un tres en raya de verdad — y encaja con el nombre.
+   ========================================================================= */
+@keyframes traza-gato{ to{ stroke-dashoffset:0 } }
+@keyframes pone-gato{ from{ transform:scale(.6); opacity:0 } to{ transform:scale(1); opacity:1 } }
+
+.foot-juego{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:40px; flex-wrap:wrap;
+  padding:44px 0; margin-top:8px;
+  border-top:1px solid var(--border);
+}
+.foot-ask{ max-width:420px; display:flex; flex-direction:column; gap:8px }
+.foot-ask p{
+  margin:0; font-family:var(--font-display); font-weight:700;
+  font-size:1.5rem; letter-spacing:-.02em; line-height:1.2; color:var(--text);
+  text-wrap:balance;
+}
+.foot-ask p em{ font-style:italic; color:var(--accent) }
+.foot-ask-sub{ font-family:var(--font-mono); font-size:.8rem; color:var(--text-3); line-height:1.5 }
+
+.gato{ position:relative; flex:none }
+.gato__board{
+  position:relative;
+  display:grid; grid-template-columns:repeat(3,84px); grid-template-rows:repeat(3,84px);
+}
+.gato__grid{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1 }
+.gato__grid path{
+  fill:none; stroke:var(--border); stroke-width:1; stroke-linecap:round;
+  vector-effect:non-scaling-stroke; stroke-dasharray:1; stroke-dashoffset:1;
+}
+.gato.is-in .gato__grid path{ animation:traza-gato 500ms var(--ease-out) forwards }
+
+.gato__cell{
+  position:relative; z-index:2; display:grid; place-items:center;
+  background:none; border:0; border-radius:0; padding:0;
+  min-width:44px; min-height:44px; cursor:pointer;
+}
+.gato__cell:disabled{ cursor:default }
+/* Al pasar por encima se insinúa tu ficha, sin pintarla. */
+.gato__cell:not(:disabled)::before,
+.gato__cell:not(:disabled)::after{
+  content:''; position:absolute; width:32px; height:2px; border-radius:2px;
+  background:var(--accent); opacity:0; transition:opacity .12s var(--ease);
+}
+.gato__cell:not(:disabled)::before{ transform:rotate(45deg) }
+.gato__cell:not(:disabled)::after{ transform:rotate(-45deg) }
+.gato__cell:not(:disabled):hover::before,
+.gato__cell:not(:disabled):hover::after{ opacity:.25 }
+.gato__cell:focus-visible{ outline:2px solid var(--accent); outline-offset:-6px }
+.gato__cell svg{ width:44px; height:44px; animation:pone-gato .2s cubic-bezier(.34,1.06,.64,1) }
+
+.gato__x{ stroke:var(--accent); stroke-width:7; stroke-linecap:round; fill:none; filter:drop-shadow(0 0 6px rgba(34,211,238,.5)) }
+.gato__t{ filter:drop-shadow(0 0 8px rgba(37,99,235,.6)) }
+
+.gato__line{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3 }
+.gato__line path{
+  fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round;
+  vector-effect:non-scaling-stroke; stroke-dasharray:1; stroke-dashoffset:1;
+}
+.gato__line.is-on path{ animation:traza-gato 520ms var(--ease-out) forwards }
+.gato__msg{ margin-top:14px; color:var(--accent); min-height:1.4em; text-align:center; font-size:.9rem }
+
+.foot-copy{ color:var(--text-3) }
+
+@media (max-width:760px){
+  .foot-juego{ justify-content:center; text-align:center; gap:28px }
+  .foot-ask{ align-items:center }
+  .gato__board{ grid-template-columns:repeat(3,72px); grid-template-rows:repeat(3,72px) }
+}
+@media (prefers-reduced-motion:reduce){
+  .gato__grid path,.gato__line path{ animation:none !important; stroke-dashoffset:0 }
+  .gato__cell svg{ animation:none !important }
+}
+
+/* Galería: cada captura aparece sola al entrar en viewport.     (2026-08-01)
+   Es la idea portable del componente de React de referencia — allí lo hacía
+   con useInView de framer-motion; aquí con la misma técnica scroll-driven
+   que ya usa el resto de la página, sin dependencias.
+   El aspect-ratio hace el trabajo de su <AspectRatio>: reserva el hueco
+   antes de que cargue la imagen, así no hay salto de layout. */
+.dentro-item img{ aspect-ratio:1130 / 781; object-fit:cover }
+.dentro-item:last-child img{ aspect-ratio:775 / 580 }
+
+@supports (animation-timeline: view()){
+  .dentro-item img{
+    opacity:0;
+    animation:aparece-dentro 1s ease-in-out both;
+    animation-timeline:view();
+    animation-range:entry 6% entry 46%;
+  }
+}
+@keyframes aparece-dentro{
+  from{ opacity:0; transform:translateY(14px) }
+  to  { opacity:1; transform:none }
+}
+@media (prefers-reduced-motion:reduce){
+  .dentro-item img{ opacity:1 !important; animation:none !important; transform:none !important }
+}
+
+/* =========================================================================
+   PASADA DE MÓVIL Y ACABADOS                                   (2026-08-01)
+   El escritorio no se toca: todo lo de aquí o es nuevo, o va dentro de una
+   media query de ancho máximo.
+   ========================================================================= */
+
+/* --- 1 · Iconos de SO en las insignias del hero ------------------------- */
+.hero-badges li{ display:inline-flex; align-items:center; gap:7px }
+.badge-ico{ width:14px; height:14px; flex:none; opacity:.8 }
+
+/* --- 2 · Los cortes entre secciones, degradados ------------------------- */
+/* Antes: border-block de 1px, que se lee como una raya dibujada a mano.
+   Ahora: bandas de degradado que funden una sección con la siguiente. */
+.privacy{ border-block:0 }
+.footer{ border-top:0 }
+.privacy::before,.privacy::after,.footer::before{
+  content:''; position:absolute; left:0; right:0; height:96px;
+  pointer-events:none; z-index:0;
+}
+.privacy::before{ top:0;    background:linear-gradient(180deg,var(--bg),transparent) }
+.privacy::after { bottom:0; background:linear-gradient(0deg,var(--bg),transparent) }
+.footer::before { top:0;    background:linear-gradient(180deg,var(--bg),transparent) }
+.privacy > *,.footer > *{ position:relative; z-index:1 }
+
+/* --- 3 · Firma del footer ----------------------------------------------- */
+.foot-firma{ margin-top:26px; text-align:center; display:flex; flex-direction:column; gap:9px }
+.foot-firma__copy{ margin:0; font-size:.85rem; color:var(--text-2) }
+.foot-firma__autor{
+  margin:0; font-size:.85rem; font-style:italic;
+  color:#D8BC7E;                      /* dorado cálido, solo aquí */
+  letter-spacing:.01em;
+}
+.foot-firma__autor em{ font-style:italic; font-weight:600; color:#E8CE96 }
+
+/* =========================================================================
+   MÓVIL
+   ========================================================================= */
+@media (max-width:860px){
+
+  /* Menú: sin esto las secciones eran inalcanzables desde el teléfono. */
+  .nav-toggle{
+    display:inline-flex; flex-direction:column; justify-content:center; gap:5px;
+    width:40px; height:40px; padding:0 10px; flex:none;
+    background:none; border:0; cursor:pointer;
+  }
+  .nav-toggle span{
+    display:block; height:2px; width:20px; border-radius:2px;
+    background:var(--text);
+    transition:transform .28s var(--ease-out), opacity .2s linear;
+  }
+  .nav-toggle[aria-expanded="true"] span:first-child{ transform:translateY(3.5px) rotate(45deg) }
+  .nav-toggle[aria-expanded="true"] span:last-child { transform:translateY(-3.5px) rotate(-45deg) }
+
+  .nav-movil{
+    display:flex; flex-direction:column;
+    margin:10px auto 0; width:min(560px,calc(100vw - 28px));
+    padding:8px; border-radius:20px;
+    background:rgba(11,18,32,.92);
+    -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-lg);
+  }
+  .nav-movil[hidden]{ display:none }
+  .nav-movil a{
+    padding:13px 14px; border-radius:12px;
+    color:var(--text-2); text-decoration:none; font-size:.98rem;
+  }
+  .nav-movil a:active{ background:var(--surface); color:var(--text) }
+
+  /* El texto del CTA del header sobra en pantalla estrecha. */
+  .nav-cta{ padding-inline:16px; font-size:.9rem }
+
+  /* El teclado a 335px era ilegible: se amplía y se encuadra en las dos
+     teclas que importan, que es lo único que la imagen tiene que comunicar. */
+  .hey-half-kb img{
+    width:170%; max-width:none; margin-left:-35%;
+    mask-image:
+      linear-gradient(to right,  transparent 0%, #000 18%, #000 72%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 20%, #000 78%, transparent 100%);
+    -webkit-mask-image:
+      linear-gradient(to right,  transparent 0%, #000 18%, #000 72%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 20%, #000 78%, transparent 100%);
+  }
+  .hey-half-kb{ overflow:hidden }
+  .hey-half-kb .hey-tag{ align-self:center; padding-left:0; margin-top:-6% }
+
+  /* Titulares: 33px en 390 de ancho aprieta demasiado. */
+  .display{ font-size:clamp(1.65rem,7.4vw,2.1rem) }
+  h1.display{ font-size:clamp(1.95rem,8.6vw,2.5rem) }
+  .lead,.sub{ font-size:1rem }
+
+  .section{ padding-block:56px }
+  .privacy::before,.privacy::after,.footer::before{ height:64px }
+
+  /* Fichas técnicas de descarga: en móvil se leen apiladas, no en tres. */
+  .dl-row{ gap:26px }
+  .dl-meta{ font-size:.72rem; line-height:1.6 }
+
+  .foot-juego{ padding:34px 0; gap:24px }
+  .dentro-grid{ gap:18px }
+}
+
+@media (max-width:420px){
+  .gato__board{ grid-template-columns:repeat(3,64px); grid-template-rows:repeat(3,64px) }
+  .gato__cell svg{ width:38px; height:38px }
+  .nav-cta{ font-size:.85rem; padding-inline:14px }
+}
+
+/* En escritorio el menú móvil no existe. */
+@media (min-width:861px){
+  .nav-toggle{ display:none }
+  .nav-movil{ display:none !important }
+}
+
+/* =========================================================================
+   «PREGÚNTALE A TU IA»                                         (2026-08-01)
+   ========================================================================= */
+.ask-mark{ position:relative; white-space:nowrap }
+.ask-sub{ position:absolute; left:-2px; right:-2px; bottom:-.26em; height:.36em; overflow:visible }
+.ask-sub path{
+  fill:none; stroke:url(#subrayadoLuz); stroke-width:3; stroke-linecap:round;
+  vector-effect:non-scaling-stroke; stroke-dasharray:1; stroke-dashoffset:1;
+}
+@supports (animation-timeline: view()){
+  .ask-sub path{
+    animation:traza-sub 800ms var(--ease-out) both;
+    animation-timeline:view(); animation-range:entry 15% entry 55%;
+  }
+}
+@supports not (animation-timeline: view()){
+  .reveal.is-in .ask-sub path{ animation:traza-sub 800ms var(--ease-out) forwards }
+}
+
+/* Los tres botones: hueco para el logo, nombre y flecha. Cada uno se tiñe
+   con el color de su marca al pasar por encima, para que se distingan de un
+   vistazo aunque el logo todavía no esté puesto. */
+.ask-btn{ gap:10px; position:relative; overflow:hidden }
+.ask-logo{
+  width:20px; height:20px; flex:none; border-radius:5px;
+  background:var(--marca, var(--text-2)) center/60% no-repeat;
+  opacity:.9; transition:opacity .2s var(--ease);
+}
+.ask-logo--chatgpt   { --marca:#10A37F }
+.ask-logo--claude    { --marca:#D97757 }
+.ask-logo--perplexity{ --marca:#20808D }
+.ask-name{ font-weight:600 }
+
+.ask-btn::after{
+  content:''; position:absolute; inset:auto 0 0 0; height:2px;
+  background:var(--marca); transform:scaleX(0); transform-origin:left;
+  transition:transform .45s var(--ease-out);
+}
+.ask-btn--chatgpt   { --marca:#10A37F }
+.ask-btn--claude    { --marca:#D97757 }
+.ask-btn--perplexity{ --marca:#20808D }
+.ask-btn:hover::after,.ask-btn:focus-visible::after{ transform:scaleX(1) }
+.ask-btn:hover{ border-color:color-mix(in srgb, var(--marca) 45%, var(--border)) }
+.ask-btn:hover .ask-logo{ opacity:1 }
+
+/* PARA CUANDO ESTÉN LOS LOGOS: descomenta estas tres líneas después de dejar
+   los SVG oficiales en assets/ia/. Mientras no existan, referenciarlos daría
+   tres 404 en cada carga, así que van comentadas a propósito.
+.ask-logo--chatgpt   { background-image:url('assets/ia/chatgpt.svg'); background-color:transparent }
+.ask-logo--claude    { background-image:url('assets/ia/claude.svg'); background-color:transparent }
+.ask-logo--perplexity{ background-image:url('assets/ia/perplexity.svg'); background-color:transparent }
+*/
+
+@media (max-width:860px){
+  .ask-row{ flex-direction:column; align-items:stretch; gap:10px }
+  .ask-btn{ justify-content:flex-start }
+}
+@media (prefers-reduced-motion:reduce){
+  .ask-sub path{ animation:none !important; stroke-dashoffset:0 }
+  .ask-btn::after{ transition:none }
+}
+
+/* =========================================================================
+   HEADER EN MÓVIL — hamburguesa · logo · descarga                (2026-08-01)
+   Tres zonas con la del centro clavada: rejilla 1fr auto 1fr, así el logo
+   queda centrado de verdad aunque los lados midan distinto.
+   ========================================================================= */
+.nav-cta__ico{ display:none }
+
+@media (max-width:860px){
+  .nav-pill{
+    display:grid; grid-template-columns:1fr auto 1fr;
+    align-items:center; gap:0; padding-inline:8px;
+  }
+  .nav-toggle{ order:1; justify-self:start; margin:0 }
+  .brand--solo{ order:2; justify-self:center }
+  .nav-cta{ order:3; justify-self:end }
+  .nav-links{ display:none }
+
+  /* A la derecha solo el icono, en azul de marca. */
+  .nav-cta{
+    width:40px; height:40px; padding:0; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:var(--primary); color:#fff;
+    box-shadow:0 8px 22px -10px rgba(37,99,235,.95);
+  }
+  .nav-cta__txt{
+    position:absolute; width:1px; height:1px; overflow:hidden;
+    clip-path:inset(50%); white-space:nowrap;    /* queda para el lector de pantalla */
+  }
+  .nav-cta__ico{ display:block; width:19px; height:19px }
+  .nav-cta:active{ transform:scale(.94) }
+
+  /* El panel se descuelga bajo la píldora, alineado a la izquierda como el
+     botón que lo abre. */
+  .nav-movil{ margin-top:8px }
+}
+
+/* El .navbar es flex en fila: al desplegarse, el panel del menú estiraba la
+   línea y la píldora crecía con él hasta 333px de alto — un óvalo enorme.
+   En móvil se apilan, y la píldora deja de estirarse. */
+@media (max-width:860px){
+  .navbar{ flex-direction:column; align-items:stretch }
+  .nav-pill{ align-self:stretch; height:56px; align-items:center }
+  .nav-movil{ align-self:center }
+}
+
+/* =========================================================================
+   TITULAR CON LOGOTIPO — «[Trazo] por dentro.»                  (2026-08-01)
+   El wordmark sustituye a la palabra. Se alinea a la altura de la x de la
+   tipografía, no a la línea base, o «flota» respecto al resto de la frase.
+   ========================================================================= */
+.h-marca{ display:flex; align-items:baseline; flex-wrap:wrap; gap:.22em }
+.h-marca__wrap{ position:relative; display:inline-block; line-height:0 }
+.h-marca__logo{
+  height:.92em; width:auto; display:block;
+  transform:translateY(.1em);          /* asienta el itálico sobre la base */
+  filter:drop-shadow(0 0 22px rgba(96,165,250,.28));
+}
+.h-marca__sub{
+  position:absolute; left:0; right:0; bottom:-.14em;
+  height:.22em; overflow:visible;
+}
+.h-marca__sub path{
+  fill:none; stroke:url(#subrayadoLuz); stroke-width:3; stroke-linecap:round;
+  vector-effect:non-scaling-stroke; stroke-dasharray:1; stroke-dashoffset:1;
+}
+@supports (animation-timeline: view()){
+  .h-marca__sub path{
+    animation:traza-sub 850ms var(--ease-out) both;
+    animation-timeline:view(); animation-range:entry 12% entry 52%;
+  }
+}
+@supports not (animation-timeline: view()){
+  .reveal.is-in .h-marca__sub path{ animation:traza-sub 850ms var(--ease-out) forwards }
+}
+@media (prefers-reduced-motion:reduce){
+  .h-marca__sub path{ animation:none !important; stroke-dashoffset:0 }
+}
+
+/* =========================================================================
+   HERO: QUE NO SE RECORTE                                       (2026-08-01)
+   Medido en producción: .hero-content sumaba 859px (435 de contenido + 144
+   de márgenes + 280 de padding) dentro de un sticky de 800px con
+   overflow:hidden. Resultado: 30px cortados arriba y 29 abajo.
+   El relleno pasa a depender de la altura de la ventana, no a ser fijo.
+   ========================================================================= */
+.hero-content{
+  padding-top:clamp(104px, 14vh, 170px);
+  padding-bottom:clamp(56px, 9vh, 110px);
+}
+
+/* Ventanas bajas (portátiles de 13", móviles apaisados): se aprieta el
+   ritmo vertical antes que dejar que se corte nada. */
+@media (max-height:860px){
+  .hero-content .display{ margin-top:14px }
+  .hero-sub{ margin-top:18px }
+  .hero-actions{ margin-top:28px }
+  .hero-badges{ margin-top:30px }
+  .hero-micro{ margin-top:12px }
+}
+@media (max-height:720px){
+  .hero-content .display{ font-size:clamp(2.2rem,5.2vw,3.4rem) }
+  .hero-sub{ font-size:1rem; margin-top:14px }
+  .hero-badges{ margin-top:22px }
+}
+
+/* =========================================================================
+   HEADER MÓVIL · ACABADOS                                       (2026-08-01)
+   ========================================================================= */
+
+/* La rayita cián de ::after subrayaba la palabra «Trazo». Sin wordmark
+   queda como un subrayado suelto bajo el isotipo: fuera. */
+.brand--solo::after{ display:none }
+
+@media (max-width:860px){
+  /* El botón de descarga: de círculo azul macizo a vidrio.
+     El azul lo pone el icono y el halo, no un bloque de color. */
+  .nav-cta{
+    width:42px; height:42px; border-radius:14px;
+    background:linear-gradient(160deg, rgba(96,165,250,.22), rgba(37,99,235,.14));
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+            backdrop-filter:blur(14px) saturate(160%);
+    border:1px solid rgba(255,255,255,.14);
+    color:var(--accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.22),      /* el filo de luz de arriba */
+      inset 0 -6px 12px -6px rgba(37,99,235,.5),
+      0 8px 20px -12px rgba(37,99,235,.8);
+    transition:transform .18s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+  }
+  .nav-cta:active{
+    transform:scale(.93);
+    background:linear-gradient(160deg, rgba(96,165,250,.34), rgba(37,99,235,.22));
+    border-color:rgba(34,211,238,.45);
+  }
+  .nav-cta__ico{ width:20px; height:20px; filter:drop-shadow(0 0 6px rgba(34,211,238,.55)) }
+}
+
+/* =========================================================================
+   FONDO VIVO — el lienzo de la onda                             (2026-08-01)
+   Va DENTRO de .bg-stage, detrás de todo. Los resplandores que ya había se
+   bajan: con la onda encima, sumados, apagaban el texto.
+   ========================================================================= */
+#onda-bg{
+  position:absolute; inset:0; width:100%; height:100%;
+  display:block; pointer-events:none; z-index:0;
+}
+.bg-grid{ position:relative; z-index:1 }
+.bg-glow{ z-index:1 }
+.bg-vignette{ z-index:2 }
+
+/* Los glows existentes bajan de intensidad para no acumularse con la onda. */
+.bg-glow-a{ opacity:.55 }
+.bg-glow-b{ opacity:.5 }
+
+/* En móvil el lienzo se calma aún más: pantalla pequeña, texto más apretado. */
+@media (max-width:860px){
+  #onda-bg{ opacity:.72 }
+}
+@media (prefers-reduced-motion:reduce){
+  #onda-bg{ opacity:.5 }
+}
+
+/* =========================================================================
+   HEADER MÓVIL · el botón de descarga, sin borde                (2026-08-01)
+   El filo blanco lo dibujaba como una caja pegada encima de la píldora.
+   Ahora el volumen lo dan el desenfoque y la luz interior, no un contorno.
+   ========================================================================= */
+@media (max-width:860px){
+  .nav-cta{
+    border:0;
+    background:radial-gradient(120% 120% at 50% 0%, rgba(96,165,250,.28), rgba(37,99,235,.10) 70%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.16),
+      0 6px 18px -12px rgba(37,99,235,.9);
+  }
+  .nav-cta:active{
+    background:radial-gradient(120% 120% at 50% 0%, rgba(96,165,250,.42), rgba(37,99,235,.18) 70%);
+  }
+}
+
+/* =========================================================================
+   CONTINUIDAD DEL FONDO VIVO                                    (2026-08-01)
+   El lienzo estaba tapado por los fondos opacos de .privacy, .footer y
+   .pitch-frame: la onda aparecía y desaparecía de golpe entre secciones.
+   Ahora esos fondos son translúcidos y la onda atraviesa la página entera.
+   ========================================================================= */
+.privacy{
+  background:linear-gradient(180deg,
+    rgba(2,6,23,.78), rgba(8,16,32,.62) 55%, rgba(11,18,32,.78));
+}
+.footer{
+  background:linear-gradient(180deg, rgba(11,18,32,.72), rgba(2,6,23,.92));
+}
+.pitch-frame{ background:rgba(2,6,23,.62) }
+.cta-card{
+  background:linear-gradient(180deg, rgba(22,35,63,.5), rgba(11,18,32,.62));
+}
+
+/* El hero se queda sin video: el velo baja para que la onda se vea. */
+.hero-media{ background:none }
+.hero-veil{
+  background:linear-gradient(180deg,
+    rgba(11,18,32,.35) 0%, rgba(11,18,32,.12) 42%, rgba(11,18,32,.62) 100%);
+}
+/* Sin video que scrubbear, el tramo largo era scroll muerto. */
+.hero-scroll{ height:112svh }
+
+/* =========================================================================
+   LOS TRES LLM · monograma en su color de marca
+   Ver la nota en el bloque de «Pregúntale a tu IA»: son marcas registradas
+   y no las voy a dibujar de memoria. El monograma es honesto y se sustituye
+   por el SVG oficial en cuanto esté.
+   ========================================================================= */
+.ask-logo{
+  display:inline-grid; place-items:center;
+  font-family:var(--font-mono); font-size:11px; font-weight:500;
+  color:#fff; letter-spacing:0;
+  background:var(--marca); border-radius:6px;
+}
+
+/* La figura de la sección de privacidad: el personaje flotando, sin marco.
+   Antes era una captura de la app metida en un cuadro, que chocaba con el
+   fondo vivo por su propio degradado. */
+.privacy-figura{
+  width:min(78%, 340px); height:auto; margin-inline:auto; display:block;
+  aspect-ratio:1; object-fit:contain;
+  filter:drop-shadow(0 24px 60px rgba(37,99,235,.42));
+  animation:flota 6s ease-in-out infinite;
+}
+@keyframes flota{
+  0%,100%{ transform:translateY(0) scale(1) }
+  50%    { transform:translateY(-14px) scale(1.015) }
+}
+.privacy-media{ background:none; border:0; box-shadow:none; padding:0;
+                display:grid; place-items:center }
+@media (prefers-reduced-motion:reduce){
+  .privacy-figura{ animation:none }
+}
+
+/* La regla original de #privacy-visual gana por especificidad (ID > clase),
+   así que el tamaño de la figura se fija aquí con el mismo peso. */
+#privacy-visual.privacy-figura{
+  width:min(72%, 320px); max-width:320px; height:auto;
+}
+
+/* =========================================================================
+   TITULAR DEL HERO · jerarquía                                  (2026-08-01)
+   Las dos líneas tenían el mismo tamaño y peso, así que ninguna mandaba y
+   el conjunto se leía plano. Ahora la primera es la promesa y la segunda
+   la matiza: distinto tamaño, distinto peso y distinto color.
+   ========================================================================= */
+h1.display{ display:flex; flex-direction:column; gap:.06em }
+h1.display .dim{
+  font-size:.58em;
+  font-weight:500;
+  letter-spacing:-.015em;
+  color:var(--text-2);
+  max-width:22ch;
+}
+h1.display .dim em{ color:var(--accent); font-style:italic }
+h1.display > em{ font-style:italic }
+h1.display br{ display:none }
+
+/* =========================================================================
+   TECLADO EN MÓVIL · a sangre                                   (2026-08-01)
+   Recortaba la tecla Ctrl, que es justo lo que la imagen tiene que enseñar.
+   En vez de hacer zoom y cortar, la imagen sale del contenedor y usa el
+   ancho completo de la pantalla: no se recorta nada.
+   ========================================================================= */
+@media (max-width:860px){
+  .hey-half-kb{
+    width:100vw; margin-left:calc(50% - 50vw); overflow:hidden;
+  }
+  .hey-half-kb img{
+    width:100%; max-width:none; margin:0;
+    mask-image:
+      linear-gradient(to right,  transparent 0%, #000 8%, #000 92%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 12%, #000 84%, transparent 100%);
+    -webkit-mask-image:
+      linear-gradient(to right,  transparent 0%, #000 8%, #000 92%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 12%, #000 84%, transparent 100%);
+  }
+  .hey-half-kb .hey-tag{ align-self:center; padding-left:0; margin-top:-10% }
+}
+
+/* =========================================================================
+   EL PÓSTER TAPABA EL VIDEO                                     (2026-08-01)
+   El JS pone hidden en el <img> del póster al montar el player, pero una
+   regla de CSS le fija display, y eso gana al [hidden] de la hoja del
+   navegador. Resultado: imagen congelada encima del video, con el audio
+   sonando por detrás. Es exactamente el síntoma de «solo se oye».
+   ========================================================================= */
+[hidden]{ display:none !important }
+
+/* =========================================================================
+   «HEY TRAZO» PROTAGONISTA · degradado azul animado             (2026-08-01)
+   ========================================================================= */
+@keyframes corre-degradado{
+  0%   { background-position:0% 50% }
+  100% { background-position:200% 50% }
+}
+
+.hey-mark{
+  font-size:1.28em;
+  font-weight:700;
+  letter-spacing:-.015em;
+  background:linear-gradient(100deg,
+    #60A5FA 0%, #22D3EE 22%, #93C5FD 44%, #22D3EE 66%, #60A5FA 88%, #22D3EE 100%);
+  background-size:220% 100%;
+  background-clip:text; -webkit-background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
+  animation:corre-degradado 7s linear infinite;
+}
+/* El subrayado se recoloca: la palabra ahora es más alta. */
+.hey-sub{ bottom:-.28em; height:.3em }
+
+/* La etiqueta bajo el personaje deja de ser un pie discreto y pasa a ser
+   la otra mitad del contraste: una tecla, o esto. */
+.hey-tag--estrella{
+  font-family:var(--font-display) !important;
+  font-size:clamp(1.5rem,3.4vw,2.25rem) !important;
+  font-weight:700;
+  letter-spacing:-.02em;
+  background:linear-gradient(100deg,
+    #60A5FA 0%, #22D3EE 22%, #93C5FD 44%, #22D3EE 66%, #60A5FA 88%, #22D3EE 100%);
+  background-size:220% 100%;
+  background-clip:text; -webkit-background-clip:text;
+  color:transparent !important; -webkit-text-fill-color:transparent;
+  animation:corre-degradado 7s linear infinite;
+  filter:drop-shadow(0 0 22px rgba(34,211,238,.28));
+}
+/* La del teclado se queda discreta: el contraste es el mensaje. */
+.hey-half-kb .hey-tag{ opacity:.72 }
+
+@media (prefers-reduced-motion:reduce){
+  .hey-mark,.hey-tag--estrella{ animation:none; background-position:0% 50% }
+}
+
+/* =========================================================================
+   FOOTER · acabado                                              (2026-08-01)
+   Adaptado del componente de React de referencia. De él se toman tres
+   ideas: el resplandor radial arriba, la línea difuminada del borde y la
+   entrada escalonada con desenfoque. El contenido, el gato y la firma no
+   se tocan — solo se acomodan.
+   Allí las animaciones venían de motion/react; aquí van con la misma
+   técnica scroll-driven que usa el resto de la página, sin dependencias.
+   ========================================================================= */
+.footer{
+  position:relative;
+  border-top-left-radius:32px; border-top-right-radius:32px;
+  max-width:1320px; margin-inline:auto;
+  overflow:hidden;
+}
+
+/* Resplandor radial en el borde superior, centrado. */
+.footer::after{
+  content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:min(38%,520px); height:150px; pointer-events:none; z-index:0;
+  background:radial-gradient(60% 100% at 50% 0%,
+    rgba(96,165,250,.20), rgba(37,99,235,.08) 45%, transparent 72%);
+}
+
+/* La costura de luz: una línea corta y desenfocada, no un borde de 1px. */
+.footer > .container::before{
+  content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:34%; height:1px; border-radius:999px; filter:blur(.6px);
+  background:linear-gradient(90deg, transparent, rgba(96,165,250,.55), transparent);
+}
+.footer > .container{ position:relative; z-index:1 }
+
+/* Entrada escalonada con desenfoque, columna por columna. */
+@supports (animation-timeline: view()){
+  .foot-brand,.foot-col{
+    animation:entra-desenfoque .8s cubic-bezier(.16,1,.3,1) both;
+    animation-timeline:view();
+  }
+  .foot-brand   { animation-range:entry 2%  entry 34% }
+  .foot-col:nth-of-type(1){ animation-range:entry 5%  entry 38% }
+  .foot-col:nth-of-type(2){ animation-range:entry 8%  entry 42% }
+  .foot-col:nth-of-type(3){ animation-range:entry 11% entry 46% }
+}
+@keyframes entra-desenfoque{
+  from{ filter:blur(4px); transform:translateY(-8px); opacity:0 }
+  to  { filter:blur(0);   transform:none;            opacity:1 }
+}
+
+/* Los encabezados de columna, en azul y con más aire. */
+.foot-h{
+  color:var(--accent); font-size:.7rem; letter-spacing:.14em;
+  text-transform:uppercase; opacity:.85;
+}
+
+@media (max-width:860px){
+  .footer{ border-top-left-radius:24px; border-top-right-radius:24px }
+  .footer::after{ width:70%; height:110px }
+  .footer > .container::before{ width:56% }
+}
+@media (prefers-reduced-motion:reduce){
+  .foot-brand,.foot-col{ animation:none !important; filter:none; opacity:1; transform:none }
+}
+
+/* =========================================================================
+   BOTÓN DE REPRODUCCIÓN                                         (2026-08-01)
+   Era una píldora blanca maciza con texto: se comía el cuadro y competía
+   con los controles nativos, que además salían a la vez.
+   Ahora es un pulso: círculo de vidrio, triángulo cián y un anillo que se
+   expande despacio, como una señal. El texto sigue ahí para el lector de
+   pantalla, pero no se dibuja.
+   ========================================================================= */
+.play-pill{
+  width:72px !important; height:72px !important;
+  padding:0 !important; gap:0 !important;
+  border-radius:50% !important; border:0 !important;
+  background:radial-gradient(120% 120% at 50% 0%,
+    rgba(96,165,250,.26), rgba(37,99,235,.12) 70%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(170%);
+          backdrop-filter:blur(16px) saturate(170%);
+  color:transparent !important;
+  font-size:0 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.20),
+    0 10px 30px -14px rgba(2,6,23,.95) !important;
+  transition:transform .25s var(--ease-out), background .3s var(--ease) !important;
+}
+/* El anillo que se expande: la señal. */
+.play-pill::after{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  border:1px solid rgba(34,211,238,.55);
+  animation:pulso-play 2.6s cubic-bezier(.16,1,.3,1) infinite;
+  pointer-events:none;
+}
+@keyframes pulso-play{
+  0%   { transform:scale(1);    opacity:.75 }
+  70%  { transform:scale(1.55); opacity:0 }
+  100% { transform:scale(1.55); opacity:0 }
+}
+.play-pill .tri{
+  border-left:15px solid var(--accent) !important;
+  border-top:10px solid transparent !important;
+  border-bottom:10px solid transparent !important;
+  margin-left:5px;                       /* centra ópticamente el triángulo */
+  filter:drop-shadow(0 0 8px rgba(34,211,238,.6));
+}
+.play-pill:hover{
+  transform:translate(-50%,-50%) scale(1.06) !important;
+  background:radial-gradient(120% 120% at 50% 0%,
+    rgba(96,165,250,.38), rgba(37,99,235,.18) 70%) !important;
+}
+.play-pill:active{ transform:translate(-50%,-50%) scale(.96) !important }
+
+/* Los controles nativos no aparecen hasta que se le da al play: antes salían
+   a la vez que el botón y era un lío de dos interfaces encima del póster. */
+.pitch-video:has(.play-pill:not([hidden])) video::-webkit-media-controls{
+  display:none !important;
+}
+
+@media (max-width:860px){
+  .play-pill{ width:60px !important; height:60px !important }
+  .play-pill .tri{ border-left-width:13px !important; border-top-width:9px !important; border-bottom-width:9px !important }
+}
+@media (prefers-reduced-motion:reduce){
+  .play-pill::after{ animation:none; opacity:.5 }
+}
+
+/* =========================================================================
+   LOGOS DE LAS IA · los oficiales                               (2026-08-01)
+   Sustituyen al monograma provisional. Los tres son iconos de app con su
+   propio color de marca, así que NO llevan chip de fondo ni se recolorean:
+   se muestran tal cual, que es como se reconocen.
+   ========================================================================= */
+.ask-logo{
+  background-color:transparent !important;
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
+  border-radius:6px;
+  font-size:0;                       /* por si queda algún monograma suelto */
+  width:22px; height:22px;
+}
+.ask-logo--chatgpt   { background-image:url('assets/ia/chatgpt.webp') }
+.ask-logo--claude    { background-image:url('assets/ia/claude.webp') }
+.ask-logo--perplexity{ background-image:url('assets/ia/perplexity.webp') }
+
+/* =========================================================================
+   BOTÓN DE PLAY · centrado de verdad                            (2026-08-01)
+   Estaba 24px a la izquierda: el .play-pill es flex pero su
+   justify-content era `normal`, no `center`, y mis reglas no lo incluían.
+   El margen de 2.5px es óptico: un triángulo de bordes tiene su centro de
+   masa a 1/3 del ancho, así que hay que empujarlo un sexto para que se vea
+   centrado aunque su caja no lo esté.
+   ========================================================================= */
+.play-pill{ justify-content:center !important }
+.play-pill .tri{ margin-left:2.5px !important }
+
+/* =========================================================================
+   PALABRA QUE ROTA EN EL TITULAR                                (2026-08-01)
+   Adaptado del componente de React de referencia. De él se toman la entrada
+   por letras con desenfoque, el brillo que barre y el resplandor. Lo que NO
+   se toma es su paleta: era morado/rosa/naranja y el contrato de marca
+   prohíbe ese rango. Aquí va en los azules de Trazo.
+   Sin motion/react: son ~40 líneas de CSS y JS.
+   ========================================================================= */
+.flip{
+  position:relative; display:inline-block;
+  vertical-align:baseline; text-align:left;
+  font-style:italic;
+}
+.flip__pal{ display:inline-block; white-space:nowrap }
+
+.flip__l{
+  display:inline-block;
+  background:linear-gradient(100deg,#60A5FA 0%,#22D3EE 40%,#93C5FD 70%,#22D3EE 100%);
+  background-size:200% 100%;
+  background-clip:text; -webkit-background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
+  animation:flip-entra .42s cubic-bezier(.16,1,.3,1) both,
+            flip-brillo 6s linear infinite;
+  filter:drop-shadow(0 0 18px rgba(34,211,238,.22));
+}
+.flip__l.sale{ animation:flip-sale .3s cubic-bezier(.4,0,1,1) both }
+
+@keyframes flip-entra{
+  from{ opacity:0; transform:translateY(.32em); filter:blur(5px) }
+  to  { opacity:1; transform:none;              filter:blur(0) }
+}
+@keyframes flip-sale{
+  from{ opacity:1; transform:none;               filter:blur(0) }
+  to  { opacity:0; transform:translateY(-.28em); filter:blur(5px) }
+}
+@keyframes flip-brillo{
+  0%  { background-position:0% 50% }
+  100%{ background-position:200% 50% }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .flip__l{ animation:none; opacity:1; filter:none;
+            background-position:0% 50%; transform:none }
+  .flip__l.sale{ animation:none }
+}
+
+/* =========================================================================
+   TITULAR ÚNICO Y CON PESO                                      (2026-08-01)
+   Fuera «Habla como piensas» y el punto final: el hero tenía tres frases
+   compitiendo. La línea animada pasa a ser EL título, así que sube de
+   tamaño y de peso — antes era la secundaria y llevaba el gris de apoyo.
+   Que la promesa esté en el titular y la explicación en el subtítulo es
+   justamente lo que hace que se lea de un golpe.
+   ========================================================================= */
+h1.h1-flip{
+  display:block;
+  font-size:clamp(2.6rem, 7.4vw, 5.4rem);
+  font-weight:700;
+  letter-spacing:-.035em;
+  line-height:.98;
+  color:var(--text);
+  text-wrap:balance;
+  max-width:16ch;
+  margin:0;
+}
+/* La regla anterior fragmentaba el H1 en dos líneas de distinto peso.
+   Ya no hay segunda línea, así que se anula. */
+h1.h1-flip .dim{ all:unset }
+h1.h1-flip br{ display:none }
+
+/* La palabra que rota manda dentro del titular: mismo cuerpo, azul de marca
+   y un halo que la separa del fondo vivo. */
+h1.h1-flip .flip{ font-style:italic }
+h1.h1-flip .flip__l{
+  font-weight:700;
+  filter:drop-shadow(0 0 26px rgba(34,211,238,.32));
+}
+
+@media (max-width:860px){
+  h1.h1-flip{ font-size:clamp(2.1rem, 9vw, 3rem); max-width:14ch; letter-spacing:-.03em }
+}
+@media (max-height:720px){
+  h1.h1-flip{ font-size:clamp(2rem, 5.6vw, 3.4rem) }
+}
+
+/* =========================================================================
+   PALABRA ROTATORIA · más clara                                 (2026-08-01)
+   El punto más oscuro del degradado era #60A5FA, con 7.36 de contraste
+   sobre el fondo — y caía al 0% y al 100%, así que la palabra pasaba buena
+   parte del ciclo en el tono más flojo. La rampa sube entera: ahora el peor
+   punto es #93C5FD, con 10.38. Un 41% mejor en el caso malo.
+   El halo también baja: a 26px aclaraba el fondo pegado a las letras, que
+   es justo donde el ojo mide el contraste.
+   ========================================================================= */
+.flip__l{
+  background:linear-gradient(100deg,
+    #A5F3FC 0%,     /* 15.0 */
+    #93C5FD 30%,    /* 10.4 — el más oscuro de la rampa */
+    #CFFAFE 58%,    /* 16.7 */
+    #BFDBFE 78%,    /* 13.2 */
+    #A5F3FC 100%);
+  background-size:200% 100%;
+  filter:drop-shadow(0 0 14px rgba(165,243,252,.20));
+}
+h1.h1-flip .flip__l{ filter:drop-shadow(0 0 16px rgba(165,243,252,.22)) }
+
+/* «Hey Trazo» usa la misma rampa y el mismo fondo: se alinea para que la
+   marca no tenga dos azules distintos según la sección. */
+.hey-mark,.hey-tag--estrella{
+  background:linear-gradient(100deg,
+    #A5F3FC 0%, #93C5FD 30%, #CFFAFE 58%, #BFDBFE 78%, #A5F3FC 100%);
+  background-size:220% 100%;
+}
+.hey-tag--estrella{ filter:drop-shadow(0 0 18px rgba(165,243,252,.22)) }
+
+/* =========================================================================
+   PALABRA ROTATORIA · color sólido                              (2026-08-01)
+   El degradado se pintaba como un RECTÁNGULO detrás de la palabra en vez de
+   recortarse a las letras.
+   CAUSA REAL (corregida el 2026-08-01 tras medir el DOM en vivo): NO era el
+   `filter`. Es que `background` es una propiedad ABREVIADA — el bloque de
+   arriba la usa sin repetir `background-clip` detrás, y eso devuelve el
+   recorte a `border-box`. Ver el bloque del final de la hoja.
+   Aquí se deja color sólido igualmente, por decisión: la palabra cambia cada
+   3 s y un color plano no tiene nada que romperse.
+   #A5F3FC da 14.03 de contraste sobre el fondo del hero.
+   ========================================================================= */
+.flip__l{
+  background:none !important;
+  background-clip:border-box !important;
+  -webkit-background-clip:border-box !important;
+  color:#A5F3FC !important;
+  -webkit-text-fill-color:#A5F3FC !important;
+  filter:none !important;
+  text-shadow:0 0 24px rgba(34,211,238,.30);   /* el brillo, sin romper nada */
+  animation:flip-entra .42s cubic-bezier(.16,1,.3,1) both !important;
+}
+.flip__l.sale{ animation:flip-sale .3s cubic-bezier(.4,0,1,1) both !important }
+
+/* La entrada ya no toca `filter`: solo opacidad y desplazamiento. */
+@keyframes flip-entra{
+  from{ opacity:0; transform:translateY(.30em) }
+  to  { opacity:1; transform:none }
+}
+@keyframes flip-sale{
+  from{ opacity:1; transform:none }
+  to  { opacity:0; transform:translateY(-.26em) }
+}
+
+/* «Hey Trazo» comparte el mismo riesgo: también lleva filter sobre texto
+   recortado. Se le quita el filter y se le deja el degradado, que ahí no
+   cambia cada tres segundos. */
+.hey-mark,.hey-tag--estrella{ filter:none !important }
+.hey-tag--estrella{ text-shadow:0 0 22px rgba(34,211,238,.28) }
+
+@media (prefers-reduced-motion:reduce){
+  .flip__l,.flip__l.sale{ animation:none !important; opacity:1; transform:none }
+}
+
+/* =========================================================================
+   «HEY TRAZO» · el rectángulo claro no era el color            (2026-08-01)
+
+   Medido sobre el sitio en vivo: `background-clip` valía `border-box`, no
+   `text`, en las dos apariciones. Con el relleno del texto en transparente,
+   el degradado se pinta como CAJA y las letras desaparecen. Eso era el
+   rectángulo claro, no un problema de contraste.
+
+   `background` es una propiedad ABREVIADA: una regla posterior que la usa
+   sin repetir `background-clip` detrás devuelve el recorte a su valor
+   inicial. Eso pasó al reajustar la rampa de color más arriba.
+   (Y no era el `filter`: estaba en `none` al medirlo.)
+
+   Dos defensas para que no se repita:
+     · `background-image` (longhand) en vez de la abreviada — no resetea nada.
+     · el recorte, con !important y al final de la hoja.
+   ========================================================================= */
+.hey-mark,
+.hey-tag--estrella{
+  font-family:var(--font-display) !important;
+  font-weight:700 !important;             /* Space Grotesk no sube de 700 */
+  letter-spacing:-.025em !important;
+  background-image:linear-gradient(100deg,
+    #60A5FA   0%,     /*  7.5 : 1  ← el punto más flojo de la rampa */
+    #38BDF8  22%,     /*  8.9 : 1 */
+    #22D3EE  46%,     /* 10.5 : 1 */
+    #7DD3FC  70%,     /* 11.4 : 1 */
+    #38BDF8  86%,
+    #60A5FA 100%) !important;
+  background-size:220% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  filter:none !important;
+  text-shadow:0 0 30px rgba(56,189,248,.40);   /* el halo, sin tocar el pintado */
+  animation:corre-degradado 6s linear infinite !important;
+}
+
+/* «Grueso» aquí es cuerpo, no peso: la display se acaba en 700. */
+.hey-mark{ font-size:1.46em !important; line-height:1.1 }
+/* nowrap: la frase de activación nunca debe partirse a media palabra. A su
+   tamaño mínimo mide ~5,9 em ≈ 164 px, así que entra hasta en 320 px. */
+.hey-tag--estrella{ font-size:clamp(1.75rem,4vw,2.6rem) !important; white-space:nowrap }
+
+/* Una palabra un 46% más alta dentro de un párrafo besa la línea de arriba
+   si el interlineado se queda como estaba. */
+.hey-copy .sub{ line-height:1.9 }
+
+/* El subrayado cuelga de la palabra: al crecer ella, baja él. */
+.hey-sub{ bottom:-.22em; height:.26em }
+
+/* Red de seguridad. Sin recorte a texto, unas letras transparentes son nada
+   en pantalla — que es justo el fallo que este bloque viene a cerrar. */
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){
+  .hey-mark,
+  .hey-tag--estrella{
+    background-image:none !important;
+    color:#7DD3FC !important;
+    -webkit-text-fill-color:#7DD3FC !important;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .hey-mark,
+  .hey-tag--estrella{ animation:none !important; background-position:0% 50% }
+}

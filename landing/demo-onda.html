@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trazo — demo de la onda (canvas WebGL)</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{ --bg:#0B1220; --text:#F8FAFC; --text-2:#94A3B8; --accent:#22D3EE; --primary:#2563EB }
+  html{scroll-behavior:smooth}
+  body{ background:var(--bg); color:var(--text); font-family:Geist,system-ui,sans-serif; }
+
+  /* EL CANVAS: fijo, a pantalla completa, detrás de todo.
+     Es exactamente lo que hace dala.craftedbygc.com */
+  #onda{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; display:block }
+
+  .aviso{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:10;
+    font-family:"Geist Mono",monospace; font-size:12px; letter-spacing:.2px;
+    color:var(--text-2); background:rgba(11,18,32,.7);
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:8px 16px;
+  }
+  section{ min-height:100svh; display:grid; place-items:center; padding:24px; text-align:center }
+  h1{ font-family:"Space Grotesk",sans-serif; font-weight:700; letter-spacing:-.03em; line-height:1.05;
+      font-size:clamp(2.4rem,7vw,5rem) }
+  h2{ font-family:"Space Grotesk",sans-serif; font-weight:600; letter-spacing:-.02em;
+      font-size:clamp(1.6rem,4vw,2.6rem) }
+  em{ font-style:italic; color:var(--accent) }
+  p{ color:var(--text-2); max-width:46ch; margin:18px auto 0; font-size:1.05rem; line-height:1.6 }
+  .mono{ font-family:"Geist Mono",monospace; font-size:.8rem; color:var(--text-2); margin-top:28px }
+  .fin{ color:var(--text-2) }
+</style>
+</head>
+<body>
+
+<canvas id="onda" aria-hidden="true"></canvas>
+<p class="aviso">demo · baja para ver cómo la onda se convierte en trazo</p>
+
+<section>
+  <div>
+    <h1>La voz se vuelve <em>trazo</em>.</h1>
+    <p>Esto es un canvas WebGL: no es un video. La onda se dibuja en tiempo real, pesa unos pocos KB y ocupa toda la página.</p>
+    <p class="mono">mueve el ratón · o toca la pantalla</p>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2>Al bajar, se calma.</h2>
+    <p>La amplitud está atada a la posición del scroll. Ningún cuadro se decodifica: se calcula.</p>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2>Sigue nítida a cualquier tamaño.</h2>
+    <p>Se dibuja al tamaño exacto de tu pantalla, así que no se recorta como el video del hero actual.</p>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2 class="fin">Y termina en una línea.</h2>
+    <p>El mismo concepto que ya habíamos diseñado, pero repartido por toda la web en vez de encerrado en el hero.</p>
+  </div>
+</section>
+
+<script>
+(function(){
+  var cv = document.getElementById('onda');
+  var gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
+  if(!gl){ document.body.style.background='#0B1220'; return; }
+
+  var VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+
+  var FS = [
+  'precision highp float;',
+  'uniform vec2 u_res; uniform float u_t; uniform float u_s; uniform vec2 u_m;',
+
+  /* Una onda de voz es una suma de senos de distinta frecuencia. Eso es
+     literalmente lo que hace un espectro de audio. */
+  'float onda(float x, float t, float amp){',
+  '  return (sin(x*2.6 + t*0.65)*0.50',
+  '        + sin(x*6.1 - t*0.95)*0.27',
+  '        + sin(x*11.7 + t*1.45)*0.13',
+  '        + sin(x*19.3 - t*2.05)*0.06) * amp;',
+  '}',
+
+  'void main(){',
+  '  vec2 uv = gl_FragCoord.xy / u_res;',
+  '  vec2 p  = uv*2.0 - 1.0;',
+  '  float ar = u_res.x / u_res.y;',
+  '  p.x *= ar;',
+
+  /* el scroll calma la onda: de agitada a recta */
+  '  float calma = clamp(u_s, 0.0, 1.0);',
+  '  calma = calma*calma*(3.0-2.0*calma);',
+  '  float amp = mix(0.40, 0.012, calma);',
+
+  /* el cursor levanta la onda a su alrededor */
+  '  vec2 m = (u_m/u_res)*2.0-1.0; m.x *= ar;',
+  '  float dm = distance(p, m);',
+  '  amp += exp(-dm*dm*6.0) * 0.13 * (1.0-calma*0.75);',
+
+  /* se apaga hacia los lados para que no choque con los bordes */
+  '  float env = smoothstep(ar*1.15, ar*0.15, abs(p.x));',
+
+  '  vec3 col = vec3(0.043,0.071,0.125);',   // #0B1220
+
+  /* dos trazos: uno de fondo desenfocado y otro nítido delante */
+  '  for(int k=0; k<2; k++){',
+  '    float fk = float(k);',
+  '    float y = onda(p.x*2.0 + fk*1.7, u_t + fk*3.0, amp*env*(1.0 - fk*0.45));',
+  '    float d = abs(p.y - y);',
+  '    float nucleo = exp(-d*d*(k==0 ? 1400.0 : 260.0));',
+  '    float halo   = exp(-d*d*(k==0 ? 55.0 : 18.0)) * (k==0 ? 0.42 : 0.20);',
+  '    float i = nucleo + halo;',
+  '    vec3 azul = vec3(0.145,0.388,0.922);',   // #2563EB
+  '    vec3 cian = vec3(0.133,0.827,0.933);',   // #22D3EE
+  '    vec3 c = mix(azul, cian, clamp(uv.x*0.55 + nucleo*0.9, 0.0, 1.0));',
+  '    col += c * i * (k==0 ? 1.0 : 0.55);',
+  '  }',
+
+  /* polvo tenue en la banda de la onda */
+  '  float n = fract(sin(dot(floor(gl_FragCoord.xy/2.0), vec2(12.9898,78.233)))*43758.5453);',
+  '  col += vec3(0.10,0.35,0.55) * step(0.9975, n) * env * (1.0-calma*0.6);',
+
+  /* grano de película */
+  '  float g = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898,78.233)) + u_t)*43758.5453);',
+  '  col += (g-0.5)*0.013;',
+
+  '  gl_FragColor = vec4(col, 1.0);',
+  '}'].join('\n');
+
+  function compila(t,s){ var o=gl.createShader(t); gl.shaderSource(o,s); gl.compileShader(o);
+    if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o; }
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, compila(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compila(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(prog,'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  var uRes=gl.getUniformLocation(prog,'u_res'),
+      uT  =gl.getUniformLocation(prog,'u_t'),
+      uS  =gl.getUniformLocation(prog,'u_s'),
+      uM  =gl.getUniformLocation(prog,'u_m');
+
+  /* Se dibuja al tamaño real del dispositivo, topado a 2x: por eso no se
+     recorta ni se ve blando como un video escalado. */
+  function mide(){
+    var dpr = Math.min(window.devicePixelRatio||1, 2);
+    cv.width  = Math.round(innerWidth*dpr);
+    cv.height = Math.round(innerHeight*dpr);
+    gl.viewport(0,0,cv.width,cv.height);
+    gl.uniform2f(uRes, cv.width, cv.height);
+  }
+  addEventListener('resize', mide); mide();
+
+  var raton = {x: cv.width*0.5, y: cv.height*0.5}, objetivo = {x:raton.x, y:raton.y};
+  addEventListener('pointermove', function(e){
+    var dpr = Math.min(window.devicePixelRatio||1, 2);
+    objetivo.x = e.clientX*dpr;
+    objetivo.y = (innerHeight - e.clientY)*dpr;   /* WebGL cuenta desde abajo */
+  }, {passive:true});
+
+  var scroll=0, objScroll=0;
+  addEventListener('scroll', function(){
+    var max = document.body.scrollHeight - innerHeight;
+    objScroll = max>0 ? scrollY/max : 0;
+  }, {passive:true});
+
+  var quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var t0 = performance.now();
+
+  function bucle(now){
+    var t = (now - t0)/1000;
+    /* muelles: nada salta, todo persigue */
+    raton.x += (objetivo.x - raton.x)*0.06;
+    raton.y += (objetivo.y - raton.y)*0.06;
+    scroll  += (objScroll - scroll)*0.07;
+
+    gl.uniform1f(uT, quieto ? 0.0 : t);
+    gl.uniform1f(uS, scroll);
+    gl.uniform2f(uM, raton.x, raton.y);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    requestAnimationFrame(bucle);
+  }
+  requestAnimationFrame(bucle);
+})();
+</script>
+</body>
+</html>

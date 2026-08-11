@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Trazo — Dictado por voz local, gratis y en español</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Trazo convierte tu voz en texto ya editado en cualquier app de tu computador. Gratis, en español, código abierto y 100% local: el audio nunca sale de tu equipo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="css/brand.css" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <link rel="icon" href="assets/marca/icono-app.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="theme-color" content="#0B1220" />
+  <link rel="canonical" href="https://usatrazo.vercel.app/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Trazo" />
+  <meta property="og:url" content="https://usatrazo.vercel.app/" />
+  <meta property="og:title" content="Trazo — Dictado por voz local, gratis y en español" />
+  <meta property="og:description" content="Pulsa un atajo o di «Hey Trazo», habla, y el texto aparece ya editado donde estés escribiendo. Gratis, sin cuenta y 100% local: tu voz nunca sale de tu equipo." />
+  <meta property="og:image" content="https://usatrazo.vercel.app/assets/og/og-trazo.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_ES" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Trazo — Dictado por voz local, gratis y en español" />
+  <meta name="twitter:description" content="Pulsa un atajo o di «Hey Trazo», habla, y el texto aparece ya editado. Gratis, sin cuenta y 100% local." />
+  <meta name="twitter:image" content="https://usatrazo.vercel.app/assets/og/og-trazo.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Trazo",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "0.9.2",
+    "description": "Dictado por voz con IA que corre en tu equipo. Convierte tu voz en texto ya editado en cualquier aplicación. Gratis, en español y 100% local.",
+    "url": "https://usatrazo.vercel.app/",
+    "downloadUrl": "https://github.com/JuanIA-sketch/trazo/releases/tag/v0.9.2",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "inLanguage": "es",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+  <script src="app.js" defer="defer"></script>
+  <script>
+  /* Red de seguridad: si app.js no llega, la cortina se va igual. */
+  setTimeout(function(){ var i=document.getElementById('intro'); if(i&&!i.classList.contains('is-out')) i.remove(); }, 1700);
+  </script>
+</head>
+<body>
+
+<div id="intro">
+  <svg viewBox="0 0 1000 1000" aria-label="Trazo">
+    <defs>
+      <linearGradient id="introGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" class="g-cy"></stop>
+        <stop offset="1" class="g-bl"></stop>
+      </linearGradient>
+      <mask id="introMask">
+        <path class="intro__pen" pathLength="1" d="M580 90C480 300 330 480 250 665C200 780 225 900 330 925C460 880 610 690 700 470"></path>
+        <path class="intro__pen intro__pen--cross" pathLength="1" d="M50 410C210 375 340 320 480 288C650 250 810 235 930 295"></path>
+      </mask>
+    </defs>
+    <path class="intro__glyph" mask="url(#introMask)" d="M315.9 938.5L283.1 938L258.6 931.5L235.6 919.5L215 901.4L200.7 879.5L191.3 855.3L185.2 823.8L184.5 793.5L191.8 734.9L209.8 662.3L251.7 549.1L323.6 399L324.1 392.9L317.5 372.2L306.4 361.7L290.1 362.2L268.9 358.3L180.1 379.2L84 406L64 407.1L44.7 399.3L32.2 383.4L30.4 361.4L39.2 344.3L63.6 326.1L123.2 305.6L420.5 230.5L452.4 208L460.9 198.5L506.4 128.8L510.3 103L526.8 78.2L539.8 67.8L558.4 61.9L576.4 62.8L597.2 70.5L608.7 81L614.4 94.7L613.8 108.2L608.2 122L589.9 134.7L589 155.1L585.3 165.1L580.7 170.3L568.5 175.5L560.1 191.4L562.3 202.4L582.5 216.4L607.4 216.9L671.4 207.2L678.5 204.2L687 195.5L696.2 193.2L816.1 186.5L859.2 188.6L899.5 194.9L928.8 204.4L950.4 217.7L962.7 233.8L969.4 251.7L970.2 274.6L965 296.6L952.8 320.5L936.3 341.6L915.6 360.9L897.3 369.7L884 368.2L877.5 358.3L878.1 349.2L889.8 314.4L889.3 302L885.6 291.6L870.1 277.3L841.8 269.3L798.4 268.3L701.2 278.4L530.2 307.8L513.6 311.9L504.3 318.1L454.4 411.6L457.3 434L451.3 461.4L453 473.4L464.9 492.5L482.3 503.3L502.7 529.2L503 575.6L509.3 592.7L513.3 594.6L517.8 592.7L528.4 579.3L540.5 572.8L567.9 547.3L587.5 534.5L609.7 495.9L636.3 435.9L645.8 427.3L660.3 426.3L674.9 431.2L687.4 440.6L695.8 452.9L700.3 465.2L701.6 480.5L693.8 523.1L681.3 559.7L665.2 595.4L622.2 673.9L573.1 743.7L518.6 808.3L464.8 859.2L410.1 900.1L359.5 927.1L317 938.4ZM324.4 830.5L351.9 818.6L393.5 787.9L426.1 757.1L476 701L495.1 669.7L497.2 631.5L501 613.2L507.8 604.6L504.2 599.3L486.5 589.7L448.1 605.5L402.5 607.1L367.8 639.3L350.3 649L335.4 666.4L319 713.4L305.2 787.5L307.4 821.9L313.3 829L323.4 830.7Z"></path>
+  </svg>
+</div>
+
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav-pill">
+  <a class="nav__brand" href="#top" aria-label="Trazo, inicio">
+    <img class="nav__mark" src="assets/marca/icono-app.png" alt="" width="28" height="28" />
+  </a>
+  <nav class="nav__links" aria-label="Secciones">
+    <a class="nav__link" href="#hey">Hey Trazo</a>
+    <a class="nav__link" href="#velocidad">Velocidad</a>
+    <a class="nav__link" href="#casos">Casos de uso</a>
+    <a class="nav__link" href="#privacidad">Privacidad</a>
+    <a class="nav__link" href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Código</a>
+  </nav>
+  <button class="nav__burger" type="button" aria-label="Abrir menú" aria-expanded="false"><span></span></button>
+  <div class="nav__cta">
+    <a class="btn btn--primary btn--sm" href="#descargas" data-download="true" data-download-short="true">
+      <span data-download-icon="true"></span>
+      <span data-download-label="true">Descargar</span>
+    </a>
+  </div>
+</header>
+
+<div class="nav-sheet">
+  <a href="#hey">Hey Trazo</a>
+  <a href="#velocidad">Velocidad</a>
+  <a href="#casos">Casos de uso</a>
+  <a href="#privacidad">Privacidad</a>
+  <a href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Código</a>
+</div>
+
+<main id="top">
+
+  <!-- 1 · HERO · secuencia de 150 cuadros sobre canvas, gobernada por el scroll -->
+  <section class="hero" id="hero">
+    <div class="hero__sticky">
+      <div class="hero__poster" aria-hidden="true"></div>
+      <canvas class="hero__canvas" id="hero-canvas" width="1280" height="720" aria-hidden="true"></canvas>
+      <canvas class="hero__dust" id="hero-dust" aria-hidden="true"></canvas>
+      <div class="wrap hero__inner">
+        <h1 class="h1" data-shutter="true">No escribas.<br /><span class="hi hi--plain">Habla.</span></h1>
+        <p class="lede hero__sub">El dictado por voz con IA que convierte lo que dices en texto pulido, en cualquier app de tu computador.</p>
+        <div class="cta-row hero__cta">
+          <a class="btn btn--ray btn--primary btn--download" href="#descargas" data-download="true" data-download-short="true">
+            <span data-download-icon="true"></span>
+            <span data-download-label="true">Descargar</span>
+          </a>
+          <a class="btn btn--ray btn--ghost" href="#descargas" data-all-downloads="true">
+            <span class="btn__os-set" id="hero-otras"></span>
+            Otras plataformas
+          </a>
+        </div>
+        <p class="hero__micro">Disponible para Mac, Windows y Linux</p>
+      </div>
+      <div class="hero__load" id="hero-load" role="status" aria-live="polite">
+        <span>cargando la onda</span>
+        <i><b id="hero-load-bar"></b></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · HEY TRAZO · activación por voz -->
+  <section class="section" id="hey">
+    <div class="wrap">
+      <div class="hey__copy reveal" data-th="0.4">
+        <!-- Si el release con activación por voz no alcanza a salir antes de
+             publicar, este kicker pasa a «En la próxima versión». Nada más. -->
+        <p class="kicker">Nuevo</p>
+        <h2 class="h2">Una tecla. O <span class="hi">ninguna.</span></h2>
+        <p class="lede">Ctrl + Space para dictar. O di <span class="hey__mark">«Hey Trazo»<svg class="hey__sub" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 8C32 3.5 54 9.5 82 6.5C114 3 142 9 170 5.5C181 4.2 191 5 198 7.5"></path></svg></span> y ni eso.</p>
+        <p class="hey__note">La escucha también corre en tu equipo. No hay grabación continua ni nada que se suba: el detector solo busca esas dos palabras y descarta todo lo demás.</p>
+      </div>
+    </div>
+    <div class="hey__halves">
+      <figure class="hey__half hey__half--kb">
+        <img src="assets/marca/teclado-ctrl-space.webp" alt="Teclado en penumbra con la tecla Ctrl y la barra espaciadora perfiladas en azul" width="1280" height="720" />
+        <figcaption class="hey__tag">Ctrl + Space</figcaption>
+      </figure>
+      <figure class="hey__half hey__half--char">
+        <img class="hey__char" src="assets/marca/personaje.png" alt="Trazito, la «t» coronada de Trazo" width="210" height="210" />
+        <figcaption class="hey__tag">«Hey Trazo»</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3 · APPS COMPATIBLES -->
+  <section class="section" id="apps">
+    <div class="wrap">
+      <div class="apps__top reveal">
+        <div class="section__head">
+          <h2 class="h2">Escribe más rápido en <span class="hi">todas tus apps</span></h2>
+          <p class="lede">Dictado nativo en cualquier aplicación de tu computador. Sin extensiones, sin copiar y pegar.</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="#demo">Verlo funcionando →</a>
+      </div>
+
+      <div class="tabs reveal" id="apps-tabs" role="tablist" aria-label="Plataforma">
+        <button type="button" role="tab" data-plat="windows" aria-selected="true"><img src="assets/so/windows.svg" alt="" width="14" height="14" />Windows</button>
+        <button type="button" role="tab" data-plat="macos" aria-selected="false"><img src="assets/so/apple.svg" alt="" width="14" height="14" />macOS</button>
+        <button type="button" role="tab" data-plat="linux" aria-selected="false"><img src="assets/so/linux.svg" alt="" width="14" height="14" />Linux</button>
+      </div>
+
+      <div class="apps__stage reveal">
+        <div class="apps__shot">
+          <div class="app-frame">
+            <div class="app-frame__bar">
+              <div class="app-frame__dots"><i></i><i></i><i></i></div>
+              <span class="app-frame__title" id="apps-frame-title">Trazo — Windows</span>
+              <span class="app-frame__tag" id="apps-frame-tag">Ctrl + Space</span>
+            </div>
+            <div class="app-frame__body">
+              <img src="assets/app/general.webp" alt="Ajustes de Trazo: atajos, modelo activo y sonido" width="1130" height="781" />
+            </div>
+          </div>
+          <div class="ov ov--grabando">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="38" height="26" />
+            <div class="ov__pill">
+              <div class="ov__wave" data-vivo="true"></div>
+            </div>
+          </div>
+        </div>
+        <div class="apps__side">
+          <p class="kicker">Escribe directo en</p>
+          <div class="dest">
+            <img src="assets/logos/whatsapp.png" alt="" width="22" height="22" />
+            <div><div class="dest__t">Mensajería</div><div class="dest__s">WhatsApp, Telegram, Discord</div></div>
+          </div>
+          <div class="dest">
+            <img src="assets/logos/cursor.png" alt="" width="22" height="22" />
+            <div><div class="dest__t">Editores de código</div><div class="dest__s">Cursor, VS Code, terminal</div></div>
+          </div>
+          <div class="dest">
+            <img src="assets/logos/notion.png" alt="" width="22" height="22" />
+            <div><div class="dest__t">Notas y documentos</div><div class="dest__s">Notion, Obsidian, Docs, Word</div></div>
+          </div>
+          <div class="dest">
+            <img src="assets/logos/gmail.png" alt="" width="22" height="22" />
+            <div><div class="dest__t">Correo y navegador</div><div class="dest__s">Gmail, Chrome, cualquier campo</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · PRUEBA SOCIAL -->
+  <section class="proof">
+    <div class="wrap">
+      <p class="kicker proof__label">Funciona donde ya trabajas</p>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track" id="logos-track">
+        <img src="assets/logos/whatsapp.png" alt="" width="30" height="30" />
+        <img src="assets/logos/notion.png" alt="" width="30" height="30" />
+        <img src="assets/logos/cursor.png" alt="" width="30" height="30" />
+        <img src="assets/logos/gmail.png" alt="" width="30" height="30" />
+        <img src="assets/logos/googlechrome.png" alt="" width="30" height="30" />
+        <img src="assets/logos/telegram.png" alt="" width="30" height="30" />
+        <img src="assets/logos/github.png" alt="" width="30" height="30" />
+        <img src="assets/logos/figma.png" alt="" width="30" height="30" />
+        <img src="assets/logos/googledocs.png" alt="" width="30" height="30" />
+        <img src="assets/logos/linear.png" alt="" width="30" height="30" />
+        <img src="assets/logos/obsidian.png" alt="" width="30" height="30" />
+        <img src="assets/logos/discord.png" alt="" width="30" height="30" />
+        <img src="assets/logos/claude.png" alt="" width="30" height="30" />
+        <img src="assets/logos/zoom.png" alt="" width="30" height="30" />
+        <img src="assets/logos/googlecalendar.png" alt="" width="30" height="30" />
+        <img src="assets/logos/x.png" alt="" width="30" height="30" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · VELOCIDAD · 7 pantallas sticky -->
+  <section class="race" id="velocidad">
+    <div class="race__stage">
+      <div class="wrap">
+        <div class="race__head">
+          <h2 class="h2"><span class="hi">4x más rápido</span> que tu teclado</h2>
+          <p class="lede">Hablar es la forma más rápida de escribir. Trazo convierte tu voz en texto a 180 palabras por minuto. Tus dedos llegan a 45.</p>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="race__grid">
+          <div class="lane lane--kb">
+            <div class="lane__bar">
+              <span class="lane__dot"></span>
+              <span class="lane__name">Teclado</span>
+              <span class="lane__ppm">45 ppm · <span id="w-kb">0 / 0</span></span>
+            </div>
+            <div class="lane__body">
+              <p class="lane__text" id="lane-kb" data-texto="Hola Marcela, te confirmo la reunión del jueves a las diez. Ya revisé el informe y quedó listo para enviar."></p>
+              <div class="lane__meter"><i id="meter-kb"></i></div>
+            </div>
+          </div>
+          <div class="lane lane--trazo">
+            <div class="lane__bar">
+              <span class="lane__dot"></span>
+              <span class="lane__name">Trazo</span>
+              <span class="lane__ppm">180 ppm · <span id="w-tz">0 / 0</span></span>
+            </div>
+            <div class="lane__body">
+              <p class="lane__text" id="lane-tz"></p>
+              <span class="lane__done" id="lane-done">Listo para enviar</span>
+              <div class="lane__meter"><i id="meter-tz"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="race__foot">
+          <a class="btn btn--primary btn--download" href="#descargas" data-download="true">
+            <span data-download-icon="true"></span>
+            <span data-download-label="true">Descargar Trazo</span>
+          </a>
+          <span class="race__clock mono" id="race-clock">0,0 s transcurridos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · CASOS DE USO · showcase sticky -->
+  <section class="section section--lg" id="casos">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Hecho para <span class="hi">tu forma de trabajar</span></h2>
+        <p class="lede">Baja y mira Trazo en cada oficio.</p>
+      </div>
+    </div>
+    <div class="show" style="margin-top:56px">
+      <div class="show__frame">
+        <div class="app-frame">
+          <div class="app-frame__bar">
+            <div class="app-frame__dots"><i></i><i></i><i></i></div>
+            <span class="app-frame__title">Trazo — dictando</span>
+            <span class="app-frame__tag">Canary 180M</span>
+          </div>
+          <div class="app-frame__body pane" id="pane-swap">
+            <div class="pane__row">
+              <span class="pane__chip" id="pane-chip"></span>
+              <span class="mono subtle">Ctrl + Space</span>
+            </div>
+            <div class="pane__said">
+              <span class="mono">dijiste</span>
+              <p id="pane-dijo"></p>
+            </div>
+            <div class="pane__out swap" id="pane-salida"></div>
+            <div class="pane__row">
+              <div class="ov ov--copiado">
+                <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+                <div class="ov__pill">
+                  <span class="ov__check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4L4.6 9L10 3.2" fill="none" stroke="#F8FAFC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+                  <span class="ov__label">copiado</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="show__list" id="casos-list"></div>
+    </div>
+  </section>
+
+  <!-- 6a · AUTO-EDICIÓN -->
+  <section class="section" id="autoedicion">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Auto-edición <span class="hi">con IA</span></h2>
+        <p class="lede">Habla natural y Trazo transcribe y edita al instante. Las ideas sueltas se convierten en texto claro y bien formateado, sin muletillas ni erratas.</p>
+      </div>
+      <div class="ab">
+        <div class="ab__card reveal">
+          <div class="ab__label"><span class="mono">lo que dijiste</span></div>
+          <p class="ab__raw"><em>eeh, o sea,</em> quería decirte que el informe, <em>el informe ese</em> que me pediste, creo que va a estar el viernes pero <em>no cachái</em>, no estoy seguro, igual lo voy a revisar</p>
+        </div>
+        <div class="ab__arrow reveal" data-d="1" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </div>
+        <div class="ab__card ab__card--out reveal" data-d="2">
+          <div class="ab__label"><span class="mono">lo que Trazo escribió</span></div>
+          <p class="ab__clean">Quería comentarte que el informe que me pediste probablemente esté listo el viernes, aunque todavía no es seguro. De todos modos, lo voy a revisar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6b · FEATURES EN GRILLA -->
+  <section class="section" id="funciones">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Se adapta a <span class="hi">cómo hablas</span></h2>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <h3 class="card__t">Diccionario personal</h3>
+          <p class="card__d">Trazo aprende tus nombres propios, tu jerga y tus tecnicismos, y deja de equivocarse con ellos.</p>
+          <div class="card__demo">
+            <div class="dict">
+              <div class="dict__row"><b>Kubernetes</b><span>técnico</span></div>
+              <div class="dict__row"><b>Valparaíso</b><span>lugar</span></div>
+              <div class="dict__row"><b>Ñuñoa</b><span>lugar</span></div>
+            </div>
+          </div>
+        </article>
+        <article class="card reveal" data-d="1">
+          <h3 class="card__t">Atajos de voz</h3>
+          <p class="card__d">Di una señal corta y Trazo escribe el bloque completo. Tu correo, tu dirección, tu firma, la respuesta de siempre.</p>
+          <div class="card__demo">
+            <div class="dict">
+              <div class="dict__row"><b>«mi correo»</b><span>→ benji@…</span></div>
+              <div class="dict__row"><b>«firma»</b><span>→ 3 líneas</span></div>
+              <div class="dict__row"><b>«cierre»</b><span>→ párrafo</span></div>
+            </div>
+          </div>
+        </article>
+        <article class="card card--hero reveal" data-d="2">
+          <h3 class="card__t">Español de verdad</h3>
+          <p class="card__d">No es inglés traducido. Trazo fue afinado en español, con perfiles para escribir casual, técnico o para tu comunidad.</p>
+          <div class="card__demo">
+            <div class="chips">
+              <span class="chip chip--on">Casual</span>
+              <span class="chip">Técnico</span>
+              <span class="chip">Formal</span>
+              <span class="chip">Comunidad</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6c · MULTIPLATAFORMA -->
+  <section class="section" id="plataformas">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Trazo, <span class="hi">donde trabajes</span></h2>
+        <p class="lede">Corre nativo en Windows, macOS y Linux. Sin navegador, sin extensión, sin conexión.</p>
+      </div>
+      <div class="plat">
+        <div class="plat__item reveal">
+          <img src="assets/so/windows.svg" alt="" width="24" height="24" />
+          <div class="plat__t">Windows 10 y 11</div>
+          <div class="plat__s">x64 · instalador .exe</div>
+        </div>
+        <div class="plat__item reveal" data-d="1">
+          <img src="assets/so/apple.svg" alt="" width="24" height="24" />
+          <div class="plat__t">macOS 12 o superior</div>
+          <div class="plat__s">Apple Silicon e Intel · .dmg</div>
+        </div>
+        <div class="plat__item reveal" data-d="2">
+          <img src="assets/so/linux.svg" alt="" width="24" height="24" />
+          <div class="plat__t">Linux</div>
+          <div class="plat__s">AppImage y .deb · x86_64</div>
+        </div>
+      </div>
+      <div class="cta-row reveal" style="margin-top:40px">
+        <a class="btn btn--primary btn--download" href="#descargas" data-download="true">
+          <span data-download-icon="true"></span>
+          <span data-download-label="true">Descargar Trazo</span>
+        </a>
+        <a class="link-all" href="#descargas" data-all-downloads="true">Ver todas las descargas</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · DEMO EN VIVO -->
+  <section class="section section--lg" id="demo">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">No nos creas. <span class="hi">Compruébalo.</span></h2>
+        <p class="lede">Esto es Trazo funcionando de verdad, sin cortes ni montaje.</p>
+      </div>
+      <div class="demo">
+        <div class="demo__stage reveal">
+          <div class="app-frame">
+            <div class="app-frame__bar">
+              <div class="app-frame__dots"><i></i><i></i><i></i></div>
+              <span class="app-frame__title">Cualquier editor</span>
+              <span class="app-frame__tag">sin extensiones</span>
+            </div>
+            <div class="app-frame__body demo__scene">
+              <div class="demo__doc">
+                <h4>Nota para el equipo</h4>
+                <p class="is-live" id="demo-live" data-texto="Confirmo la reunión del jueves a las diez. Ya revisé el informe y dejé tres comentarios en la sección de costos; el resto está listo para enviar al cliente. Si alcanzas antes del mediodía, súmale el gráfico de la semana pasada."></p>
+              </div>
+              <div class="ov ov--grabando demo__ov" id="demo-estado">
+                <img class="ov__crown" src="assets/marca/corona.png" alt="" width="38" height="26" />
+                <div class="ov__pill">
+                  <div class="ov__wave" data-vivo="true"></div>
+                  <span class="ov__label" id="demo-label">grabando</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo__side reveal" data-d="1">
+          <p class="kicker">Lo que Trazo hizo</p>
+          <div class="demo__log">
+            <p class="logline"><b>00:00</b><span>Ctrl + Space · empieza a escuchar</span></p>
+            <p class="logline"><b>00:02</b><span>Audio procesado y transcrito</span></p>
+            <p class="logline"><b>00:03</b><span>Canary 180M Flash · español</span></p>
+            <p class="logline"><b>00:04</b><span>Muletillas y erratas fuera</span></p>
+            <p class="logline"><b>00:04</b><span>Texto escrito donde estaba el cursor</span></p>
+            <p class="logline"><b>—</b><span>0 bytes enviados a internet</span></p>
+          </div>
+          <button class="btn btn--ghost btn--sm demo__replay" type="button" id="demo-replay">Repetir</button>
+        </div>
+      </div>
+
+      <div class="rule" style="margin:72px 0 40px"></div>
+      <div class="section__head reveal">
+        <p class="kicker">Los siete estados del overlay</p>
+        <p class="lede">El overlay flota sobre lo que estés usando y te dice en qué va, sin taparte nada.</p>
+      </div>
+      <div class="states reveal">
+        <div class="states__item">
+          <div class="ov ov--reposo">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill"><div class="ov__wave" data-barras="10" data-reposo="true"></div><span class="ov__label">listo</span></div>
+          </div>
+          <span class="states__name">reposo</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--grabando">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill"><div class="ov__wave" data-vivo="true"></div></div>
+          </div>
+          <span class="states__name">grabando</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--continuo">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill"><div class="ov__wave" data-barras="6"></div><span class="ov__label">continuo</span><span class="ov__time">1:24</span></div>
+          </div>
+          <span class="states__name">continuo</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--transcribiendo">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill"><div class="ov__wave" data-barras="4" data-reposo="true"></div><span class="ov__label">transcribiendo</span></div>
+          </div>
+          <span class="states__name">transcribiendo</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--puliendo">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill">
+              <svg class="ov__spark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1l1.6 4.4L14 7l-4.4 1.6L8 13l-1.6-4.4L2 7l4.4-1.6z" fill="currentColor"></path></svg>
+              <span class="ov__label">puliendo</span>
+            </div>
+          </div>
+          <span class="states__name">puliendo</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--copiado">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill">
+              <span class="ov__check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4L4.6 9L10 3.2" fill="none" stroke="#F8FAFC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+              <span class="ov__label">copiado</span>
+            </div>
+          </div>
+          <span class="states__name">copiado</span>
+        </div>
+        <div class="states__item">
+          <div class="ov ov--cancelado">
+            <img class="ov__crown" src="assets/marca/corona.png" alt="" width="34" height="24" />
+            <div class="ov__pill">
+              <span class="ov__label mono">✕</span>
+              <span class="ov__label">cancelado</span>
+            </div>
+          </div>
+          <span class="states__name">cancelado</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10.3 · GALERÍA -->
+  <section class="section" id="pordentro">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Trazo <span class="hi">por dentro</span></h2>
+        <p class="lede">Sin humo: así se ve la app que vas a instalar.</p>
+      </div>
+      <div class="gal">
+        <figure class="gal__cell reveal" style="margin:0">
+          <img src="assets/app/general.webp" alt="Pantalla General: atajos, modelo activo y sonido" width="1130" height="781" />
+          <figcaption class="gal__cap">General · atajos y modelo</figcaption>
+        </figure>
+        <figure class="gal__cell reveal" data-d="1" style="margin:0">
+          <img src="assets/app/modelos.webp" alt="Lista de modelos con una descarga en curso" width="1130" height="781" />
+          <figcaption class="gal__cap">Modelos · descarga local</figcaption>
+        </figure>
+        <figure class="gal__cell reveal" data-d="2" style="margin:0">
+          <img src="assets/app/historial.png" alt="Historial de transcripciones con reproductores de audio" width="1130" height="781" />
+          <figcaption class="gal__cap">Historial · audio y texto</figcaption>
+        </figure>
+        <figure class="gal__cell reveal" data-d="3" style="margin:0">
+          <img src="assets/app/acerca-de.webp" alt="Pantalla Acerca de: qué hace y qué no" width="1130" height="781" />
+          <figcaption class="gal__cap">Acerca de · qué hace y qué no</figcaption>
+        </figure>
+      </div>
+      <div class="gal gal--flip" style="margin-top:24px">
+        <figure class="gal__cell reveal" style="margin:0">
+          <img src="assets/app/onboarding.png" alt="Primera pantalla del onboarding de Trazo" width="1130" height="781" />
+          <figcaption class="gal__cap">Onboarding · primer paso</figcaption>
+        </figure>
+        <figure class="gal__cell reveal" data-d="1" style="margin:0">
+          <img src="assets/app/general-claro.png" alt="La misma pantalla General en tema claro" width="1130" height="781" />
+          <figcaption class="gal__cap">También tiene tema claro</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · PRIVACIDAD Y PRECIO -->
+  <section class="section section--lg" id="privacidad">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <h2 class="h2">Tu voz <span class="hi">no sale de tu equipo.</span></h2>
+      </div>
+      <div class="figures">
+        <div class="fig reveal">
+          <span class="figure">0</span>
+          <div class="plat__t">servidores</div>
+          <p class="fig__d">El modelo corre en tu máquina. No hay a dónde subir el audio.</p>
+        </div>
+        <div class="fig reveal" data-d="1">
+          <span class="figure">0</span>
+          <div class="plat__t">cuentas</div>
+          <p class="fig__d">Sin registro, sin login, sin correo. Instalas y dictas.</p>
+        </div>
+        <div class="fig reveal" data-d="2">
+          <span class="figure">$0</span>
+          <div class="plat__t">al mes</div>
+          <p class="fig__d">Gratis, y va a seguir siendo gratis. No hay plan de pago escondido.</p>
+        </div>
+        <div class="fig reveal" data-d="3">
+          <span class="figure">100%</span>
+          <div class="plat__t">abierto</div>
+          <p class="fig__d">Código bajo licencia MIT. Audítalo tú mismo, línea por línea.</p>
+        </div>
+      </div>
+      <div class="priv__quote reveal">
+        <img src="assets/marca/icono-app.png" alt="" width="56" height="56" />
+        <p>El dictado en la nube funciona mandando tu voz a otro computador. Trazo no tiene ese paso.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- · TÚ PUEDES · el crescendo, entre privacidad y el CTA final -->
+  <section class="puedes" id="puedes">
+    <div class="wrap">
+      <h2 class="puedes__titulo">
+        <span aria-hidden="true">tú puedes</span>
+        <span class="sr">Con Trazo puedes dictar, hablar, responder, comunicar, promptear, documentar, ahorrar, construir, probar, optimizar, aprender, pensar, idear, tramar, fluir y trazar.</span>
+      </h2>
+      <ul class="puedes__lista" aria-hidden="true">
+        <li>dictar.</li>
+        <li>hablar.</li>
+        <li>responder.</li>
+        <li>comunicar.</li>
+        <li>promptear.</li>
+        <li>documentar.</li>
+        <li>ahorrar.</li>
+        <li>construir.</li>
+        <li>probar.</li>
+        <li>optimizar.</li>
+        <li>aprender.</li>
+        <li>pensar.</li>
+        <li>idear.</li>
+        <li>tramar.</li>
+        <li>fluir.</li>
+        <li class="es-trazar">trazar.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 · CTA FINAL -->
+  <section class="close" id="descargas">
+    <div class="close__bg" aria-hidden="true">
+      <div class="glow glow--a"></div>
+      <div class="glow glow--b"></div>
+    </div>
+    <div class="wrap wrap--narrow">
+      <div class="beam" id="cta-beam">
+        <span class="beam__glow" aria-hidden="true"></span>
+        <div class="close__card reveal">
+          <span class="beam__ring" aria-hidden="true"></span>
+        <h2 class="h2">Comienza a <span class="hi">trazar.</span></h2>
+        <p class="lede">Dictado por voz en cualquier aplicación: 4x más rápido que escribir, con auto-edición por IA.</p>
+        <div class="cta-row cta-row--center">
+          <a class="btn btn--primary btn--download" href="#descargas" data-download="true">
+            <span data-download-icon="true"></span>
+            <span data-download-label="true">Descargar Trazo</span>
+          </a>
+          <a class="btn btn--ghost" href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Ver el código</a>
+        </div>
+        <p class="micro">
+          <span>Disponible para Mac, Windows y Linux</span>
+          <span class="micro__dot"></span>
+          <a class="link-all" href="#descargas" data-all-downloads="true">Ver todas las descargas</a>
+        </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · PREGÚNTALE A UNA IA -->
+  <section class="ask">
+    <div class="wrap wrap--narrow">
+      <p class="kicker reveal">¿Todavía no te convence Trazo?</p>
+      <p class="lede reveal" data-d="1" style="margin-top:12px">Deja que ChatGPT, Claude o Perplexity lo investiguen por ti.</p>
+      <div class="ask__row reveal" data-d="2">
+        <a class="ask__btn" href="#" data-ask="chatgpt">
+          Pregúntale a ChatGPT
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M11 5H6M11 5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <a class="ask__btn" href="#" data-ask="claude">
+          <img src="assets/logos/claude.png" alt="" width="17" height="17" />
+          Pregúntale a Claude
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M11 5H6M11 5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <a class="ask__btn" href="#" data-ask="perplexity">
+          Pregúntale a Perplexity
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M11 5H6M11 5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 11 · FOOTER -->
+<footer class="foot">
+  <div class="foot__card">
+    <div class="foot__grid-tex" aria-hidden="true"></div>
+    <div class="foot__orb foot__orb--1" aria-hidden="true"></div>
+    <div class="foot__orb foot__orb--2" aria-hidden="true"></div>
+    <div class="foot__inner">
+      <div class="foot__top">
+        <div class="foot__brand">
+          <a class="nav__brand" href="#top">
+            <img class="nav__mark" src="assets/marca/icono-app.png" alt="" width="30" height="30" />
+            <span class="nav__word" style="font-size:1.625rem">Trazo</span>
+          </a>
+          <p>Dictado por voz para tu computador. Hablas y el texto aparece donde estés escribiendo.</p>
+        </div>
+        <div class="foot__col">
+          <h4>Producto</h4>
+          <ul>
+            <li><a href="#hey">Hey Trazo</a></li>
+            <li><a href="#velocidad">Velocidad</a></li>
+            <li><a href="#casos">Casos de uso</a></li>
+            <li><a href="#funciones">Funciones</a></li>
+            <li><a href="#privacidad">Privacidad</a></li>
+          </ul>
+        </div>
+        <div class="foot__col">
+          <h4>Recursos</h4>
+          <ul>
+            <li><a href="#pordentro">Trazo por dentro</a></li>
+            <li><a href="#autoedicion">Auto-edición</a></li>
+            <li><a href="#apps">Apps compatibles</a></li>
+            <li><a href="#demo">Los siete estados</a></li>
+          </ul>
+        </div>
+        <div class="foot__col">
+          <h4>Proyecto</h4>
+          <ul>
+            <li><a href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Código</a></li>
+            <li><a href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Licencia MIT</a></li>
+            <li><a href="https://github.com/cjpais/handy" target="_blank" rel="noopener">Handy, de cjpais</a></li>
+            <li><a href="https://github.com/JuanIA-sketch/trazo" target="_blank" rel="noopener" data-pendiente="true">Reportar un error</a></li>
+          </ul>
+        </div>
+        <div class="foot__col">
+          <h4>Descargar</h4>
+          <ul>
+            <li><a href="#descargas" data-all-downloads="true">Windows</a></li>
+            <li><a href="#descargas" data-all-downloads="true">macOS</a></li>
+            <li><a href="#descargas" data-all-downloads="true">Linux</a></li>
+            <li><a href="#descargas" data-all-downloads="true">Todas las versiones</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="foot__play">
+        <div class="foot__ask">
+          <p>Gana quien <span class="hi">traza</span> primero.</p>
+          <span class="mono">Tres en raya. La única parte de Trazo donde hay que usar las manos.</span>
+        </div>
+        <div class="gato" id="gato">
+          <div class="gato__board">
+            <svg class="gato__grid" viewBox="0 0 264 264" aria-hidden="true">
+              <path pathLength="1" d="M88 6V258"></path>
+              <path pathLength="1" d="M176 6V258"></path>
+              <path pathLength="1" d="M6 88H258"></path>
+              <path pathLength="1" d="M6 176H258"></path>
+            </svg>
+            <svg class="gato__line" viewBox="0 0 264 264" aria-hidden="true">
+              <path pathLength="1" d=""></path>
+            </svg>
+          </div>
+          <p class="gato__msg" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div class="foot__legal">
+        <span>Trazo es un fork de <a href="https://github.com/cjpais/handy" target="_blank" rel="noopener">Handy</a>, de cjpais. Código abierto bajo licencia MIT.</span>
+        <span>© 2026 Trazo</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="dock">
+  <span class="dock__txt">Windows · macOS · Linux</span>
+  <a class="btn btn--primary btn--sm btn--download" href="#descargas" data-download="true">
+    <span data-download-icon="true"></span>
+    <span data-download-label="true">Descargar Trazo</span>
+  </a>
+</div>
+
+<svg class="svg-defs" aria-hidden="true">
+  <defs>
+    <linearGradient id="subrayadoLuz" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" class="g-bl"></stop>
+      <stop offset="1" class="g-cy"></stop>
+    </linearGradient>
+    <linearGradient id="trazoLuz" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" class="g-bl" stop-opacity="0"></stop>
+      <stop offset="0.4" class="g-bl-lt"></stop>
+      <stop offset="0.75" class="g-cy"></stop>
+      <stop offset="1" class="g-cy" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+</svg>
+
+</body>
+</html>

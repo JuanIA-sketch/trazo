@@ -1,9 +1,8 @@
-// Placeholder del ícono (la mano de Handy) mientras no hay logo final: un
-// monograma "T". Conserva `fill-text` como el original para seguir el color
-// del texto de la UI en la navegación (un morado fijo desaparecería sobre el
-// fondo morado del ítem activo del sidebar).
-const BRAND_INITIAL = "T";
+import { TRAZO_GLYPH_PATH, TRAZO_GLYPH_VIEWBOX } from "./trazoGlyph";
 
+// Trazo brand mark: the cursive "t" of the logo. Keeps `fill-text` like the
+// original so it follows the UI text colour in the navigation — a fixed brand
+// blue would disappear against the sidebar's active-item background.
 const HandyHand = ({
   width,
   height,
@@ -14,20 +13,11 @@ const HandyHand = ({
   <svg
     width={width || 126}
     height={height || 135}
-    viewBox="0 0 126 135"
+    viewBox={TRAZO_GLYPH_VIEWBOX}
     className="fill-text"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <text
-      x="63"
-      y="74"
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fontSize="120"
-      fontWeight="700"
-    >
-      {BRAND_INITIAL}
-    </text>
+    <path d={TRAZO_GLYPH_PATH} fillRule="evenodd" />
   </svg>
 );
 

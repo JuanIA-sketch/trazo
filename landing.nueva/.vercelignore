@@ -1,0 +1,24 @@
+# Lo que NO se sube. Se verifica con curl contra el sitio en vivo (deben dar
+# 404), no confiando en que estas reglas quedaron bien escritas.
+
+# Credenciales que `vercel link` deja dentro de la carpeta que se despliega
+.env
+.env.*
+.vercel
+.gitignore
+
+# Herramientas: generador de la tarjeta OG y arnés de pruebas
+tools/
+
+# Contrato de diseño — es documentación del proyecto, no del sitio.
+#
+# OJO: `css/` estaba en esta lista y NO puede estar. La landing nueva carga
+# css/brand.css desde el <head>; excluirlo da 404 en producción y la página
+# se queda sin un solo token de marca.
+brand.json
+voice.json
+motion.json
+COMPONENT_RULES.md
+
+# Captura del tema claro: es material de referencia, no la usa ninguna página
+assets/app/general-claro.png

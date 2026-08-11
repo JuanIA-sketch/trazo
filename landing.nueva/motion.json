@@ -1,0 +1,61 @@
+{
+  "_regla_operativa": "El movimiento tambien se contrata. 'Que se sienta fluido' no es verificable; durations_ms.base = 200 si lo es.",
+  "schema_version": "1.0",
+  "personality": {
+    "_escalas": {
+      "energy": "1 = todo se desliza apenas · 5 = todo entra con impulso",
+      "elasticity": "1 = cero rebote · 5 = overshoot visible",
+      "directionality": "1 = aparece en su lugar · 5 = viaja distancias largas",
+      "restraint": "1 = se anima todo · 5 = solo lo que comunica un cambio"
+    },
+    "energy": 2,
+    "elasticity": 1,
+    "directionality": 2,
+    "restraint": 4,
+    "rationale": {
+      "energy": "Movimiento sobrio: la landing es premium, no un carrusel de efectos.",
+      "elasticity": "Sin rebote; el rebote lee como consumo, no como software serio.",
+      "directionality": "Fade-ins con un desplazamiento corto al entrar en viewport; el unico movimiento grande es el scrubbing del hero.",
+      "restraint": "Solo se anima lo que comunica: la entrada de cada seccion y el hero. Nada decorativo."
+    }
+  },
+  "durations_ms": {
+    "instant": 60,
+    "fast": 120,
+    "base": 200,
+    "slow": 320
+  },
+  "easing": {
+    "default": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+    "entrance": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "exit": "cubic-bezier(0.4, 0, 1, 1)",
+    "emphasis": "cubic-bezier(0.34, 1.06, 0.64, 1)"
+  },
+  "easing_gsap": {
+    "default": "power2.out",
+    "entrance": "expo.out",
+    "exit": "power2.in",
+    "emphasis": "back.out(1.06)"
+  },
+  "safe_props": ["transform", "opacity", "color", "background-color", "border-color", "box-shadow", "clip-path"],
+  "unsafe_props": ["width", "height", "padding", "margin", "top", "left", "right", "bottom"],
+  "_nota_props": "El gate grepea el CSS del proyecto y falla si encuentra 'transition: width' o 'transition: all'. Para mover algo, transform. Para revelar, clip-path u opacity.",
+  "stagger": {
+    "subtle": 0.06,
+    "tight": 0.03,
+    "max_items": 8
+  },
+  "rules": [
+    "Entrada con ease-out. Salida con ease-in. Nunca al reves.",
+    "El feedback de una interaccion directa (clic, hover) nunca pasa de 200ms.",
+    "Solo se animan propiedades de safe_props. Nunca 'transition: all'.",
+    "El hero es scroll-scrubbing: el video se controla por scroll, interpolando currentTime, nunca asignandolo de golpe.",
+    "Nada se anima dos veces: si una seccion ya entro, no vuelve a entrar al hacer scroll.",
+    "Un solo elemento en movimiento por region de la pantalla.",
+    "Todo respeta prefers-reduced-motion: con reduce, el hero muestra el poster y no hay scrubbing."
+  ],
+  "reduced_motion": {
+    "strategy": "disable_transform",
+    "keep_animating": ["opacity", "color", "background-color", "border-color"]
+  }
+}

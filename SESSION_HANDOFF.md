@@ -30,7 +30,9 @@ sincronizado con `origin/main`
 > 7. **`gh` apunta al repo equivocado por defecto** (`cjpais/handy`, el
 >    upstream). Usar siempre `--repo JuanIA-sketch/trazo` (§11.5).
 >
-> Orden sugerido: **§13.6**. Estado de la máquina: **§12.9**.
+> **El estado consolidado al cerrar, y dos correcciones que importan, están en §14.**
+>
+> Orden sugerido: **§14.5**. Estado de la máquina: **§14.6**.
 >
 > **Estado del 2026-07-31 por la tarde (§10)**
 >
@@ -2719,3 +2721,134 @@ por detrás de `origin/main`.** No es un error, es la única forma de no tocar e
 WIP. Para ponerlo al día hay que resolver antes qué se hace con
 `src/main.tsx` y `ModelSettingsCard.tsx`; hasta entonces, **no hacer `git pull`
 a ciegas en `C:\Handy`**.
+
+
+---
+
+## 14. Estado al cerrar — 2026-08-02
+
+Sección de cierre. Consolida el estado real; el historial de cómo se llegó
+sigue en las secciones anteriores.
+
+### 14.1 ⚠️ «Lentitud en la transcripción»: NO HAY DIAGNÓSTICO
+
+Al cerrar, se pidió dejar «el diagnóstico de la lentitud en la transcripción,
+causa raíz o estado exacto donde quedó», descrito como el pendiente más urgente.
+
+**No existe tal diagnóstico. No se investigó en esta sesión ni en la anterior.**
+No hay causa raíz, no hay trabajo a medias, no hay datos. Queda escrito así de
+explícito para que nadie lo busque creyendo que se perdió.
+
+La sesión del 1-2 de agosto fue: pagefile, selector de tema, fondos a WebP,
+overlay (recorte de la píldora y capas de la corona), el descubrimiento del
+segundo worktree, y la fusión a `main`. En ningún momento se midió velocidad de
+transcripción.
+
+**Puede que la petición se refiera a investigaciones que SÍ existen y están
+CERRADAS**, todas sobre coste de decodificación:
+
+| dónde | qué se midió | veredicto |
+| --- | --- | --- |
+| §2.3 | entero vs troceado siempre | trocear siempre era regresión; se decodifica entero y solo se reintenta si sale truncado |
+| §2.6 | ventanas de segmento más grandes | rechazado: ahorró 1 decode en todo el corpus y perdió 13 palabras |
+| §4.1 | `run_batch` vs bucle | rechazado: **0,94× (más lento)** y además cambiaba el texto |
+| §5 | acortar la ventana de 30 s de Whisper | descartado: la capacidad existe pero no es configurable sin parchear la crate |
+
+Coste actual medido, para tener referencia: **71 s de audio en 6,7 s (10,6×
+tiempo real)** por el camino normal. Solo el reintento troceado cuesta 2-2,6×.
+
+⚠️ **Trampa que falsea cualquier medición en esta máquina:** con `--backend
+vulkan` sin `--gpu 1`, el device 0 es la iGPU Intel y el mismo audio tarda
+**64 s en vez de 2,7 s (24×)**. Si alguien reporta lentitud, esto es lo primero
+que hay que descartar. Ver §4.1.
+
+**Si la lentitud es real y nueva, hay que empezar por un caso reproducible**:
+qué audio, cuánto tardó, y `handy.log` con
+`RUST_LOG=handy_app_lib::managers::transcription=warn`.
+
+### 14.2 ⚠️ El mapa de actividad diaria SÍ ESTÁ CONSTRUIDO
+
+Al cerrar se describió como «sin construir (esquema SQL ya diseñado)». **Es
+falso, y escribirlo así haría que alguien rehiciera una función que ya existe.**
+
+Está hecho, commiteado y en `origin/main` desde el 31/07:
+
+```
+125e9cf feat: mapa de actividad diaria, congelado al escribir el dictado
+```
+
+Archivos vivos en `origin/main`: `src-tauri/src/managers/insights.rs`,
+`src/components/settings/history/ActivityMap.tsx`, `activityGrid.ts` y
+`activityGrid.test.ts`. Detalle de diseño en §10.1.
+
+No es solo un esquema SQL: hay backend, componente y tests.
+
+### 14.3 Git — estado exacto
+
+| ref | commit | nota |
+| --- | --- | --- |
+| `origin/main` | **`2120f03`** | incluye la fusión `8d83fcc` |
+| `main` local (`C:\Handy`) | **`eafbf8d`** | **2 commits por detrás, a propósito** |
+| `origin/feat/rebrand-material` | **`b4caae3`** | ya fusionada en main |
+
+**Todo lo commiteado está pusheado.** No hay commits locales sin subir en
+ninguna de las dos ramas.
+
+⚠️ **`main` local va por detrás y NO se puede adelantar sin decidir algo antes.**
+Ponerlo al día toca `src/main.tsx` y
+`src/components/settings/general/ModelSettingsCard.tsx`, que están sucios: el
+primero por el arranque del selector de tema, el segundo por el WIP de wakeword.
+**No hacer `git pull` a ciegas en `C:\Handy`.** Detalle en §13.7.
+
+### 14.4 Sin commitear (deliberado)
+
+**WIP de wakeword de Charly — intacto, 4 entradas:**
+
+```
+ M src-tauri/src/settings.rs
+ M src/components/settings/general/ModelSettingsCard.tsx
+?? src-tauri/resources/models/wakeword/
+?? src-tauri/src/wakeword/
+```
+
+**Trabajo hecho y probado que espera a que aterrice ese WIP:**
+
+| qué | estado | por qué no entra |
+| --- | --- | --- |
+| Selector de tema (5 archivos + `Sidebar.tsx`, `main.tsx`, `App.css`, `material.css`) | 11 tests en verde | no funciona sin sus claves i18n, y los 21 `translation.json` llevan mezcladas 4 líneas del wakeword |
+| Ventana 1100x880 + maximizable (`lib.rs`) | **compila** (verificado 02/08) | el mismo archivo lleva `mod wakeword;` |
+
+Ninguno de los dos está en riesgo: están en el árbol de trabajo y documentados.
+
+### 14.5 Pendientes, por orden
+
+1. **Si la lentitud de transcripción es real, conseguir un caso reproducible**
+   (§14.1). Hoy no hay nada que retomar: se empieza de cero.
+2. **Decidir qué se hace con `main.tsx` y `ModelSettingsCard.tsx`** para poder
+   poner al día `main` local (§14.3). Bloquea también los dos puntos siguientes.
+3. **Commitear el selector de tema y la ventana 1100x880** (§14.4), y persistir
+   el tema en `settings.rs` quitando el `localStorage` de `useTheme.ts`.
+4. **Pagefile** (§11.1) — sigue sin subir. Los builds del 02/08 pasaron solo por
+   ser incrementales y con la máquina despejada; uno completo probablemente siga
+   sin entrar.
+5. **Bug de reconocimiento en inglés** — sin resolver. Falta una muestra de más
+   de 6-7 s; detalle y herramientas en §10.2.
+6. **Encaje de la corona**: 43 % de solape, es geometría (haría falta una ventana
+   de 71 px). Se revisa entero cuando llegue el **SVG definitivo del logo**, que
+   `CLAUDE.md` sigue dando por `PENDIENTE` **sin fecha** (§13.3).
+7. `#[cfg(not(debug_assertions))]` en el autostart, para que la build de dev deje
+   de secuestrarlo (§12.9).
+
+### 14.6 Entorno al cerrar
+
+| | |
+| --- | --- |
+| Trazo instalado | **corriendo** (reiniciado durante la sesión; el PID cambia) |
+| Trazo de desarrollo + Vite | cerrados |
+| Autostart | apunta al **instalado**, verificado |
+| **Wispr Flow** | **corriendo, ~10 procesos, RETIENE EL MICRÓFONO** |
+
+⚠️ **Mientras Wispr Flow esté activo, Trazo no puede grabar** —
+`Recorder not available` en el log. Arranca solo desde la carpeta de Inicio.
+Charly pidió no tocarlo. Para verificar cosas visuales sin micrófono, forzar el
+overlay por CDP (§13.4); añadir la clase `show` **no sirve**, React la quita.

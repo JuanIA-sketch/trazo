@@ -5,6 +5,7 @@ import "./Sidebar.css";
 import HandyTextLogo from "./icons/HandyTextLogo";
 import HandyHand from "./icons/HandyHand";
 import { HeyTrazo } from "./HeyTrazo";
+import { ThemeToggle } from "./ThemeToggle";
 import ModelSelector from "./model-selector";
 import { useSettings } from "../hooks/useSettings";
 import {
@@ -155,6 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           modelo activo. */}
       <div className="flex w-full shrink-0 flex-col gap-2 pb-1">
         <HeyTrazo />
+        <ThemeToggle />
         <ModelSelector />
       </div>
     </div>

@@ -726,6 +726,12 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "theme": {
+    "label": "Motyw",
+    "light": "Jasny",
+    "auto": "Automatyczny",
+    "dark": "Ciemny"
+  },
   "screen": {
     "general": {
       "sub": "Shortcuts, model and sound"

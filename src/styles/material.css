@@ -175,6 +175,10 @@
   --tg-bg: #f1f5f9;
   --tg-bd: #e2e8f0;
   --tg-sh: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+  /* Segmento elegido: se despega del pozo, al revés que el resto. */
+  --tgs-tx: #1d4ed8;
+  --tgs-bg: #ffffff;
+  --tgs-sh: 0 1px 2px rgba(15, 23, 42, 0.1);
 
   /* — Píldora del modelo — */
   --mp-bg: linear-gradient(180deg, #ffffff, #f4f7fc);
@@ -335,6 +339,9 @@
     --tg-bg: #0c1424;
     --tg-bd: #22314b;
     --tg-sh: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+    --tgs-tx: #f8fafc;
+    --tgs-bg: linear-gradient(180deg, #1b2b4a, #16233f);
+    --tgs-sh: inset 0 1px 0 rgba(190, 220, 255, 0.1);
 
     --mp-bg: linear-gradient(180deg, #142138, #101a2e);
 
@@ -496,6 +503,9 @@
     --tg-bg: #0c1424;
     --tg-bd: #22314b;
     --tg-sh: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+    --tgs-tx: #f8fafc;
+    --tgs-bg: linear-gradient(180deg, #1b2b4a, #16233f);
+    --tgs-sh: inset 0 1px 0 rgba(190, 220, 255, 0.1);
 
     --mp-bg: linear-gradient(180deg, #142138, #101a2e);
 

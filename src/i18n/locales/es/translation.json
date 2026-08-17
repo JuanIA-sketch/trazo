@@ -726,6 +726,12 @@
     "name": "Hey Trazo",
     "soon": "Próximamente"
   },
+  "theme": {
+    "label": "Tema",
+    "light": "Claro",
+    "auto": "Automático",
+    "dark": "Oscuro"
+  },
   "screen": {
     "general": {
       "sub": "Atajos, modelo y sonido"

@@ -83,11 +83,45 @@ body::before {
   background-size: 160px 160px;
 }
 
+/* En oscuro el grano puede subir: sobre fondo claro el mismo valor se lee
+   como artefacto de compresión.
+
+   Va por duplicado —forzado y automático— igual que los tokens de
+   material.css: si dependiera solo de la media query, forzar el tema claro
+   con el sistema en oscuro dejaría el grano de oscuro sobre fondo claro,
+   que es justo el artefacto que este valor existe para evitar. */
+:root[data-theme="dark"] body::before {
+  opacity: 0.038;
+}
+
 @media (prefers-color-scheme: dark) {
-  /* En oscuro el grano puede subir: sobre fondo claro el mismo valor se lee
-     como artefacto de compresión. */
-  body::before {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) body::before {
     opacity: 0.038;
+  }
+}
+
+/* Transición de tema (~200 ms, 05-DETALLES-UX.md §1).
+
+   Gated por `data-theme-ready`, que main.tsx pone recién tras el primer
+   pintado: durante el arranque el tema guardado se pinta de golpe y no se
+   anima. Se listan las superficies grandes en vez de usar `*` a propósito —
+   `*` pisaría las transiciones propias de cada componente. */
+:root[data-theme-ready] body,
+:root[data-theme-ready] .trz-sidebar,
+:root[data-theme-ready] .trz-screen,
+:root[data-theme-ready] .trz-panel {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme-ready] body,
+  :root[data-theme-ready] .trz-sidebar,
+  :root[data-theme-ready] .trz-screen,
+  :root[data-theme-ready] .trz-panel {
+    transition: none;
   }
 }
 

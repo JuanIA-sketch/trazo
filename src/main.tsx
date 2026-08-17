@@ -2,9 +2,30 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { platform } from "@tauri-apps/plugin-os";
 import App from "./App";
+import { initTheme, THEME_STORAGE_KEY } from "./lib/utils/theme";
 
 // Set platform before render so CSS can scope per-platform (e.g. scrollbar styles)
 document.documentElement.dataset.platform = platform();
+
+// El tema guardado se aplica ANTES del primer render: si se aplicara después,
+// el arranque pintaría un cuadro con el tema equivocado (el flash blanco que
+// 05-DETALLES-UX.md §1 prohíbe). Las transiciones se habilitan recién tras el
+// primer pintado, por eso ese cuadro inicial no se anima.
+initTheme({
+  root: document.documentElement,
+  readPersisted: () => {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  },
+  enableTransitions: () =>
+    document.documentElement.setAttribute("data-theme-ready", ""),
+  // Doble rAF: el primero corre antes del pintado, el segundo ya después.
+  afterFirstPaint: (cb) =>
+    requestAnimationFrame(() => requestAnimationFrame(cb)),
+});
 
 /* La build de desarrollo se anuncia con una franja visible.
  *

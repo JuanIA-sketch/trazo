@@ -726,6 +726,12 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "theme": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "auto": "Tự động",
+    "dark": "Tối"
+  },
   "screen": {
     "general": {
       "sub": "Shortcuts, model and sound"

@@ -1,0 +1,64 @@
+/* ============================================================
+   Selector de tema — material
+   ============================================================
+   Tokens en src/styles/material.css (--tg-* el pozo, --tgs-* el elegido).
+   Geometría tomada del tablero Sidebar.dc.html.
+
+   La figura es la del pozo: el carril va hundido y el segmento elegido
+   se despega hacia afuera. Es la misma gramática que los desplegables,
+   así que "lo hundido es el fondo, lo que sobresale es lo activo" se
+   aprende una vez y vale en toda la app.
+   ============================================================ */
+
+.trz-theme {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--tg-bg);
+  border: 1px solid var(--tg-bd);
+  box-shadow: var(--tg-sh);
+}
+
+.trz-theme-seg {
+  flex: 1;
+  height: 26px;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  color: var(--t4);
+  /* Solo color: el segmento no se mueve ni cambia de tamaño al elegirlo,
+     porque son tres objetivos de clic pegados y desplazarlos haría fallar
+     el segundo clic de quien corrige. */
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.trz-theme-seg:hover:not(.is-active) {
+  color: var(--t2);
+}
+
+.trz-theme-seg.is-active {
+  color: var(--tgs-tx);
+  background: var(--tgs-bg);
+  box-shadow: var(--tgs-sh);
+}
+
+/* Anillo de foco de marca, no el default del navegador (05-DETALLES-UX.md §4). */
+.trz-theme-seg:focus-visible {
+  outline: 2px solid var(--ac-tx);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trz-theme-seg {
+    transition: none;
+  }
+}

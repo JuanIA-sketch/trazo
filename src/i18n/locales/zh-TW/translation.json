@@ -726,6 +726,12 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "theme": {
+    "label": "主題",
+    "light": "淺色",
+    "auto": "自動",
+    "dark": "深色"
+  },
   "screen": {
     "general": {
       "sub": "Shortcuts, model and sound"

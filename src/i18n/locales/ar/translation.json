@@ -726,6 +726,12 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "theme": {
+    "label": "المظهر",
+    "light": "فاتح",
+    "auto": "تلقائي",
+    "dark": "داكن"
+  },
   "screen": {
     "general": {
       "sub": "Shortcuts, model and sound"

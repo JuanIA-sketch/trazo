@@ -844,10 +844,18 @@ pub fn run(cli_args: CliArgs) {
             let mut win_builder =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
                     .title("Trazo")
-                    .inner_size(680.0, 570.0)
+                    // El diseño de Trazo asume el ancho grande: a 680 px el
+                    // sidebar y el área de contenido quedan apretados por
+                    // definición, no por falta de ajuste fino.
+                    .inner_size(1100.0, 880.0)
+                    // El mínimo NO sube con el tamaño inicial a propósito:
+                    // 880 px de alto no entran en un portátil de 1366x768, y
+                    // un mínimo que no entra en la pantalla deja la ventana
+                    // sin poder encogerse. El tamaño de arranque es una
+                    // recomendación; el mínimo es un límite duro.
                     .min_inner_size(680.0, 570.0)
                     .resizable(true)
-                    .maximizable(false)
+                    .maximizable(true)
                     .visible(false);
 
             if let Some(data_dir) = portable::data_dir() {

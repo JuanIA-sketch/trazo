@@ -1,10 +1,27 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-08-17 · **Rama:** `main` = **`e93ed62`** =
-`origin/main` (sincronizados)
+**Última actualización:** 2026-08-18 · **Rama:** `main` = `origin/main`
+(sincronizados)
 **Entrega del hackathon:** 31 de julio de 2026
 
-> **⚠️ LO PRIMERO AL RETOMAR — 2026-08-17 (§15)**
+> **⚠️ LO PRIMERO AL RETOMAR — 2026-08-18 (§16)**
+>
+> 1. **El bug del VAD de Benja está REPRODUCIDO** sin su grabación, con su
+>    magnitud exacta (16,6 %): un segundo canal con ruido de banda ancha 6 dB
+>    bajo la voz, hundido por la mezcla por media. Es la SEÑAL, no el
+>    suavizador (§16.1), y eso baja de rango la hipótesis del titubeo (§16.2).
+> 2. **Hay una propuesta SIN COMMITEAR**: el selector de canal, 3 archivos y
+>    10 tests, que lleva ese 16,6 % al 96,5 % (§16.3). Charly la quería ver
+>    antes de desplegarla.
+> 3. **Las muestras en inglés NO llegaron**, y el historial rota en 1,5 horas:
+>    sin marcar con la estrella se pierden (§16.4).
+> 4. `code quality` llevaba semanas rojo por `format:check`; arreglado en
+>    `eb650f8`. En Windows ese check acusa 202 archivos y solo 51 son reales
+>    (CRLF): separar con `git diff --ignore-cr-at-eol --numstat`.
+>
+> ---
+>
+> **Cierre del 2026-08-17 (§15)**
 >
 > 1. **La lentitud de transcripción está RESUELTA y medida** (§15.1): la GTX 1650
 >    se cayó del bus PCI, el índice de GPU guardado quedó caducado y la carga
@@ -3077,3 +3094,151 @@ C:/h/debug/handy.exe --transcribe-file <wav> --device-index N --repeat 2
 Mide un dispositivo concreto sin tocar la configuración de la app, e imprime
 `load=…ms best=…ms rtf=…x`. Es la forma más rápida de descartar «¿está corriendo
 en el dispositivo que creo?» ante cualquier reporte de lentitud.
+
+---
+
+## 16. Sesión 2026-08-18
+
+### 16.1 El bug del VAD de Benja: reproducido sin Benja
+
+No hizo falta esperar su grabación. Se reprodujo el síntoma **con su magnitud
+exacta** partiendo de una grabación real de Charly de 14,7 s (casi los 13 s del
+caso), simulando un dispositivo de 2 canales y aplicando **la misma mezcla que
+hace el código de producción** (`AudioRecorder::build_stream`: media aritmética
+de los canales, muestra a muestra).
+
+Medido con `vad_survival`, columna "sobrevive" = audio que llegaría al modelo:
+
+| qué lleva el canal 2                | sobrevive  | voz %   | racha | diagnóstico |
+| ----------------------------------- | ---------- | ------- | ----- | ----------- |
+| nada (mono, control)                | 96,5 %     | 78 %    | 82    | ok          |
+| silencio digital (micrófono muerto) | 94,5 %     | 84 %    | 132   | ok          |
+| zumbido de 50 Hz                    | 94,5 %     | 90 %    | 267   | ok          |
+| la misma voz retrasada 3 ms (peine) | 94,3 %     | 72 %    | 80    | ok          |
+| la misma voz retrasada 10 ms        | 94,5 %     | 91 %    | 270   | ok          |
+| ruido de banda ancha a −20 dB       | 92,2 %     | 83 %    | 302   | ok          |
+| ruido a −15 dB                      | 91,0 %     | 80 %    | 168   | ok          |
+| ruido a −12 dB                      | 85,1 %     | 62 %    | 80    | ok          |
+| ruido a −9 dB                       | 37,4 %     | 16 %    | 36    | degrada     |
+| **ruido a −6 dB**                   | **16,6 %** | **5 %** | 17    | **SEÑAL**   |
+| ruido al nivel de la voz o más      | 0 %        | 0 %     | 0     | SEÑAL       |
+| voz invertida (cancelación)         | 0 %        | 0 %     | 0     | SEÑAL       |
+
+**La fila de −6 dB es el caso de Benja con una precisión incómoda:** él reportó
+1,05-2,16 s de 13 s = **8-16,6 %**; aquí salen 2,43 s de 14,7 s = **16,6 %**.
+
+Tres cosas que esto fija:
+
+1. **Es la señal, no el suavizador.** En todas las filas que colapsan Silero
+   dice "no hay voz" (0-5 % de frames), no titubea.
+2. **Descarta cuatro sospechosos**: pérdida de nivel, micrófono muerto, zumbido
+   y filtro peine no rompen nada (todos > 92 %). Solo el **ruido de banda
+   ancha** lo hace.
+3. **El desplome cabe en 6 dB**: de 85 % a 0 % entre −12 y −3 dB. Por eso parece
+   todo-o-nada y por eso es tan específico de un dispositivo.
+
+⚠️ Esto es una explicación **suficiente**, no una prueba de que sea lo que tiene
+Benja. Su WAV sigue haciendo falta para confirmarlo; el harness lo resuelve en
+una corrida (§15.1 y el mensaje que se le pasó).
+
+### 16.2 La hipótesis del titubeo baja de rango — la mía
+
+La sesión anterior propuso que el mecanismo era `VAD_ONSET_FRAMES = 2` exigiendo
+dos frames de voz **consecutivos**, con un solo frame malo reiniciando el
+contador. **Sigue siendo cierto en el código** —con veredictos alternando sale
+el 0 % del audio, medido— **pero no es lo que produce esta familia de fallos**:
+en toda la zona de transición las rachas siguen siendo largas (36 frames a
+−9 dB, 17 a −6 dB) y el suavizador sí abre.
+
+Queda como defecto latente, no como causa. Y sigue en pie el otro que se
+encontró midiendo: **el prefill duplica audio** en cada reentrada en habla
+(`frame_buffer` no se limpia al entrar), hasta 480 ms reemitidos por reentrada;
+en un caso entrecortado salieron un 48 % más de muestras de las que entraron.
+
+### 16.3 Selector de canal — PROPUESTA, sin desplegar
+
+Si el problema es promediar, la solución es no promediar. La media reparte el
+daño dos veces: mete la energía del canal malo **y** baja la voz a la mitad.
+
+**Sin commitear a propósito** (Charly pidió verlo funcionando antes). Vive en
+tres archivos del árbol de trabajo:
+
+| archivo                                             | qué                                            |
+| --------------------------------------------------- | ---------------------------------------------- |
+| `src-tauri/src/audio_toolkit/audio/channel_pick.rs` | el selector, puro, **10 tests**                |
+| `src-tauri/src/audio_toolkit/audio/mod.rs`          | 2 líneas que lo exportan                       |
+| `src-tauri/examples/channel_pick_demo.rs`           | compara las dos estrategias con la cadena real |
+
+**No elige por volumen, y esa es la decisión de diseño.** El canal malo puede
+ser el más fuerte —un micrófono roto que solo mete ruido— y entonces el nivel
+elige justo el peor. Elige por **tasa de cruces por cero**, medida sobre
+material real de este proyecto: **la voz da 0,079 y el ruido blanco 0,501**, un
+factor 6, sin FFT y sin cargar un modelo. La puntuación es
+`rms × speechiness(zcr)`, con rampa lineal entre 0,15 y 0,45.
+
+Resultado, sobre WAV estéreo de verdad (ch1 = voz real, ch2 = el sospechoso):
+
+| caso                             | media      | selector   |
+| -------------------------------- | ---------- | ---------- |
+| ch2 silencio                     | 94,5 %     | **96,5 %** |
+| **ch2 ruido −6 dB (caso Benja)** | **16,0 %** | **96,5 %** |
+| ch2 ruido a nivel de voz         | 0 %        | **96,5 %** |
+| ch2 ruido +12 dB (4× más fuerte) | 0 %        | **96,5 %** |
+| ch2 voz invertida                | 0 %        | **96,5 %** |
+
+La fila de +12 dB es la que justifica el ZCR: el canal malo tiene `rms 0,036`
+contra `0,009` del bueno —cuatro veces más fuerte— y aun así pierde, porque su
+`zcr 0,500` le deja la puntuación en cero.
+
+**Dos honestidades sobre la propuesta:**
+
+- **La voz invertida sale bien por desempate, no por discriminación.** Los dos
+  canales puntúan idéntico (0,00908) y gana el índice 0 por la regla de empate.
+  Da igual cuál se elija: la voz invertida sola también es voz perfectamente
+  inteligible. Pero no es que el selector "lo detecte".
+- **El zumbido de red es un punto ciego conocido**: tiene ZCR bajísimo, así que
+  para este criterio "parece voz". Hay un test que lo documenta. No se arregla
+  porque el zumbido **no rompe el VAD** (94,5 % de supervivencia): arreglarlo
+  costaría mirar el espectro para nada.
+
+**Lo que falta para que sea desplegable** (no hecho): decidir CUÁNDO se elige
+—una ventana de arranque de ~500 ms y quedarse con esa decisión toda la
+grabación, en vez de reevaluar por callback— y conectarlo en `build_stream`,
+detrás de un ajuste, con el comportamiento actual como opción.
+
+Para verlo correr:
+
+```bash
+cargo run --manifest-path src-tauri/Cargo.toml --example channel_pick_demo -- \
+  src-tauri/resources/models/silero_vad_v4.onnx  <estereo.wav>...
+```
+
+El material sintético se regenera con los scripts del scratchpad de la sesión
+(`make_multichannel.py` y el generador de estéreo), ambos con `random.seed` fijo
+para que el experimento se repita igual.
+
+### 16.4 Las muestras en inglés: NO han llegado
+
+Charly indicó que las había mandado en la sesión. **No consta ninguna**, y se
+comprobó contra la máquina, no de memoria:
+
+```
+history.db: 20 entradas · 0 marcadas (saved=0) · todas en español
+```
+
+⚠️ **Y el historial rota mucho más rápido de lo que parece: las 20 entradas que
+hay abarcan 1,5 horas.** Cualquier prueba en inglés hecha hoy y no marcada con
+la estrella ya se perdió. Para que la próxima sobreviva hay que marcarla **en el
+momento**, o subir `history_limit`.
+
+Con el texto (lo pedido vs lo transcrito) basta para empezar a acotar; para
+medir de verdad hace falta el WAV.
+
+### 16.5 Estado al cerrar
+
+| ref                          | valor                                                     |
+| ---------------------------- | --------------------------------------------------------- |
+| `origin/main` = `main` local | `a150684` + el commit de este traspaso                    |
+| Sin commitear                | WIP de wakeword (grupo C) + la propuesta del selector     |
+| Tests                        | 357 lib + 1 versión + 102 front, 0 fallos                 |
+| `code quality` en CI         | debería pasar a verde: el formato se arregló en `eb650f8` |

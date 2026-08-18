@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "Transcribir y formalizar",
             "description": "Dicta el texto y lo reescribe como un correo listo para enviar."
+          },
+          "transcribe_to_english": {
+            "name": "Dictar en inglés",
+            "description": "Dictas en cualquier idioma y sale en inglés."
           }
         },
         "errors": {

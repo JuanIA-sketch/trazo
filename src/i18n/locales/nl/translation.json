@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "Transcriberen en formaliseren",
             "description": "Dicteert de tekst en herschrijft deze als een verzendklare e-mail."
+          },
+          "transcribe_to_english": {
+            "name": "Dicteren in het Engels",
+            "description": "Dicteer in elke taal; de uitvoer is Engels."
           }
         },
         "errors": {

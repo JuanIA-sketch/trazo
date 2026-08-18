@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "转录并正式化",
             "description": "听写内容并将其改写为可直接发送的邮件。"
+          },
+          "transcribe_to_english": {
+            "name": "以英文输出听写",
+            "description": "用任何语言口述，输出为英文。"
           }
         },
         "errors": {

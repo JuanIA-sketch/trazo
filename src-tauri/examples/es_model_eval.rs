@@ -36,6 +36,7 @@ fn main() {
         .next()
         .expect("usage: es_model_eval <model.gguf> [--lang es] <wav>...");
     let mut language: Option<String> = None;
+    let mut translate = false;
     let mut wavs: Vec<String> = Vec::new();
     let mut stream_chunk_ms: Option<usize> = None;
     let mut backend = Backend::Cpu;
@@ -43,6 +44,16 @@ fn main() {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--lang" => language = Some(args.next().expect("--lang needs a value")),
+            // Tarea `translate` del motor: traduccion de verdad, no el efecto
+            // lateral de forzar un idioma en la tarea `transcribe`. Solo va
+            // hacia el ingles.
+            //
+            // OJO: whisper-large-v3-turbo IGNORA esta tarea y devuelve el
+            // idioma original (medido el 31/07 con tres variantes: con target
+            // "en", sin target, y con y sin --lang). Es el checkpoint, no el
+            // codigo: turbo se destilo excluyendo datos de traduccion. Para
+            // probar traduccion de verdad hace falta large-v3 (no turbo).
+            "--translate" => translate = true,
             "--stream" => {
                 stream_chunk_ms = Some(
                     args.next()
@@ -106,10 +117,19 @@ fn main() {
     for wav in &wavs {
         let audio = read_wav_16k_mono(wav);
         let secs = audio.len() as f32 / 16_000.0;
-        let options = RunOptions {
-            task: Task::Transcribe,
-            language: language.clone(),
-            ..Default::default()
+        let options = if translate {
+            RunOptions {
+                task: Task::Translate,
+                language: language.clone(),
+                target_language: Some("en".to_string()),
+                ..Default::default()
+            }
+        } else {
+            RunOptions {
+                task: Task::Transcribe,
+                language: language.clone(),
+                ..Default::default()
+            }
         };
 
         // Streaming mode: mimic the app's live-preview worker, feeding fixed

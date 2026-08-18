@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "Chuyển giọng nói và trang trọng hóa",
             "description": "Chuyển giọng nói thành văn bản và viết lại thành email sẵn sàng gửi."
+          },
+          "transcribe_to_english": {
+            "name": "Đọc ra tiếng Anh",
+            "description": "Đọc bằng bất kỳ ngôn ngữ nào, kết quả là tiếng Anh."
           }
         },
         "errors": {

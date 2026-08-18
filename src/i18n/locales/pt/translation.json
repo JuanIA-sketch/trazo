@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "Transcrever e formalizar",
             "description": "Dita o texto e o reescreve como um e-mail pronto para enviar."
+          },
+          "transcribe_to_english": {
+            "name": "Ditar em inglês",
+            "description": "Dite em qualquer idioma e o resultado sai em inglês."
           }
         },
         "errors": {

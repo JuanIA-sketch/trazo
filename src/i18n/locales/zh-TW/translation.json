@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "轉錄並正式化",
             "description": "聽寫內容並將其改寫為可直接傳送的郵件。"
+          },
+          "transcribe_to_english": {
+            "name": "以英文輸出聽寫",
+            "description": "用任何語言口述，輸出為英文。"
           }
         },
         "errors": {

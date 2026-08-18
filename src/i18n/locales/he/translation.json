@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "תמלול והפיכה לרשמי",
             "description": "מתמלל את הדיבור ומנסח אותו מחדש כהודעת דוא״ל מוכנה לשליחה."
+          },
+          "transcribe_to_english": {
+            "name": "הכתבה באנגלית",
+            "description": "הכתב בכל שפה והפלט יהיה באנגלית."
           }
         },
         "errors": {

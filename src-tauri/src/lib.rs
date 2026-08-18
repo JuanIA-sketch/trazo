@@ -503,7 +503,7 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
             }
         }
         let t = Instant::now();
-        match tm.transcribe_recording(samples.clone()) {
+        match tm.transcribe_recording(samples.clone(), None) {
             Ok(out) => text = out,
             Err(e) => {
                 eprintln!("error: transcribe failed: {}", e);

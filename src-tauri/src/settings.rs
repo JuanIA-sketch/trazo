@@ -509,7 +509,16 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 8;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 9;
+
+/// Atajo que dicta en cualquier idioma y entrega ingles.
+///
+/// Se apoya en la tarea `translate` del motor, que es traduccion de verdad —no
+/// el efecto lateral de forzar un idioma en la tarea `transcribe`— pero solo va
+/// HACIA el ingles: Whisper no traduce en la otra direccion.
+pub const TRANSLATE_BINDING_ID: &str = "transcribe_to_english";
+
+const DEFAULT_TRANSLATE_SHORTCUT: &str = "f10";
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -1019,6 +1028,18 @@ pub fn get_default_settings() -> AppSettings {
             current_binding: default_formalize_shortcut.to_string(),
         },
     );
+    // Mismo criterio que f9 (ver arriba): una sola tecla fisica, jamas un
+    // modificador desnudo ni un acorde. f10 esta libre en el resto de defaults.
+    bindings.insert(
+        TRANSLATE_BINDING_ID.to_string(),
+        ShortcutBinding {
+            id: TRANSLATE_BINDING_ID.to_string(),
+            name: "Dictate in English".to_string(),
+            description: "Dictates in any language and outputs English.".to_string(),
+            default_binding: DEFAULT_TRANSLATE_SHORTCUT.to_string(),
+            current_binding: DEFAULT_TRANSLATE_SHORTCUT.to_string(),
+        },
+    );
     bindings.insert(
         "cancel".to_string(),
         ShortcutBinding {
@@ -1358,6 +1379,25 @@ fn apply_settings_migrations(
         updated = true;
     }
 
+    if stored_schema_version < 9 {
+        // Siembra el atajo de dictar-en-ingles en stores existentes. Sin esto
+        // el mapa de bindings ya presente en el JSON gana y el atajo no existe
+        // nunca para nadie que ya tuviera Trazo instalado. Solo inserta si
+        // falta: una reasignacion del usuario manda.
+        settings
+            .bindings
+            .entry(TRANSLATE_BINDING_ID.to_string())
+            .or_insert_with(|| ShortcutBinding {
+                id: TRANSLATE_BINDING_ID.to_string(),
+                name: "Dictate in English".to_string(),
+                description: "Dictates in any language and outputs English.".to_string(),
+                default_binding: DEFAULT_TRANSLATE_SHORTCUT.to_string(),
+                current_binding: DEFAULT_TRANSLATE_SHORTCUT.to_string(),
+            });
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
+
     if stored_schema_version < 8 {
         // Repara los stores que la interfaz volteó a `dont_modify` sin que nadie
         // lo eligiera: el desplegable pintaba esa opción como seleccionada
@@ -1452,6 +1492,68 @@ mod tests {
         assert_eq!(
             settings.settings_schema_version,
             CURRENT_SETTINGS_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn the_translate_binding_ships_by_default_on_f10() {
+        let settings = get_default_settings();
+
+        let binding = settings
+            .bindings
+            .get(TRANSLATE_BINDING_ID)
+            .expect("el atajo de traducir al ingles debe venir de fabrica");
+
+        // Mismo razonamiento que f9 (ver el comentario del default de
+        // formalizar): una sola tecla fisica, nunca un modificador desnudo.
+        assert_eq!(binding.default_binding, "f10");
+        assert_eq!(binding.current_binding, "f10");
+        assert!(!binding.default_binding.contains('+'));
+    }
+
+    fn store_at_version(version: u64) -> serde_json::Value {
+        serde_json::json!({
+            "settings_schema_version": version,
+            "onboarding_completed": true,
+            "whats_new_last_seen_version": default_whats_new_last_seen_version(),
+        })
+    }
+
+    /// Sin migracion, un store existente se queda sin el atajo para siempre:
+    /// serde no reconstruye un mapa de bindings que ya esta en el JSON.
+    #[test]
+    fn the_translate_binding_migration_seeds_existing_stores() {
+        let mut settings = get_default_settings();
+        settings.bindings.remove(TRANSLATE_BINDING_ID);
+        settings.settings_schema_version = 8;
+
+        assert!(apply_settings_migrations(
+            &mut settings,
+            &store_at_version(8)
+        ));
+
+        assert_eq!(
+            settings.bindings[TRANSLATE_BINDING_ID].current_binding,
+            "f10"
+        );
+    }
+
+    /// Y si el usuario ya lo tiene reasignado, la migracion no puede pisarlo.
+    #[test]
+    fn the_translate_binding_migration_keeps_a_reassigned_key() {
+        let mut settings = get_default_settings();
+        settings
+            .bindings
+            .get_mut(TRANSLATE_BINDING_ID)
+            .expect("binding")
+            .current_binding = "f12".to_string();
+        settings.settings_schema_version = 8;
+
+        apply_settings_migrations(&mut settings, &store_at_version(8));
+
+        assert_eq!(
+            settings.bindings[TRANSLATE_BINDING_ID].current_binding,
+            "f12"
         );
     }
 

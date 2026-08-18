@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { LanguageSelector } from "../LanguageSelector";
 import { TranslateToEnglish } from "../TranslateToEnglish";
+import { ShortcutInput } from "../ShortcutInput";
 import { useModelStore } from "../../../stores/modelStore";
 import type { ModelInfo } from "@/bindings";
 import {
@@ -107,7 +108,17 @@ export const ModelSettingsCard: React.FC = () => {
         />
       )}
       {supportsTranslation && (
-        <TranslateToEnglish descriptionMode="tooltip" grouped={true} />
+        <>
+          <TranslateToEnglish descriptionMode="tooltip" grouped={true} />
+          {/* El atajo vive junto al ajuste que comparte motor, y solo aparece
+              en modelos que declaran traducción: en los demás sería una tecla
+              que no hace nada. */}
+          <ShortcutInput
+            shortcutId="transcribe_to_english"
+            descriptionMode="tooltip"
+            grouped={true}
+          />
+        </>
       )}
     </SettingsGroup>
   );

@@ -1246,10 +1246,18 @@ impl TranscriptionManager {
     /// measures against how much speech the audio actually holds. Normal
     /// dictations keep their accuracy and their speed; only a decode that
     /// visibly bailed pays for the retry.
-    pub fn transcribe_recording(&self, audio: Vec<f32>) -> Result<String> {
+    /// `translate_override` fuerza (o desactiva) la tarea `translate` para este
+    /// dictado concreto, ignorando `settings.translate_to_english`. `None` deja
+    /// mandar al ajuste. Existe para que un atajo pueda decidir su propio
+    /// comportamiento sin que el usuario tenga que ir a Ajustes y volver.
+    pub fn transcribe_recording(
+        &self,
+        audio: Vec<f32>,
+        translate_override: Option<bool>,
+    ) -> Result<String> {
         let rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE;
 
-        let whole = self.transcribe(audio.clone())?;
+        let whole = self.transcribe(audio.clone(), translate_override)?;
 
         let speech = crate::audio_toolkit::speech_seconds(&audio, rate);
         let total = audio.len() as f32 / rate as f32;
@@ -1292,7 +1300,7 @@ impl TranscriptionManager {
         let mut parts: Vec<String> = Vec::new();
         let mut last_error: Option<anyhow::Error> = None;
         for range in segments {
-            match self.transcribe(audio[range].to_vec()) {
+            match self.transcribe(audio[range].to_vec(), translate_override) {
                 Ok(text) => {
                     let text = text.trim();
                     if !text.is_empty() {
@@ -1325,7 +1333,7 @@ impl TranscriptionManager {
         }
     }
 
-    pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
+    pub fn transcribe(&self, audio: Vec<f32>, translate_override: Option<bool>) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANDY_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
             return Err(anyhow::anyhow!(
@@ -1462,7 +1470,7 @@ impl TranscriptionManager {
                         };
 
                         let run_plan = transcribe_cpp_run_plan(
-                            settings.translate_to_english,
+                            translate_override.unwrap_or(settings.translate_to_english),
                             &validated_language,
                             &model_languages,
                             model_supports_translate,
@@ -1553,7 +1561,7 @@ impl TranscriptionManager {
                         };
                         let options = TranscribeOptions {
                             language: lang,
-                            translate: settings.translate_to_english,
+                            translate: translate_override.unwrap_or(settings.translate_to_english),
                             ..Default::default()
                         };
                         canary_engine

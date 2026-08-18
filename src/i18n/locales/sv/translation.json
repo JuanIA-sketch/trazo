@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "Transkribera och formalisera",
             "description": "Dikterar texten och skriver om den som ett sändningsklart e-postmeddelande."
+          },
+          "transcribe_to_english": {
+            "name": "Diktera på engelska",
+            "description": "Diktera på valfritt språk – resultatet blir engelska."
           }
         },
         "errors": {

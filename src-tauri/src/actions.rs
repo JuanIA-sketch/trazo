@@ -49,6 +49,10 @@ pub trait ShortcutAction: Send + Sync {
 // Transcribe Action
 struct TranscribeAction {
     mode: crate::formalize::PostProcessMode,
+    /// Fuerza la tarea `translate` del motor para ESTE dictado, sin tocar el
+    /// ajuste global. Mismo patron que `mode`: lo que hace el atajo lo decide
+    /// el atajo, no un viaje a Ajustes y vuelta.
+    translate_to_english: bool,
 }
 
 /// Field name for structured output JSON schema
@@ -522,10 +526,16 @@ impl ShortcutAction for TranscribeAction {
         // Use the app-facing model capability as the single pre-recording source
         // for live streaming decisions. Unknown support is represented as false
         // until the model registry is updated by discovery or runtime load.
-        let model_supports_streaming = selected_model_info
-            .as_ref()
-            .map(|m| m.supports_streaming)
-            .unwrap_or(false);
+        // El camino de streaming arma sus RunOptions desde los ajustes y no ve
+        // el override por dictado, asi que un atajo que traduce tiene que
+        // quedarse en el camino por lotes o su traduccion se perderia en
+        // silencio. Ningun modelo que hoy declare streaming declara ademas
+        // traduccion, asi que en la practica esto no le quita streaming a nadie.
+        let model_supports_streaming = !self.translate_to_english
+            && selected_model_info
+                .as_ref()
+                .map(|m| m.supports_streaming)
+                .unwrap_or(false);
         let vad_policy = if !settings.vad_enabled {
             VadPolicy::Disabled
         } else if model_supports_streaming {
@@ -672,6 +682,13 @@ impl ShortcutAction for TranscribeAction {
 
         let binding_id = binding_id.to_string(); // Clone binding_id for the async task
         let mode = self.mode;
+        // `None` = manda el ajuste global. Solo el atajo de traducir impone su
+        // propio valor, para no cambiarle el comportamiento a los demas.
+        let translate_override = if self.translate_to_english {
+            Some(true)
+        } else {
+            None
+        };
         let cancel_generation = rm.cancel_generation();
 
         tauri::async_runtime::spawn(async move {
@@ -727,7 +744,7 @@ impl ShortcutAction for TranscribeAction {
                         // surfaced instead — the worker may still hold the engine,
                         // so a batch fallback would contend with it.
                         Ok(Some(text)) if !text.trim().is_empty() => Ok(text),
-                        Ok(_) => tm.transcribe_recording(samples),
+                        Ok(_) => tm.transcribe_recording(samples, translate_override),
                         Err(err) => Err(err),
                     };
 
@@ -963,18 +980,30 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
         "transcribe".to_string(),
         Arc::new(TranscribeAction {
             mode: crate::formalize::PostProcessMode::Off,
+            translate_to_english: false,
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "transcribe_with_post_process".to_string(),
         Arc::new(TranscribeAction {
             mode: crate::formalize::PostProcessMode::Selected,
+            translate_to_english: false,
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "transcribe_and_formalize".to_string(),
         Arc::new(TranscribeAction {
             mode: crate::formalize::PostProcessMode::Formalize,
+            translate_to_english: false,
+        }) as Arc<dyn ShortcutAction>,
+    );
+    map.insert(
+        crate::settings::TRANSLATE_BINDING_ID.to_string(),
+        Arc::new(TranscribeAction {
+            // Sin post-procesado: la traduccion la hace el motor, y encadenar
+            // un LLM con perfil espanol encima reescribiria el ingles.
+            mode: crate::formalize::PostProcessMode::Off,
+            translate_to_english: true,
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(

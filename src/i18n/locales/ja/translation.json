@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "文字起こしして整形する",
             "description": "音声を文字起こしし、すぐに送信できるメール文面に書き直します。"
+          },
+          "transcribe_to_english": {
+            "name": "英語で書き取る",
+            "description": "どの言語で話しても英語で出力します。"
           }
         },
         "errors": {

@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "Trascrivi e formalizza",
             "description": "Detta il testo e lo riscrive come un'email pronta per l'invio."
+          },
+          "transcribe_to_english": {
+            "name": "Detta in inglese",
+            "description": "Detta in qualsiasi lingua e il risultato è in inglese."
           }
         },
         "errors": {

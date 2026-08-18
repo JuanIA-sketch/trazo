@@ -142,7 +142,7 @@ pub async fn retry_history_entry_transcription(
 
     let tm = Arc::clone(&transcription_manager);
     let transcription =
-        tauri::async_runtime::spawn_blocking(move || tm.transcribe_recording(samples))
+        tauri::async_runtime::spawn_blocking(move || tm.transcribe_recording(samples, None))
             .await
             .map_err(|e| format!("Transcription task panicked: {}", e))?
             .map_err(|e| e.to_string())?;

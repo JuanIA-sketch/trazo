@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "Transcribe and Formalize",
             "description": "Dictates and rewrites it as a ready-to-send email."
+          },
+          "transcribe_to_english": {
+            "name": "Dictate in English",
+            "description": "Dictates in any language and outputs English."
           }
         },
         "errors": {

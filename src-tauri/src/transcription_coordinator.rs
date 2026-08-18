@@ -43,7 +43,10 @@ pub struct TranscriptionCoordinator {
 }
 
 pub fn is_transcribe_binding(id: &str) -> bool {
-    id == "transcribe" || id == "transcribe_with_post_process" || id == "transcribe_and_formalize"
+    id == "transcribe"
+        || id == "transcribe_with_post_process"
+        || id == "transcribe_and_formalize"
+        || id == crate::settings::TRANSLATE_BINDING_ID
 }
 
 impl TranscriptionCoordinator {
@@ -375,6 +378,14 @@ mod tests {
         assert!(is_transcribe_binding("transcribe"));
         assert!(is_transcribe_binding("transcribe_with_post_process"));
         assert!(is_transcribe_binding("transcribe_and_formalize"));
+    }
+
+    /// El atajo de dictar-traduciendo-al-ingles enruta por el coordinador igual
+    /// que los otros tres: sin esto no tiene toggle, ni debounce, ni el
+    /// doble-tap que latchea grabacion continua.
+    #[test]
+    fn is_transcribe_binding_recognizes_the_translate_shortcut() {
+        assert!(is_transcribe_binding("transcribe_to_english"));
     }
 
     #[test]

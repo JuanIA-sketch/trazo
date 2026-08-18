@@ -202,6 +202,10 @@
           "transcribe_and_formalize": {
             "name": "받아쓰기 후 격식체로 변환",
             "description": "받아쓴 내용을 바로 보낼 수 있는 이메일로 다시 작성합니다."
+          },
+          "transcribe_to_english": {
+            "name": "영어로 받아쓰기",
+            "description": "어떤 언어로 말해도 영어로 출력합니다."
           }
         },
         "errors": {

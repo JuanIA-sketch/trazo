@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "Yazıya dök ve resmileştir",
             "description": "Konuşmayı yazıya döker ve gönderime hazır bir e-postaya dönüştürür."
+          },
+          "transcribe_to_english": {
+            "name": "İngilizce dikte et",
+            "description": "Herhangi bir dilde dikte edin, çıktı İngilizce olur."
           }
         },
         "errors": {

@@ -599,5 +599,7 @@ mod tests {
     #[test]
     fn f9_the_new_formalize_default_is_accepted() {
         assert!(validate_shortcut("f9").is_ok());
+        // f10: default del atajo de dictar traduciendo al ingles.
+        assert!(validate_shortcut("f10").is_ok());
     }
 }

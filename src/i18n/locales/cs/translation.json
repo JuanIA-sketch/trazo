@@ -220,6 +220,10 @@
           "transcribe_and_formalize": {
             "name": "Přepsat a formalizovat",
             "description": "Nadiktuje text a přepíše ho jako e-mail připravený k odeslání."
+          },
+          "transcribe_to_english": {
+            "name": "Diktovat anglicky",
+            "description": "Diktujte v jakémkoli jazyce, výstup bude anglicky."
           }
         },
         "errors": {

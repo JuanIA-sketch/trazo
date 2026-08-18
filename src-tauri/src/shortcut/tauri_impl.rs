@@ -169,6 +169,8 @@ mod tests {
     #[test]
     fn f9_the_new_formalize_default_validates_and_parses() {
         assert!(validate_shortcut("f9").is_ok());
+        // f10: default del atajo de dictar traduciendo al ingles.
+        assert!(validate_shortcut("f10").is_ok());
         assert!(
             "f9".parse::<Shortcut>().is_ok(),
             "f9 debe ser un Shortcut valido para tauri_plugin_global_shortcut"

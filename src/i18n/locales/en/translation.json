@@ -216,7 +216,7 @@
       },
       "language": {
         "title": "Language",
-        "description": "Select the language for speech recognition. Auto will automatically determine the language, while selecting a specific language can improve accuracy for that language.",
+        "description": "Sets the language for short dictations, where automatic detection is unreliable. Longer ones are detected automatically, so you can switch language without changing this.",
         "searchPlaceholder": "Search languages...",
         "noResults": "No languages found",
         "auto": "Auto"

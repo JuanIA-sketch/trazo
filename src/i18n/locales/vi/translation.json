@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Ngôn ngữ",
-        "description": "Chọn ngôn ngữ để nhận dạng giọng nói. Tự động sẽ tự động xác định ngôn ngữ, trong khi chọn một ngôn ngữ cụ thể có thể cải thiện độ chính xác cho ngôn ngữ đó.",
+        "description": "Đặt ngôn ngữ cho các lần đọc ngắn, khi việc tự động nhận diện không đáng tin cậy. Các đoạn dài hơn sẽ được nhận diện tự động, nên bạn có thể đổi ngôn ngữ mà không cần sửa cài đặt này.",
         "searchPlaceholder": "Tìm kiếm ngôn ngữ...",
         "noResults": "Không tìm thấy ngôn ngữ",
         "auto": "Tự động"

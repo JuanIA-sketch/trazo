@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Dil",
-        "description": "Konuşma tanıma dilini seçin. 'Otomatik' seçeneği dili kendisi belirler, ancak belirli bir dil seçmek o dildeki doğruluğu artırabilir.",
+        "description": "Otomatik algılamanın güvenilir olmadığı kısa dikteler için dili belirler. Daha uzun dikteler otomatik olarak algılanır, bu yüzden bu ayarı değiştirmeden dil değiştirebilirsiniz.",
         "searchPlaceholder": "Dil ara...",
         "noResults": "Dil bulunamadı",
         "auto": "Otomatik"

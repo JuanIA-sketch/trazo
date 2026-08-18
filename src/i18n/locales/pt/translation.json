@@ -216,7 +216,7 @@
       },
       "language": {
         "title": "Idioma",
-        "description": "Selecione o idioma para reconhecimento de fala. Auto detectará automaticamente o idioma, enquanto selecionar um idioma específico pode melhorar a precisão para esse idioma.",
+        "description": "Define o idioma dos ditados curtos, em que a detecção automática não é confiável. Os mais longos são detectados automaticamente, por isso pode mudar de idioma sem alterar esta definição.",
         "searchPlaceholder": "Buscar idiomas...",
         "noResults": "Nenhum idioma encontrado",
         "auto": "Auto"

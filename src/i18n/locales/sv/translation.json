@@ -216,7 +216,7 @@
       },
       "language": {
         "title": "Språk",
-        "description": "Välj språk för taligenkänning. Auto kommer automatiskt att bestämma språket, medan val av ett specifikt språk kan förbättra noggrannheten för det språket.",
+        "description": "Anger språket för korta dikteringar, där automatisk identifiering är opålitlig. Längre dikteringar identifieras automatiskt, så du kan byta språk utan att ändra den här inställningen.",
         "searchPlaceholder": "Sök språk...",
         "noResults": "Inga språk hittades",
         "auto": "Auto"

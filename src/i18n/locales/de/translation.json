@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Sprache",
-        "description": "Wähle die Sprache für die Spracherkennung. Auto erkennt die Sprache automatisch, die Auswahl einer bestimmten Sprache kann die Genauigkeit verbessern.",
+        "description": "Legt die Sprache für kurze Diktate fest, bei denen die automatische Erkennung unzuverlässig ist. Längere Diktate werden automatisch erkannt – Sie können die Sprache also wechseln, ohne diese Einstellung zu ändern.",
         "searchPlaceholder": "Sprachen suchen...",
         "noResults": "Keine Sprachen gefunden",
         "auto": "Auto"

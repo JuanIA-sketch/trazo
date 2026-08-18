@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Język",
-        "description": "Wybierz język rozpoznawania mowy. Opcja Auto automatycznie określi język, a wybór konkretnego języka może poprawić dokładność.",
+        "description": "Ustawia język krótkich dyktowań, w których automatyczne wykrywanie jest zawodne. Dłuższe są wykrywane automatycznie, więc możesz zmienić język bez zmiany tego ustawienia.",
         "searchPlaceholder": "Szukaj języka...",
         "noResults": "Nie znaleziono języków",
         "auto": "Auto"

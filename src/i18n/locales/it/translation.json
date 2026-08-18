@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Lingua",
-        "description": "Scegli la lingua per il riconoscimento vocale. Auto la determinerà automaticamente, mentre scegliere una lingua specifica può migliorare l'accuratezza per quella lingua.",
+        "description": "Imposta la lingua per le dettature brevi, dove il rilevamento automatico non è affidabile. Quelle più lunghe vengono rilevate automaticamente, quindi puoi cambiare lingua senza modificare questa impostazione.",
         "searchPlaceholder": "Cerca lingue...",
         "noResults": "Nessuna lingua trovata",
         "auto": "Auto"

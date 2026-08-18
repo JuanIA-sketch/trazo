@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Idioma",
-        "description": "Selecciona el idioma para el reconocimiento de voz. Auto detectará automáticamente el idioma, mientras que seleccionar un idioma específico puede mejorar la precisión para ese idioma.",
+        "description": "Fija el idioma de los dictados cortos, donde la detección automática no es fiable. Los largos se detectan solos, así que puedes cambiar de idioma sin tocar esto.",
         "searchPlaceholder": "Buscar idiomas...",
         "noResults": "No se encontraron idiomas",
         "auto": "Auto"

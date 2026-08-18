@@ -234,7 +234,7 @@
       },
       "language": {
         "title": "Jazyk",
-        "description": "Vyberte jazyk rozpoznávání řeči. Auto jazyk určí automaticky, zatímco výběr konkrétního jazyka může zlepšit přesnost.",
+        "description": "Nastavuje jazyk pro krátká diktování, u kterých není automatické rozpoznávání spolehlivé. U delších se jazyk rozpozná automaticky, takže jej můžete změnit, aniž byste upravovali toto nastavení.",
         "searchPlaceholder": "Hledat jazyky...",
         "noResults": "Žádné jazyky nenalezeny",
         "auto": "Auto"

@@ -63,7 +63,8 @@ export const ReactiveBorder: React.FC<Props> = ({
             objetivo[i] = 0;
           } else {
             // Reparte los niveles disponibles a lo largo del contorno.
-            objetivo[i] = fuente[Math.floor((i / MUESTRAS) * fuente.length)] ?? 0;
+            objetivo[i] =
+              fuente[Math.floor((i / MUESTRAS) * fuente.length)] ?? 0;
           }
         }
 
@@ -74,7 +75,9 @@ export const ReactiveBorder: React.FC<Props> = ({
 
         path.setAttribute(
           "d",
-          rutaSvg(deformarHaciaAdentro(base, { amplitudes: suaves, origen: 0 })),
+          rutaSvg(
+            deformarHaciaAdentro(base, { amplitudes: suaves, origen: 0 }),
+          ),
         );
       }
       raf = requestAnimationFrame(dibujar);

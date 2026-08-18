@@ -18,7 +18,7 @@ export const AlwaysOnMicrophone: React.FC<AlwaysOnMicrophoneProps> = React.memo(
 
     return (
       <ToggleSwitch
-      icon={Mic}
+        icon={Mic}
         checked={alwaysOnMode}
         onChange={(enabled) => updateSetting("always_on_microphone", enabled)}
         isUpdating={isUpdating("always_on_microphone")}

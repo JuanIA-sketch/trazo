@@ -18,7 +18,7 @@ export const ExperimentalToggle: React.FC<ExperimentalToggleProps> = React.memo(
 
     return (
       <ToggleSwitch
-      icon={FlaskConical}
+        icon={FlaskConical}
         checked={enabled}
         onChange={(enabled) => updateSetting("experimental_enabled", enabled)}
         isUpdating={isUpdating("experimental_enabled")}

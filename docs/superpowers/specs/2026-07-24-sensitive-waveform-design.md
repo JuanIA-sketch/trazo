@@ -35,12 +35,12 @@ como 0 exacto. La curva frontend operaba sobre una señal ya aplastada.
 ### Estado de voz desde el VAD (Rust)
 
 - `SpeechStateTracker` (nuevo, puro, en audio_toolkit/vad): `update(bool) ->
-  Option<bool>` — devuelve Some solo en transiciones voz↔no-voz. TDD.
+Option<bool>` — devuelve Some solo en transiciones voz↔no-voz. TDD.
 - `AudioRecorder::with_speech_callback(Fn(bool))`: invocado desde
   `handle_frame` vía el tracker cuando el veredicto del VAD cambia. Con VAD
   deshabilitado no se invoca nunca (el frontend queda en neutro).
 - `managers/audio.rs` lo cablea a un `emit_to("recording_overlay",
-  "speech-active", bool)` gateado por OVERLAY_ENABLED (mismo patrón que
+"speech-active", bool)` gateado por OVERLAY_ENABLED (mismo patrón que
   emit_levels; las transiciones son poco frecuentes, coste despreciable).
 
 ### Pulso visual (frontend)

@@ -18,7 +18,7 @@ export const AutostartToggle: React.FC<AutostartToggleProps> = React.memo(
 
     return (
       <ToggleSwitch
-      icon={Power}
+        icon={Power}
         checked={autostartEnabled}
         onChange={(enabled) => updateSetting("autostart_enabled", enabled)}
         isUpdating={isUpdating("autostart_enabled")}

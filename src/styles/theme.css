@@ -16,13 +16,12 @@
  * FORZADO a oscuro (`<html data-theme="dark">`).
  */
 :root[data-theme="dark"] {
-
-    --color-text: #f8fafc;
-    /* Navy premium del rebrand Trazo (mockup #0B1220) */
-    --color-background: #0b1220;
-    /* Azul más claro para mantener contraste sobre el navy */
-    --color-logo-primary: #3b82f6;
-    --color-logo-stroke: #93c5fd;
+  --color-text: #f8fafc;
+  /* Navy premium del rebrand Trazo (mockup #0B1220) */
+  --color-background: #0b1220;
+  /* Azul más claro para mantener contraste sobre el navy */
+  --color-logo-primary: #3b82f6;
+  --color-logo-stroke: #93c5fd;
 }
 
 /* Automático: sin tema forzado, manda el sistema.
@@ -34,7 +33,6 @@
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
-
     --color-text: #f8fafc;
     /* Navy premium del rebrand Trazo (mockup #0B1220) */
     --color-background: #0b1220;

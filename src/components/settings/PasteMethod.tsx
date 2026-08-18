@@ -76,7 +76,7 @@ export const PasteMethodSetting: React.FC<PasteMethodProps> = React.memo(
 
     return (
       <SettingContainer
-      icon={ClipboardPaste}
+        icon={ClipboardPaste}
         title={t("settings.advanced.pasteMethod.title")}
         description={t("settings.advanced.pasteMethod.description")}
         descriptionMode={descriptionMode}

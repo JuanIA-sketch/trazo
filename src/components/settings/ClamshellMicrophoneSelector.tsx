@@ -70,7 +70,7 @@ export const ClamshellMicrophoneSelector: React.FC<ClamshellMicrophoneSelectorPr
 
     return (
       <SettingContainer
-      icon={Laptop}
+        icon={Laptop}
         title={t("settings.debug.clamshellMicrophone.title")}
         description={t("settings.debug.clamshellMicrophone.description")}
         descriptionMode={descriptionMode}

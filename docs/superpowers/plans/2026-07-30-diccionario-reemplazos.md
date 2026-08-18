@@ -206,12 +206,12 @@ fn impact_report_caps_the_excerpts_it_returns() {
 **Contenido de la siembra.** Solo lo que **no puede colisionar** con español:
 multi-palabra o cadenas que no son palabras.
 
-| from            | to             |
-| --------------- | -------------- |
-| `chat gpt`      | `ChatGPT`      |
-| `mid journey`   | `Midjourney`   |
-| `ene ocho ene`  | `n8n`          |
-| `pul reques`    | `pull request` |
+| from           | to             |
+| -------------- | -------------- |
+| `chat gpt`     | `ChatGPT`      |
+| `mid journey`  | `Midjourney`   |
+| `ene ocho ene` | `n8n`          |
+| `pul reques`   | `pull request` |
 
 **Prohibido sembrar** términos de una sola palabra que existan en español o sean
 nombres de persona. La medición del spec (§3) mostró que `veo`, `flujo`, `sara`

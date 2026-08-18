@@ -52,7 +52,7 @@ export const ShowOverlay: React.FC<ShowOverlayProps> = React.memo(
     return (
       <>
         <SettingContainer
-      icon={Eye}
+          icon={Eye}
           title={t("settings.advanced.overlay.style.title")}
           description={t("settings.advanced.overlay.style.description")}
           descriptionMode={descriptionMode}

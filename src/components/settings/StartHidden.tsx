@@ -18,7 +18,7 @@ export const StartHidden: React.FC<StartHiddenProps> = React.memo(
 
     return (
       <ToggleSwitch
-      icon={EyeOff}
+        icon={EyeOff}
         checked={startHidden}
         onChange={(enabled) => updateSetting("start_hidden", enabled)}
         isUpdating={isUpdating("start_hidden")}

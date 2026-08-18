@@ -18,7 +18,7 @@ export const ShowTrayIcon: React.FC<ShowTrayIconProps> = React.memo(
 
     return (
       <ToggleSwitch
-      icon={AppWindow}
+        icon={AppWindow}
         checked={showTrayIcon}
         onChange={(enabled) => updateSetting("show_tray_icon", enabled)}
         isUpdating={isUpdating("show_tray_icon")}

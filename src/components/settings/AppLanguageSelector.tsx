@@ -31,7 +31,7 @@ export const AppLanguageSelector: React.FC<AppLanguageSelectorProps> =
 
     return (
       <SettingContainer
-      icon={Languages}
+        icon={Languages}
         title={t("appLanguage.title")}
         description={t("appLanguage.description")}
         descriptionMode={descriptionMode}

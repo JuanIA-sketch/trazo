@@ -28,10 +28,12 @@
 ### Task 1: Funciones puras del formalizador
 
 **Files:**
+
 - Create: `src-tauri/src/formalize.rs`
 - Modify: `src-tauri/src/lib.rs` (declarar el módulo)
 
 **Interfaces:**
+
 - Consumes: nada.
 - Produces:
   - `pub fn greeting_for_hour(hour: u32) -> &'static str`
@@ -202,10 +204,12 @@ git commit -m "feat: funciones puras del formalizador de correo"
 ### Task 2: Ajustes nuevos y migración de esquema v7
 
 **Files:**
+
 - Modify: `src-tauri/src/settings.rs` (enum nuevo, 3 campos, prompt sembrado, constante de versión en la línea 479, bloque de migración tras el de `< 6` en la línea 1202)
 - Test: `src-tauri/src/settings.rs` (módulo `#[cfg(test)]` existente al final)
 
 **Interfaces:**
+
 - Consumes: nada de la Task 1.
 - Produces:
   - `pub enum FormalityTreatment { Tu, Usted }` con `Default` = `Tu`
@@ -496,11 +500,13 @@ git commit -m "feat: ajustes del formalizador y migracion de esquema v7"
 ### Task 3: Enrutado del post-procesado al perfil correcto
 
 **Files:**
+
 - Modify: `src-tauri/src/formalize.rs` (añadir el modo y el resolutor)
 - Modify: `src-tauri/src/actions.rs:50-52` (struct), `:77` (firma), `:105-112` (resolución del prompt), `:410-420` (call site y metadato del historial), `:622` (lectura del campo)
 - Test: `src-tauri/src/formalize.rs`
 
 **Interfaces:**
+
 - Consumes: `PromptVars` y `render_prompt_variables` de la Task 1; `FormalityTreatment`, `DEFAULT_EMAIL_PROMPT_ID` de la Task 2.
 - Produces:
   - `pub enum PostProcessMode { Off, Selected, Formalize }`
@@ -766,12 +772,14 @@ git commit -m "feat: enruta el post-procesado al perfil del formalizador"
 ### Task 4: Atajo `transcribe_and_formalize`
 
 **Files:**
+
 - Modify: `src-tauri/src/settings.rs` (bindings por defecto, junto al bloque de `settings.rs:894-914`)
 - Modify: `src-tauri/src/actions.rs` (entrada en `ACTION_MAP`)
 - Modify: `src-tauri/src/shortcut/mod.rs:397`, `src-tauri/src/shortcut/handy_keys.rs:437` (puerta de `post_process_enabled`)
 - Test: `src-tauri/src/settings.rs`
 
 **Interfaces:**
+
 - Consumes: `PostProcessMode::Formalize` de la Task 3.
 - Produces: binding con id `"transcribe_and_formalize"` en `AppSettings.bindings`.
 
@@ -913,12 +921,14 @@ git commit -m "feat: atajo de una tecla para formalizar (ctrl_right / cmd_right)
 ### Task 5: Interfaz y traducciones
 
 **Files:**
+
 - Modify: `src/components/settings/post-processing/PostProcessingSettings.tsx:427-450`
 - Create: `src/components/settings/post-processing/FormalizeSettings.tsx`
 - Modify: `src/i18n/locales/en/translation.json` y las otras 20 locales
 - Test: `bun run check:translations`, `bun run lint`, `bun run build`
 
 **Interfaces:**
+
 - Consumes: `FormalityTreatment` y los tres ajustes vía `src/bindings.ts` (regenerado en la Task 2); el binding `transcribe_and_formalize` de la Task 4.
 - Produces: nada que consuman otras tareas.
 
@@ -1002,7 +1012,10 @@ export const FormalizeSettings: React.FC = () => {
           className="mt-1 w-full rounded-md border border-text/20 bg-transparent px-2 py-1"
           value={settings.formality_treatment}
           onChange={(e) =>
-            updateSetting("formality_treatment", e.target.value as "tu" | "usted")
+            updateSetting(
+              "formality_treatment",
+              e.target.value as "tu" | "usted",
+            )
           }
         >
           <option value="tu">
@@ -1043,14 +1056,14 @@ export const FormalizeSettings: React.FC = () => {
 En `PostProcessingSettings.tsx`, dentro del `return` del componente `PostProcessingSettings` (línea ~430), añadir el atajo y la sección después del `SettingsGroup` del hotkey existente:
 
 ```tsx
-      <SettingsGroup title={t("settings.postProcessing.formalize.title")}>
-        <ShortcutInput
-          shortcutId="transcribe_and_formalize"
-          descriptionMode="tooltip"
-          grouped={true}
-        />
-        <FormalizeSettings />
-      </SettingsGroup>
+<SettingsGroup title={t("settings.postProcessing.formalize.title")}>
+  <ShortcutInput
+    shortcutId="transcribe_and_formalize"
+    descriptionMode="tooltip"
+    grouped={true}
+  />
+  <FormalizeSettings />
+</SettingsGroup>
 ```
 
 Y el import correspondiente arriba del archivo:
@@ -1085,9 +1098,11 @@ git commit -m "feat: ajustes del formalizador en la interfaz y 21 locales"
 ### Task 6: Test de comportamiento del perfil contra la API real
 
 **Files:**
+
 - Modify: `src-tauri/src/actions.rs` (módulo `post_process_profile_tests`, donde ya viven los tres perfiles ES)
 
 **Interfaces:**
+
 - Consumes: el perfil `DEFAULT_EMAIL_PROMPT_ID` de la Task 2 y `render_prompt_variables` de la Task 1.
 - Produces: nada.
 
@@ -1219,6 +1234,6 @@ Validación en vivo (Charly, con `bun run tauri dev` desde `C:\Handy`):
 
 1. Ajustes → Post-procesamiento: aparecen el atajo nuevo, el nombre, el tratamiento y el perfil.
 2. Con el store existente ya migrado, `settings_schema_version` pasa a **7** y el perfil "Correo formal (ES)" aparece en la lista **sin** que cambie el perfil seleccionado del día a día.
-3. Dictar con Ctrl derecho *"dile a María que el deploy se retrasa"* → sale un correo con saludo por la hora, cuerpo, despedida y firma.
+3. Dictar con Ctrl derecho _"dile a María que el deploy se retrasa"_ → sale un correo con saludo por la hora, cuerpo, despedida y firma.
 4. Dictar con `alt_left` (el atajo normal) sigue dando texto crudo, sin formalizar.
 5. Apagar el post-procesado en Ajustes → el atajo de formalizar deja de responder.

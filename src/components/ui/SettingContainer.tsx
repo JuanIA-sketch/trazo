@@ -136,9 +136,7 @@ export const SettingContainer: React.FC<SettingContainerProps> = ({
         )}
         <div className="trz-row__texto">
           <div className="flex items-center gap-2">
-            <h3
-              className={`trz-row__title ${disabled ? "opacity-50" : ""}`}
-            >
+            <h3 className={`trz-row__title ${disabled ? "opacity-50" : ""}`}>
               {title}
             </h3>
             <div

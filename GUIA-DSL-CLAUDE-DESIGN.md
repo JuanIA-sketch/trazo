@@ -12,24 +12,24 @@ Design. Abrirlos en el navegador no muestra nada útil.
 
 **Páginas** (tableros de presentación, para mirar y decidir):
 
-| Archivo | Contenido |
-| --- | --- |
-| `00 · Material.dc.html` | La hoja de especímenes del material |
-| `01 · App.dc.html` | Las pantallas del producto |
-| `02 · Tu trazo.dc.html` | El tablero de actividad |
-| `03 · Primera vez y overlay.dc.html` | Onboarding y overlay |
-| `04 · Sidebar.dc.html` | El sidebar en sus estados |
-| `99 · Archivo.dc.html` | Descartes, no montar |
+| Archivo                              | Contenido                           |
+| ------------------------------------ | ----------------------------------- |
+| `00 · Material.dc.html`              | La hoja de especímenes del material |
+| `01 · App.dc.html`                   | Las pantallas del producto          |
+| `02 · Tu trazo.dc.html`              | El tablero de actividad             |
+| `03 · Primera vez y overlay.dc.html` | Onboarding y overlay                |
+| `04 · Sidebar.dc.html`               | El sidebar en sus estados           |
+| `99 · Archivo.dc.html`               | Descartes, no montar                |
 
 **Componentes** (lo que de verdad sirve para montar):
 
-| Archivo | Qué monta |
-| --- | --- |
-| `Shell.dc.html` | ⭐ **El más importante.** Marco, fondo, y LOS TOKENS |
-| `Sidebar.dc.html` | El sidebar |
-| `HeyTrazo.dc.html` | El bloque de la palabra de activación |
-| `Pantalla.dc.html` | El contenido: paneles, filas, controles |
-| `Tablero.dc.html` | El tablero de actividad |
+| Archivo            | Qué monta                                            |
+| ------------------ | ---------------------------------------------------- |
+| `Shell.dc.html`    | ⭐ **El más importante.** Marco, fondo, y LOS TOKENS |
+| `Sidebar.dc.html`  | El sidebar                                           |
+| `HeyTrazo.dc.html` | El bloque de la palabra de activación                |
+| `Pantalla.dc.html` | El contenido: paneles, filas, controles              |
+| `Tablero.dc.html`  | El tablero de actividad                              |
 
 **Assets** en `assets/`: `isotipo-trazo.png` (34 KB), `trazito.png` (52 KB),
 `corona.png`, más los fondos generados.
@@ -66,15 +66,15 @@ mp-   píldora del modelo     ok-  estado correcto
 
 ## 3. Cómo se traduce el DSL a React
 
-| DSL | React |
-| --- | --- |
-| `<sc-if value="{{ x }}">` | `{x && (...)}` |
-| `<sc-for list="{{ xs }}" as="i">` | `{xs.map(i => ...)}` |
-| `<dc-import name="HeyTrazo" …>` | `<HeyTrazo … />` |
-| `style="{{ nombre }}"` | El objeto está en la clase `Component` del `<script>` al final del archivo |
-| `<svg><use href="#ic-home"/></svg>` | El equivalente de `lucide-react` |
-| `ref="{{ setEl }}"` | `useRef` |
-| `onMouseEnter="{{ enter }}"` | `onMouseEnter={...}` |
+| DSL                                 | React                                                                      |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `<sc-if value="{{ x }}">`           | `{x && (...)}`                                                             |
+| `<sc-for list="{{ xs }}" as="i">`   | `{xs.map(i => ...)}`                                                       |
+| `<dc-import name="HeyTrazo" …>`     | `<HeyTrazo … />`                                                           |
+| `style="{{ nombre }}"`              | El objeto está en la clase `Component` del `<script>` al final del archivo |
+| `<svg><use href="#ic-home"/></svg>` | El equivalente de `lucide-react`                                           |
+| `ref="{{ setEl }}"`                 | `useRef`                                                                   |
+| `onMouseEnter="{{ enter }}"`        | `onMouseEnter={...}`                                                       |
 
 Los valores de estilo **no están en el markup**: están calculados en la clase
 `Component` al final de cada archivo. Para ver un estilo concreto, buscar su

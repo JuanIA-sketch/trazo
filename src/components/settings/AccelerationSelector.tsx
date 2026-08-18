@@ -137,7 +137,7 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
   return (
     <>
       <SettingContainer
-      icon={Cpu}
+        icon={Cpu}
         title={t("settings.advanced.acceleration.transcribe.title")}
         description={t("settings.advanced.acceleration.transcribe.description")}
         descriptionMode={descriptionMode}

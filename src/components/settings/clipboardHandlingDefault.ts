@@ -11,7 +11,8 @@ import type { ClipboardHandling } from "@/bindings";
  * sobre lo que había en disco. Si algún día cambia el default en `settings.rs`,
  * este valor tiene que cambiar con él.
  */
-export const CLIPBOARD_HANDLING_DEFAULT: ClipboardHandling = "copy_to_clipboard";
+export const CLIPBOARD_HANDLING_DEFAULT: ClipboardHandling =
+  "copy_to_clipboard";
 
 /**
  * Qué opción mostrar como seleccionada a partir de lo que hay en los ajustes.

@@ -2034,11 +2034,11 @@ publicada, y un bloqueo de máquina que impide seguir con lo que toca Rust.
 reiniciar.** Se intentó tres veces y falló tres veces, siempre por la misma
 causa aunque con tres síntomas distintos:
 
-| Intento | Commit libre | Dónde murió |
-| --- | --- | --- |
-| 1 | 1,6 GB | `error[E0786]` al mapear `libwindows-*.rlib` — `os error 1455` (ERROR_COMMITMENT_LIMIT) |
-| 2 | 2,9 GB | `memory allocation of 2129936 bytes failed` en MIR (`elaborate_drops`) |
-| 3 | 7,0 GB | `rustc-LLVM ERROR: out of memory` en codegen |
+| Intento | Commit libre | Dónde murió                                                                             |
+| ------- | ------------ | --------------------------------------------------------------------------------------- |
+| 1       | 1,6 GB       | `error[E0786]` al mapear `libwindows-*.rlib` — `os error 1455` (ERROR_COMMITMENT_LIMIT) |
+| 2       | 2,9 GB       | `memory allocation of 2129936 bytes failed` en MIR (`elaborate_drops`)                  |
+| 3       | 7,0 GB       | `rustc-LLVM ERROR: out of memory` en codegen                                            |
 
 Cada intento llegó más lejos, lo que confirma que es memoria y no un bug.
 
@@ -2110,8 +2110,8 @@ grupo** (solo se cablearon las dos de General).
 
 ### 11.4 Punto 3 — completado y verificado
 
-**La letra "T" del overlay ya no existe.** El diseño es explícito: *Sin letra
-adentro: la corona es la marca.* La corona (`.scrown`) **ya estaba montada**
+**La letra "T" del overlay ya no existe.** El diseño es explícito: _Sin letra
+adentro: la corona es la marca._ La corona (`.scrown`) **ya estaba montada**
 desde antes; lo único que faltaba era quitar la letra.
 
 **El contorno de la píldora es ahora el visualizador.** Geometría pura en
@@ -2225,7 +2225,7 @@ InitialSize 2048 / MaximumSize 20480    ← idéntico a §11.1
 ```
 
 Durante la sesión el **commit libre llegó a bajar a 0,73 GB** (Chrome solo:
-47 procesos / 8,3 GB; más 44 procesos de node). Es *peor* que el intento 1 de
+47 procesos / 8,3 GB; más 44 procesos de node). Es _peor_ que el intento 1 de
 §11.1, que ya murió con 1,6 GB. No es solo Rust: **hasta Chromium headless
 falló** — Playwright lanzó el proceso (pid 20464) y se colgó 180 s sin
 completar el handshake, intentando capturar el control. Los huérfanos se
@@ -2253,7 +2253,7 @@ de previsualización.
   un valor de `data-theme`, es su AUSENCIA**, porque el CSS escribe la media
   query como `:root:not([data-theme="light"]):not([data-theme="dark"])`.
   Escribir `data-theme="auto"` dejaría al usuario clavado en claro y
-  *parecería* correcto al inspeccionar el DOM. Hay un test dedicado a que
+  _parecería_ correcto al inspeccionar el DOM. Hay un test dedicado a que
   volver a automático BORRE el atributo.
 - `src/components/ThemeToggle.{tsx,css}` — `role="radiogroup"` + 3 `radio`.
   Glifos calcados del tablero (`ic-sun`/`ic-auto`/`ic-moon`).
@@ -2285,12 +2285,12 @@ memoria (§12.1). Nadie ha visto el control renderizado.
 **68,08 MB → 566 KB.** Los 4 PNG del ZIP eran de 5504x3072 y 4096x4096, o sea
 que el grueso del ahorro es el reescalado, no el formato.
 
-| archivo | destino | tamaño | SSIM |
-| --- | --- | --- | --- |
-| `bg-onboarding.webp` | 2560 px | 81 KB | 0,9921 |
-| `bg-acerca.webp` | 2560 px | 465 KB | 0,9885 |
-| `bg-error.webp` | 1024 px | 10 KB | 0,9953 |
-| `bg-empty-historial.webp` | 1024 px | 11 KB | 0,9956 |
+| archivo                   | destino | tamaño | SSIM   |
+| ------------------------- | ------- | ------ | ------ |
+| `bg-onboarding.webp`      | 2560 px | 81 KB  | 0,9921 |
+| `bg-acerca.webp`          | 2560 px | 465 KB | 0,9885 |
+| `bg-error.webp`           | 1024 px | 10 KB  | 0,9953 |
+| `bg-empty-historial.webp` | 1024 px | 11 KB  | 0,9956 |
 
 Calidad **90**, elegida con datos: se midió SSIM contra el original reescalado
 a q82/q90/q95/sin-pérdida. De q90 a sin-pérdida el SSIM sube ~0,003 y el peso
@@ -2406,12 +2406,12 @@ recto contra el canto de la ventana.
 
 **Causa raíz, medida (no deducida):**
 
-| dato | valor |
-| --- | --- |
-| ventana | 256x64 (`OVERLAY_HEIGHT`, constante de Rust) |
-| tarjeta | top 22.4 · bottom **64.0** |
-| hueco debajo | **0 px** |
-| hueco encima | 22.4 px (de sobra) |
+| dato            | valor                                                       |
+| --------------- | ----------------------------------------------------------- |
+| ventana         | 256x64 (`OVERLAY_HEIGHT`, constante de Rust)                |
+| tarjeta         | top 22.4 · bottom **64.0**                                  |
+| hueco debajo    | **0 px**                                                    |
+| hueco encima    | 22.4 px (de sobra)                                          |
 | halo `--t-glow` | `offsetY 3px, blur 26px, spread -9px` → se derrama **7 px** |
 
 `.ov-stage` usa `align-items: flex-end`, que pega la tarjeta al borde inferior.
@@ -2440,10 +2440,10 @@ al menos eso, más que corona + tarjeta + hueco entren en los 64 px.
 ✅ **Aplicado en los DOS árboles**, con el mismo cambio y el mismo test, para
 que no vuelvan a divergir:
 
-| árbol | estado |
-| --- | --- |
-| `C:\Handy` (main) | `RecordingOverlay.css` modificado + `overlayFit.test.ts` |
-| `C:\trazo-material` (`feat/rebrand-material`) | ídem |
+| árbol                                         | estado                                                   |
+| --------------------------------------------- | -------------------------------------------------------- |
+| `C:\Handy` (main)                             | `RecordingOverlay.css` modificado + `overlayFit.test.ts` |
+| `C:\trazo-material` (`feat/rebrand-material`) | ídem                                                     |
 
 **Verificado en vivo sobre el worktree**, que es el que sirve la app de dev
 (§12.6). Números después del arreglo, medidos por CDP con una grabación real:
@@ -2477,11 +2477,11 @@ Lo primero mañana es preguntárselo, no suponerlo.
 Lo que sí hay son **medidas de esta sesión**, que acotan el terreno. Ventana de
 256x64, tarjeta de 173,6 px de ancho:
 
-| eje | medida | lectura |
-| --- | --- | --- |
-| horizontal | 41,2 px a cada lado | centrada **dentro de su ventana** |
-| vertical (antes) | 22,4 arriba · 0 abajo | pegada al borde inferior |
-| vertical (ahora) | 17,4 arriba · 5 abajo | sigue anclada abajo, con hueco |
+| eje              | medida                | lectura                           |
+| ---------------- | --------------------- | --------------------------------- |
+| horizontal       | 41,2 px a cada lado   | centrada **dentro de su ventana** |
+| vertical (antes) | 22,4 arriba · 0 abajo | pegada al borde inferior          |
+| vertical (ahora) | 17,4 arriba · 5 abajo | sigue anclada abajo, con hueco    |
 
 O sea que **dentro de la ventana está centrada en horizontal**, y en vertical
 está anclada abajo **a propósito** (`align-items: flex-end`). Dos pistas para
@@ -2501,20 +2501,20 @@ mañana:
 
 Sesión cerrada a las 03:30. Lo que quedó corriendo y dónde:
 
-| | estado |
-| --- | --- |
-| Trazo instalado (`%LOCALAPPDATA%\Trazo\Trazo.exe`) | **corriendo**, PID 26664, normal |
-| Trazo de desarrollo (`C:\h\debug\handy.exe`) | cerrado |
-| Servidor Vite (puerto 1420) | parado |
-| Autostart | apunta al **instalado**, verificado tras rearranque |
+|                                                    | estado                                              |
+| -------------------------------------------------- | --------------------------------------------------- |
+| Trazo instalado (`%LOCALAPPDATA%\Trazo\Trazo.exe`) | **corriendo**, PID 26664, normal                    |
+| Trazo de desarrollo (`C:\h\debug\handy.exe`)       | cerrado                                             |
+| Servidor Vite (puerto 1420)                        | parado                                              |
+| Autostart                                          | apunta al **instalado**, verificado tras rearranque |
 
 Para volver al entorno de desarrollo mañana: cerrar el Trazo instalado (bloquea
 al de dev por instancia única), `bun run dev` **desde `C:\trazo-material`** —
 ojo, no desde `C:\Handy`, ver §12.6— y luego `C:\h\debug\handy.exe`.
 
 **Marca de build de desarrollo (nueva).** El de dev ahora se anuncia con una
-franja ámbar a rayas en el borde superior: *«BUILD DE DESARROLLO — no es tu
-Trazo instalado»*. Vive en `src/main.tsx` del worktree, bajo
+franja ámbar a rayas en el borde superior: _«BUILD DE DESARROLLO — no es tu
+Trazo instalado»_. Vive en `src/main.tsx` del worktree, bajo
 `import.meta.env.DEV`, así que en producción no existe. Se hizo en el DOM y no
 en el título de la ventana porque **`setTitle` está vetado por los permisos de
 Tauri** (`core:window:allow-set-title`) y las capabilities se compilan dentro
@@ -2539,10 +2539,10 @@ sincronizado y **no se tocó**; no se fusionó nada.
 
 ### 12.10 Lo que sigue SIN COMMITEAR (a propósito)
 
-| árbol | qué |
-| --- | --- |
-| `C:\Handy` | selector de tema (5 archivos nuevos), 4 fondos WebP, ventana 1100x880 en `lib.rs`, arreglo de la píldora, este documento |
-| `C:\trazo-material` | arreglo de la píldora, `overlayFit.test.ts`, franja de dev en `main.tsx` |
+| árbol               | qué                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `C:\Handy`          | selector de tema (5 archivos nuevos), 4 fondos WebP, ventana 1100x880 en `lib.rs`, arreglo de la píldora, este documento |
+| `C:\trazo-material` | arreglo de la píldora, `overlayFit.test.ts`, franja de dev en `main.tsx`                                                 |
 
 Más el WIP de wakeword de Charly en `C:\Handy`, **intacto** en toda la sesión
 (37 archivos; se verificó que sus 4 líneas de `transcribe_to_english` conviven
@@ -2596,11 +2596,11 @@ panicked at src\lib.rs:190:50
 Failed to initialize history manager: MigrationDefinition(DatabaseTooFarAhead)
 ```
 
-| | migraciones |
-| --- | --- |
-| `history.db` real | **v6** |
-| `feat/rebrand-material` | **4** |
-| `main` | **6** |
+|                         | migraciones |
+| ----------------------- | ----------- |
+| `history.db` real       | **v6**      |
+| `feat/rebrand-material` | **4**       |
+| `main`                  | **6**       |
 
 `history.rs` difería en **−220 líneas**: la rama no conocía las dos últimas
 migraciones y se negaba a abrir la base de datos que ya había migrado el Trazo
@@ -2616,17 +2616,17 @@ pánico** y registra los atajos. Verificado compilando y ejecutando.
 
 Charly pidió comprobarlo de verdad. Resultado:
 
-| | |
-| --- | --- |
-| Letra "T" | **eliminada** — no está en el TSX, el DOM da `letraT_presente: false`, y no aparece en la captura |
-| Píldora cortada | **arreglada** — `huecoAbajo` 0 → 5 |
-| Capas | **arreglado hoy** (abajo) |
-| Encaje de la corona | **se deja como está**, decisión de Charly |
+|                     |                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| Letra "T"           | **eliminada** — no está en el TSX, el DOM da `letraT_presente: false`, y no aparece en la captura |
+| Píldora cortada     | **arreglada** — `huecoAbajo` 0 → 5                                                                |
+| Capas               | **arreglado hoy** (abajo)                                                                         |
+| Encaje de la corona | **se deja como está**, decisión de Charly                                                         |
 
 **Bug nuevo encontrado y arreglado: el contorno partía la corona en dos.**
 `.scrown` estaba en `z-index: 1` y `.sborde` en `2`, así que el trazo del borde
 reactivo cruzaba por encima del emblema. Contradecía la intención que describe
-el propio CSS del arco — *«orbita saliendo de DEBAJO de la corona»*: para salir
+el propio CSS del arco — _«orbita saliendo de DEBAJO de la corona»_: para salir
 de debajo, la corona tiene que ir delante. Ahora `z-index: 3`. Verificado
 ampliando a 4x: el arco pasa por detrás y desaparece donde la corona lo tapa.
 
@@ -2667,7 +2667,9 @@ Charly pidió **no tocarlo**. Para verificar cosas visuales sin micrófono, se
 fuerza la visibilidad del overlay por CDP:
 
 ```js
-document.querySelector(".ov-stage").style.setProperty("opacity","1","important")
+document
+  .querySelector(".ov-stage")
+  .style.setProperty("opacity", "1", "important");
 ```
 
 Ojo: **añadir la clase `show` no sirve** — React reconcilia el `className` y la
@@ -2690,10 +2692,10 @@ verde, traducciones 20/20.
 **`main` (C:\Handy) — solo lo independiente**, por decisión de Charly. El resto
 choca con su WIP:
 
-| queda SIN commitear | por qué |
-| --- | --- |
+| queda SIN commitear                                                                  | por qué                                                                                                                                |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Selector de tema (5 archivos + `Sidebar.tsx`, `main.tsx`, `App.css`, `material.css`) | **no funciona sin sus claves i18n**, y los 21 `translation.json` tienen mezcladas las 4 líneas de `transcribe_to_english` del wakeword |
-| Ventana 1100x880 (`lib.rs`) | el mismo archivo lleva su `mod wakeword;` |
+| Ventana 1100x880 (`lib.rs`)                                                          | el mismo archivo lleva su `mod wakeword;`                                                                                              |
 
 **Al retomar el wakeword, esos dos se desbloquean solos.** El trabajo está
 hecho y probado (11 tests del tema en verde); solo espera a poder separarse.
@@ -2708,7 +2710,6 @@ hecho y probado (11 tests del tema en verde); solo espera a poder separarse.
    1100x880, y persistir el tema en `settings.rs` quitando el `localStorage`.
 4. `#[cfg(not(debug_assertions))]` en el autostart (§12.9).
 5. Cuando llegue el SVG del logo: rehacer el encaje de la corona (§13.3).
-
 
 ### 13.7 La fusión a `main` — hecha, y por qué `main` local va por detrás
 
@@ -2740,7 +2741,6 @@ WIP. Para ponerlo al día hay que resolver antes qué se hace con
 `src/main.tsx` y `ModelSettingsCard.tsx`; hasta entonces, **no hacer `git pull`
 a ciegas en `C:\Handy`**.
 
-
 ---
 
 ## 14. Estado al cerrar — 2026-08-02
@@ -2765,12 +2765,12 @@ transcripción.
 **Puede que la petición se refiera a investigaciones que SÍ existen y están
 CERRADAS**, todas sobre coste de decodificación:
 
-| dónde | qué se midió | veredicto |
-| --- | --- | --- |
-| §2.3 | entero vs troceado siempre | trocear siempre era regresión; se decodifica entero y solo se reintenta si sale truncado |
-| §2.6 | ventanas de segmento más grandes | rechazado: ahorró 1 decode en todo el corpus y perdió 13 palabras |
-| §4.1 | `run_batch` vs bucle | rechazado: **0,94× (más lento)** y además cambiaba el texto |
-| §5 | acortar la ventana de 30 s de Whisper | descartado: la capacidad existe pero no es configurable sin parchear la crate |
+| dónde | qué se midió                          | veredicto                                                                                |
+| ----- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| §2.3  | entero vs troceado siempre            | trocear siempre era regresión; se decodifica entero y solo se reintenta si sale truncado |
+| §2.6  | ventanas de segmento más grandes      | rechazado: ahorró 1 decode en todo el corpus y perdió 13 palabras                        |
+| §4.1  | `run_batch` vs bucle                  | rechazado: **0,94× (más lento)** y además cambiaba el texto                              |
+| §5    | acortar la ventana de 30 s de Whisper | descartado: la capacidad existe pero no es configurable sin parchear la crate            |
 
 Coste actual medido, para tener referencia: **71 s de audio en 6,7 s (10,6×
 tiempo real)** por el camino normal. Solo el reintento troceado cuesta 2-2,6×.
@@ -2803,11 +2803,11 @@ No es solo un esquema SQL: hay backend, componente y tests.
 
 ### 14.3 ~~Git — estado exacto~~ — EQUIVOCADA, ver §15.2
 
-| ref | commit | nota |
-| --- | --- | --- |
-| `origin/main` | **`2120f03`** | incluye la fusión `8d83fcc` |
-| `main` local (`C:\Handy`) | **`eafbf8d`** | **2 commits por detrás, a propósito** |
-| `origin/feat/rebrand-material` | **`b4caae3`** | ya fusionada en main |
+| ref                            | commit        | nota                                  |
+| ------------------------------ | ------------- | ------------------------------------- |
+| `origin/main`                  | **`2120f03`** | incluye la fusión `8d83fcc`           |
+| `main` local (`C:\Handy`)      | **`eafbf8d`** | **2 commits por detrás, a propósito** |
+| `origin/feat/rebrand-material` | **`b4caae3`** | ya fusionada en main                  |
 
 **Todo lo commiteado está pusheado.** No hay commits locales sin subir en
 ninguna de las dos ramas.
@@ -2831,10 +2831,10 @@ primero por el arranque del selector de tema, el segundo por el WIP de wakeword.
 
 **Trabajo hecho y probado que espera a que aterrice ese WIP:**
 
-| qué | estado | por qué no entra |
-| --- | --- | --- |
-| Selector de tema (5 archivos + `Sidebar.tsx`, `main.tsx`, `App.css`, `material.css`) | 11 tests en verde | no funciona sin sus claves i18n, y los 21 `translation.json` llevan mezcladas 4 líneas del wakeword |
-| Ventana 1100x880 + maximizable (`lib.rs`) | **compila** (verificado 02/08) | el mismo archivo lleva `mod wakeword;` |
+| qué                                                                                  | estado                         | por qué no entra                                                                                    |
+| ------------------------------------------------------------------------------------ | ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Selector de tema (5 archivos + `Sidebar.tsx`, `main.tsx`, `App.css`, `material.css`) | 11 tests en verde              | no funciona sin sus claves i18n, y los 21 `translation.json` llevan mezcladas 4 líneas del wakeword |
+| Ventana 1100x880 + maximizable (`lib.rs`)                                            | **compila** (verificado 02/08) | el mismo archivo lleva `mod wakeword;`                                                              |
 
 Ninguno de los dos está en riesgo: están en el árbol de trabajo y documentados.
 
@@ -2859,12 +2859,12 @@ Ninguno de los dos está en riesgo: están en el árbol de trabajo y documentado
 
 ### 14.6 Entorno al cerrar
 
-| | |
-| --- | --- |
-| Trazo instalado | **corriendo** (reiniciado durante la sesión; el PID cambia) |
-| Trazo de desarrollo + Vite | cerrados |
-| Autostart | apunta al **instalado**, verificado |
-| **Wispr Flow** | **corriendo, ~10 procesos, RETIENE EL MICRÓFONO** |
+|                            |                                                             |
+| -------------------------- | ----------------------------------------------------------- |
+| Trazo instalado            | **corriendo** (reiniciado durante la sesión; el PID cambia) |
+| Trazo de desarrollo + Vite | cerrados                                                    |
+| Autostart                  | apunta al **instalado**, verificado                         |
+| **Wispr Flow**             | **corriendo, ~10 procesos, RETIENE EL MICRÓFONO**           |
 
 ⚠️ **Mientras Wispr Flow esté activo, Trazo no puede grabar** —
 `Recorder not available` en el log. Arranca solo desde la carpeta de Inicio.
@@ -2901,10 +2901,10 @@ La GTX 1650 se cayó del bus PCI (error 43 de Windows,
 
 Y el efecto, en el mismo log:
 
-| cuándo | dispositivo | rendimiento |
-| --- | --- | --- |
-| hasta 03:28 UTC | `Vulkan1` (GTX) | 10,2x · 13,4x · 14,3x · 12,0x tiempo real |
-| desde 03:48 UTC | `Vulkan0` (iGPU) | 0,72x · 0,62x · 0,63x · 0,46x · 0,43x |
+| cuándo          | dispositivo      | rendimiento                               |
+| --------------- | ---------------- | ----------------------------------------- |
+| hasta 03:28 UTC | `Vulkan1` (GTX)  | 10,2x · 13,4x · 14,3x · 12,0x tiempo real |
+| desde 03:48 UTC | `Vulkan0` (iGPU) | 0,72x · 0,62x · 0,63x · 0,46x · 0,43x     |
 
 **18 horas así, y el único rastro fue ese `warn!`.** Charly dictó toda la tarde
 con esperas de 30-110 s por dictado (el peor: 111,12 s para 68,79 s de audio).
@@ -2913,11 +2913,11 @@ con esperas de 30-110 s por dictado (el peor: 111,12 s para 68,79 s de audio).
 1,68 s, mismo modelo (`whisper-large-v3-turbo-Q8_0`), vía
 `handy.exe --transcribe-file <wav> --device-index N --repeat 2`:
 
-| dispositivo | mejor decode | contra la GPU |
-| --- | --- | --- |
-| **GTX 1650** (`--device-index 1`) | **1,46 s** | — |
-| CPU i5-10300H (`--device-index 2`) | 24,3 s | 17x más lento |
-| **Intel UHD** (`--device-index 0`) | **96,5 s** | **66x más lento** |
+| dispositivo                        | mejor decode | contra la GPU     |
+| ---------------------------------- | ------------ | ----------------- |
+| **GTX 1650** (`--device-index 1`)  | **1,46 s**   | —                 |
+| CPU i5-10300H (`--device-index 2`) | 24,3 s       | 17x más lento     |
+| **Intel UHD** (`--device-index 0`) | **96,5 s**   | **66x más lento** |
 
 ⚠️ **El repliegue aterrizaba en el PEOR de los tres.** La iGPU es 4x más lenta
 que la CPU pura en esta máquina. Se decidió (Charly, esta sesión) **no cambiar el
@@ -2982,11 +2982,11 @@ Moraleja operativa: **medir antes de decidir**. Un `git fetch` y un
 §14.4 describía el WIP como «wakeword, 4 entradas». En realidad hay tres bloques
 independientes, y uno de ellos ni siquiera es wakeword:
 
-| grupo | qué | estado |
-| --- | --- | --- |
-| **A — aviso de GPU perdida** | `transcription.rs` (parte), `bindings.ts`, `App.tsx`, `AccelerationSelector.tsx`, `ComputeHealthBanner.tsx`, `computeHealth.{ts,test.ts}`, 21 locales | ✅ **commiteado y pusheado** (`e93ed62`) |
-| **B — atajo dictar-en-inglés (F10)** | `actions.rs`, `settings.rs` (esquema **v9** + `TRANSLATE_BINDING_ID`), `transcription.rs` (`translate_override`), `transcription_coordinator.rs`, `commands/history.rs`, `lib.rs`, `shortcut/*.rs`, `examples/es_model_eval.rs`, `ModelSettingsCard.tsx`, 21 locales | **terminado y en verde, sin commitear** |
-| **C — wakeword** | `Cargo.{toml,lock}` (`ort`, `ndarray`), `lib.rs` (`mod wakeword;`), `src/wakeword/` (5 archivos, 15 tests), `resources/models/wakeword/` (3 ONNX), `recorder.rs`, `managers/audio.rs` | **no distribuible tal cual** |
+| grupo                                | qué                                                                                                                                                                                                                                                                  | estado                                   |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **A — aviso de GPU perdida**         | `transcription.rs` (parte), `bindings.ts`, `App.tsx`, `AccelerationSelector.tsx`, `ComputeHealthBanner.tsx`, `computeHealth.{ts,test.ts}`, 21 locales                                                                                                                | ✅ **commiteado y pusheado** (`e93ed62`) |
+| **B — atajo dictar-en-inglés (F10)** | `actions.rs`, `settings.rs` (esquema **v9** + `TRANSLATE_BINDING_ID`), `transcription.rs` (`translate_override`), `transcription_coordinator.rs`, `commands/history.rs`, `lib.rs`, `shortcut/*.rs`, `examples/es_model_eval.rs`, `ModelSettingsCard.tsx`, 21 locales | **terminado y en verde, sin commitear**  |
+| **C — wakeword**                     | `Cargo.{toml,lock}` (`ort`, `ndarray`), `lib.rs` (`mod wakeword;`), `src/wakeword/` (5 archivos, 15 tests), `resources/models/wakeword/` (3 ONNX), `recorder.rs`, `managers/audio.rs`                                                                                | **no distribuible tal cual**             |
 
 Correcciones concretas a §14.4:
 
@@ -3011,12 +3011,12 @@ recompilar transcribe-cpp-sys entero y `C:` está al 96 %).
 
 ### 15.4 Correcciones a §14 — qué hay que dejar de creer
 
-| §14 dice | realidad al 2026-08-17 |
-| --- | --- |
-| «No existe diagnóstico de la lentitud» | Existe, está medido y arreglado (§15.1) |
-| «`main` local va 2 commits por detrás» | Iba 2 **por delante**; ya está pusheado (§15.2) |
-| «Selector de tema y ventana esperan al wakeword» | Ya estaban commiteados (`7febb30`, `0045ec8`) |
-| «WIP de wakeword, 4 entradas» | Tres grupos; dos de ellos no son wakeword (§15.3) |
+| §14 dice                                         | realidad al 2026-08-17                            |
+| ------------------------------------------------ | ------------------------------------------------- |
+| «No existe diagnóstico de la lentitud»           | Existe, está medido y arreglado (§15.1)           |
+| «`main` local va 2 commits por detrás»           | Iba 2 **por delante**; ya está pusheado (§15.2)   |
+| «Selector de tema y ventana esperan al wakeword» | Ya estaban commiteados (`7febb30`, `0045ec8`)     |
+| «WIP de wakeword, 4 entradas»                    | Tres grupos; dos de ellos no son wakeword (§15.3) |
 
 §14.2 (el mapa de actividad diaria **sí** está construido) sigue siendo correcta:
 verificado en `HEAD` — `insights.rs`, `ActivityMap.tsx`, `activityGrid.{ts,test.ts}`,
@@ -3058,15 +3058,15 @@ segundos** y **marcarlas con la estrella en el Historial en el momento**.
 
 ### 15.7 Entorno al cerrar
 
-| | |
-| --- | --- |
-| `origin/main` = `main` local | **`e93ed62`**, sincronizados |
-| GTX 1650 | **recuperada**, `Status: OK`, y la app liga `Vulkan1` |
-| Trazo instalado | corriendo (`AppData\Local\Trazo\Trazo.exe`) |
-| Trazo de desarrollo + Vite | cerrados |
-| Binario de dev | reconstruido en `C:\h\debug\handy.exe` (grupos A+B+C) |
-| `C:` | 96 % lleno, ~20 GB libres |
-| Wispr Flow | **no estaba corriendo** esta sesión (§14.6 lo daba por activo) |
+|                              |                                                                |
+| ---------------------------- | -------------------------------------------------------------- |
+| `origin/main` = `main` local | **`e93ed62`**, sincronizados                                   |
+| GTX 1650                     | **recuperada**, `Status: OK`, y la app liga `Vulkan1`          |
+| Trazo instalado              | corriendo (`AppData\Local\Trazo\Trazo.exe`)                    |
+| Trazo de desarrollo + Vite   | cerrados                                                       |
+| Binario de dev               | reconstruido en `C:\h\debug\handy.exe` (grupos A+B+C)          |
+| `C:`                         | 96 % lleno, ~20 GB libres                                      |
+| Wispr Flow                   | **no estaba corriendo** esta sesión (§14.6 lo daba por activo) |
 
 **Herramienta que conviene recordar**, porque resolvió esta sesión entera:
 

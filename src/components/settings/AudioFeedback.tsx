@@ -20,7 +20,7 @@ export const AudioFeedback: React.FC<AudioFeedbackProps> = React.memo(
     return (
       <div className="flex flex-col">
         <ToggleSwitch
-        icon={Volume2}
+          icon={Volume2}
           checked={audioFeedbackEnabled}
           onChange={(enabled) => updateSetting("audio_feedback", enabled)}
           isUpdating={isUpdating("audio_feedback")}

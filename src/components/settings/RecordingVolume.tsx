@@ -30,7 +30,7 @@ export const RecordingVolume: React.FC<RecordingVolumeProps> = React.memo(
     return (
       <>
         <ToggleSwitch
-        icon={Volume2}
+          icon={Volume2}
           checked={enabled}
           onChange={(on) =>
             updateSetting("recording_volume", on ? DEFAULT_DUCK_LEVEL : null)

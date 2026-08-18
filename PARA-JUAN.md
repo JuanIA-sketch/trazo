@@ -34,23 +34,23 @@ todo lo de arriba dice "compila y pasa los chequeos", no "se ve bien corriendo".
 
 **Nuevos**
 
-| Archivo | Qué es |
-| --- | --- |
-| `src/styles/material.css` | ~60 tokens de material (superficies, elevación, bordes en degradado) en claro y oscuro |
-| `src/components/Sidebar.css` | Superficie del sidebar, marca de agua, ítem activo con riel |
-| `src/components/HeyTrazo.tsx` | El bloque de la palabra de activación |
-| `src/components/HeyTrazo.css` | Su material y sus estados |
-| `src/assets/trazito.png` | La mascota (52 KB) |
+| Archivo                       | Qué es                                                                                 |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `src/styles/material.css`     | ~60 tokens de material (superficies, elevación, bordes en degradado) en claro y oscuro |
+| `src/components/Sidebar.css`  | Superficie del sidebar, marca de agua, ítem activo con riel                            |
+| `src/components/HeyTrazo.tsx` | El bloque de la palabra de activación                                                  |
+| `src/components/HeyTrazo.css` | Su material y sus estados                                                              |
+| `src/assets/trazito.png`      | La mascota (52 KB)                                                                     |
 
 **Modificados**
 
-| Archivo | Qué |
-| --- | --- |
-| `src/App.css` | +41 líneas: importa el material, malla de fondo, capa de grano |
-| `src/components/Sidebar.tsx` | Clases + campo `group` + render agrupado + `<HeyTrazo/>` |
-| `src/i18n/locales/*/translation.json` | 6 claves nuevas × 21 locales |
-| `CLAUDE.md` | Correcciones de documentación (ver §6) |
-| `src/overlay/RecordingOverlay.css` | Solo comentarios: describían el diseño morado viejo |
+| Archivo                               | Qué                                                            |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `src/App.css`                         | +41 líneas: importa el material, malla de fondo, capa de grano |
+| `src/components/Sidebar.tsx`          | Clases + campo `group` + render agrupado + `<HeyTrazo/>`       |
+| `src/i18n/locales/*/translation.json` | 6 claves nuevas × 21 locales                                   |
+| `CLAUDE.md`                           | Correcciones de documentación (ver §6)                         |
+| `src/overlay/RecordingOverlay.css`    | Solo comentarios: describían el diseño morado viejo            |
 
 ## 4. Las claves de traducción
 
@@ -80,11 +80,11 @@ antes de tu commit, va apagado.
 
 Tres estados están diseñados; dos están montados:
 
-| Estado | Copy | Montado |
-| --- | --- | --- |
-| Apagado | `Activar «Hey Trazo»` | ✅ |
-| Escuchando | `Di «Hey Trazo»` + línea de privacidad | ✅ |
-| Detectado | pulso de Trazito + `Te escucho…` | ❌ falta el evento del backend |
+| Estado     | Copy                                   | Montado                        |
+| ---------- | -------------------------------------- | ------------------------------ |
+| Apagado    | `Activar «Hey Trazo»`                  | ✅                             |
+| Escuchando | `Di «Hey Trazo»` + línea de privacidad | ✅                             |
+| Detectado  | pulso de Trazito + `Te escucho…`       | ❌ falta el evento del backend |
 
 Para el tercero necesito un evento cuando se detecta la frase. Con eso el
 personaje pulsa y la tarjeta destella ~1s. Es el instante que demuestra que la

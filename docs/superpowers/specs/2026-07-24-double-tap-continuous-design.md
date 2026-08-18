@@ -18,10 +18,10 @@ igual. El modo toggle existente (`push_to_talk=false`) no cambia.
   de siempre no espera nada.
 - Release tras hold **< 450 ms** → "tap pendiente": la grabación SIGUE y se
   arma un deadline de **550 ms** (DOUBLE_TAP_WINDOW).
-- *(Los valores originales 250/350 ms se descartaron en validación en vivo:
+- _(Los valores originales 250/350 ms se descartaron en validación en vivo:
   exigían timing de máquina — varios intentos para latchear. Un doble-tap
   humano relajado es ~180 ms de hold con ~300-450 ms entre taps; hay test de
-  regresión con ese perfil.)*
+  regresión con ese perfil.)_
   - Segundo press dentro de la ventana → **latch continuo**: grabando sin
     tecla; su release se ignora.
   - Ventana expira sin segundo press → stop normal (el mini-clip se procesa

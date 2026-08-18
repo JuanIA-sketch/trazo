@@ -126,7 +126,7 @@ export const CustomReplacements: React.FC<CustomReplacementsProps> = React.memo(
     return (
       <>
         <SettingContainer
-      icon={Replace}
+          icon={Replace}
           title={t("settings.advanced.customReplacements.title")}
           description={t("settings.advanced.customReplacements.description")}
           descriptionMode={descriptionMode}

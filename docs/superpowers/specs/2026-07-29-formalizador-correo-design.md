@@ -122,9 +122,9 @@ atajo de post-proceso en `settings.rs`:
 > de la tabla siguiente se conserva porque explica por qué se descartaron AltGr
 > y `shift_right`, que sigue vigente.
 
-| Plataforma      | Default      | Por qué                                                             |
-| --------------- | ------------ | ------------------------------------------------------------------- |
-| Windows / Linux | ~~`ctrl_right`~~ | Existe en todo teclado PC, no colisiona con AltGr, libre al escribir |
+| Plataforma      | Default          | Por qué                                                                       |
+| --------------- | ---------------- | ----------------------------------------------------------------------------- |
+| Windows / Linux | ~~`ctrl_right`~~ | Existe en todo teclado PC, no colisiona con AltGr, libre al escribir          |
 | macOS           | ~~`cmd_right`~~  | Los MacBook no tienen Ctrl derecho; Command derecho sí, y suelto no hace nada |
 
 **Nada de acordes de tres teclas, y nunca Ctrl+Alt.** En teclado español AltGr
@@ -154,11 +154,11 @@ coordinador sin código adicional.
 
 ## Ajustes nuevos
 
-| Ajuste                | Tipo                     | Default             |
-| --------------------- | ------------------------ | ------------------- |
-| `user_full_name`      | `String`                 | `""`                |
-| `formality_treatment` | enum `Tu` \| `Usted`     | `Tu`                |
-| `formalize_prompt_id` | `Option<String>`         | `"default_es_email"` |
+| Ajuste                | Tipo                 | Default              |
+| --------------------- | -------------------- | -------------------- |
+| `user_full_name`      | `String`             | `""`                 |
+| `formality_treatment` | enum `Tu` \| `Usted` | `Tu`                 |
+| `formalize_prompt_id` | `Option<String>`     | `"default_es_email"` |
 
 Más un `LLMPrompt` sembrado con id `default_es_email`, en la línea de los tres
 perfiles ES que ya existen.
@@ -181,11 +181,11 @@ default no bastaría para los usuarios existentes — de ahí la migración.
 
 ### `greeting_for_hour(hour: u32) -> &'static str`
 
-| Rango (hora local) | Saludo         |
-| ------------------ | -------------- |
-| 5–11               | Buenos días    |
-| 12–19              | Buenas tardes  |
-| 20–4               | Buenas noches  |
+| Rango (hora local) | Saludo        |
+| ------------------ | ------------- |
+| 5–11               | Buenos días   |
+| 12–19              | Buenas tardes |
+| 20–4               | Buenas noches |
 
 Recibe la hora como parámetro (no la lee del reloj) para que sea testeable sin
 mockear el tiempo. El llamador le pasa la hora local del sistema.

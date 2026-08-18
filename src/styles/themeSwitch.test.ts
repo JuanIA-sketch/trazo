@@ -51,7 +51,10 @@ describe.each(ARCHIVOS)("%s: tema conmutable", (archivo) => {
   it("el automático no pisa un tema claro forzado", () => {
     const iMedia = css.indexOf("@media (prefers-color-scheme: dark)");
     expect(iMedia).toBeGreaterThan(-1);
-    const selector = css.slice(iMedia, css.indexOf("{", css.indexOf("{", iMedia) + 1));
+    const selector = css.slice(
+      iMedia,
+      css.indexOf("{", css.indexOf("{", iMedia) + 1),
+    );
     expect(selector).toContain(':not([data-theme="light"])');
   });
 

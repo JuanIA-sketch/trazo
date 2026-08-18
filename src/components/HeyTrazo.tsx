@@ -27,7 +27,9 @@ export const HeyTrazo: React.FC<HeyTrazoProps> = ({ compact = false }) => {
   return (
     <div
       className={`trz-hey is-soon ${compact ? "is-compact" : ""}`}
-      title={compact ? `${t("heyTrazo.name")} · ${t("heyTrazo.soon")}` : undefined}
+      title={
+        compact ? `${t("heyTrazo.name")} · ${t("heyTrazo.soon")}` : undefined
+      }
     >
       <img src={trazito} alt="" aria-hidden="true" className="trz-hey-pet" />
       {!compact && (

@@ -64,7 +64,7 @@ export const AutoSubmit: React.FC<AutoSubmitProps> = React.memo(
 
     return (
       <SettingContainer
-      icon={CornerDownLeft}
+        icon={CornerDownLeft}
         title={t("settings.advanced.autoSubmit.title")}
         description={t("settings.advanced.autoSubmit.description")}
         descriptionMode={descriptionMode}

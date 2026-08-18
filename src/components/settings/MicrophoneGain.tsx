@@ -24,7 +24,7 @@ export const MicrophoneGain: React.FC<{
 
   return (
     <Slider
-        icon={SlidersHorizontal}
+      icon={SlidersHorizontal}
       value={gain}
       onChange={(value: number) => updateSetting("microphone_gain", value)}
       min={0.5}

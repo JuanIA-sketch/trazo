@@ -34,7 +34,7 @@ export const ClipboardHandlingSetting: React.FC<ClipboardHandlingProps> =
 
     return (
       <SettingContainer
-      icon={Clipboard}
+        icon={Clipboard}
         title={t("settings.advanced.clipboardHandling.title")}
         description={t("settings.advanced.clipboardHandling.description")}
         descriptionMode={descriptionMode}

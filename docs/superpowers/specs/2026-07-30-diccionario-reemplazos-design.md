@@ -16,11 +16,11 @@ Historial en vez de una excursión a Ajustes.
 
 ## 1. Lo que YA existe (y por tanto NO se construye)
 
-| Pieza                                   | Estado                                                                           |
-| --------------------------------------- | -------------------------------------------------------------------------------- |
-| Motor de reemplazos exactos             | `apply_custom_replacements` (`audio_toolkit/text.rs:113`)                          |
-| Motor de corrección difusa              | `apply_custom_words` + `word_correction_threshold` (0.18)                          |
-| **Alta manual en Ajustes**              | **YA EXISTE**: `CustomReplacements.tsx` (alta/baja/CSV) y `CustomWords.tsx`        |
+| Pieza                                   | Estado                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------ |
+| Motor de reemplazos exactos             | `apply_custom_replacements` (`audio_toolkit/text.rs:113`)                            |
+| Motor de corrección difusa              | `apply_custom_words` + `word_correction_threshold` (0.18)                            |
+| **Alta manual en Ajustes**              | **YA EXISTE**: `CustomReplacements.tsx` (alta/baja/CSV) y `CustomWords.tsx`          |
 | Glosario técnico en los prompts del LLM | Ya en los tres perfiles ES (`commit`, `pull request`, `n8n`…), solo con post-proceso |
 
 De las tres piezas pedidas, **la del botón manual ya estaba hecha**. Queda la
@@ -37,13 +37,13 @@ actúa en el dictado crudo, no gasta tokens y no puede alucinar. Complementarios
 Se probó la lista de nombres candidatos contra el motor difuso con el umbral
 real (0.18), usando el código de producción:
 
-| Frase dictada                | Resultado          |
-| ---------------------------- | ------------------ |
-| "se lo mando a **Claudia**"  | → "a **Claude**" ❌ |
-| "hablé con **Claudio**"      | → "con **Claude**" ❌ |
-| "no lo **veo** claro"        | → "no lo **Veo** claro" ❌ |
-| "el **flujo** de trabajo"    | → "el **Flux** de trabajo" ❌ |
-| "mi hermana **Sara**"        | → "mi hermana **Sora**" ❌ |
+| Frase dictada               | Resultado                     |
+| --------------------------- | ----------------------------- |
+| "se lo mando a **Claudia**" | → "a **Claude**" ❌           |
+| "hablé con **Claudio**"     | → "con **Claude**" ❌         |
+| "no lo **veo** claro"       | → "no lo **Veo** claro" ❌    |
+| "el **flujo** de trabajo"   | → "el **Flux** de trabajo" ❌ |
+| "mi hermana **Sara**"       | → "mi hermana **Sora**" ❌    |
 
 **Cinco de doce frases corrompidas.** La causa está en `find_best_match`: cuando
 Soundex empareja, el score se multiplica por **0.3**, así que pares que la

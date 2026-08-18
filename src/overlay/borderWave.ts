@@ -122,7 +122,8 @@ export const deformarHaciaAdentro = (
     // Distancia angular a la corona, normalizada 0..1 (0 = en la corona).
     const bruto = Math.abs(i - origen);
     const circular = Math.min(bruto, n - bruto) / (n / 2);
-    const ventana = minimoDecaimiento + (1 - minimoDecaimiento) * (1 - circular);
+    const ventana =
+      minimoDecaimiento + (1 - minimoDecaimiento) * (1 - circular);
 
     const amplitud = Math.max(0, Math.min(1, amplitudes[i] ?? 0));
     const empuje = amplitud * ventana * maximo;

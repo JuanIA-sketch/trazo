@@ -149,8 +149,7 @@ export const settingUpdaters: {
     commands.changeUserFullNameSetting(value as string),
   formality_treatment: (value) =>
     commands.changeFormalityTreatmentSetting(value as string),
-  formalize_prompt_id: (value) =>
-    commands.setFormalizePrompt(value as string),
+  formalize_prompt_id: (value) => commands.setFormalizePrompt(value as string),
   mute_while_recording: (value) =>
     commands.changeMuteWhileRecordingSetting(value as boolean),
   recording_volume: (value) =>

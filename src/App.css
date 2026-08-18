@@ -12,8 +12,8 @@
      Las familias de respaldo cubren los idiomas que Geist no trae (árabe,
      hebreo, CJK): ahí resuelve el sistema, que es lo que el diseño espera. */
   --font-sans:
-    "Geist", system-ui, -apple-system, "Segoe UI", sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji";
+    "Geist", system-ui, -apple-system, "Segoe UI", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
 

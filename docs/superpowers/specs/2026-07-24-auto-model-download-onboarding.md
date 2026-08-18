@@ -50,9 +50,9 @@ decididos por lógica pura:
 export const ONBOARDING_DEFAULT_MODEL_ID =
   "handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf";
 export type ModelStepPlan =
-  | { kind: "select"; modelId: string }   // default ya en disco → selección directa
+  | { kind: "select"; modelId: string } // default ya en disco → selección directa
   | { kind: "download"; modelId: string } // default descargable → auto-descarga
-  | { kind: "manual" };                   // default ausente del catálogo → chooser
+  | { kind: "manual" }; // default ausente del catálogo → chooser
 export function planModelStep(models: ModelInfo[]): ModelStepPlan;
 ```
 

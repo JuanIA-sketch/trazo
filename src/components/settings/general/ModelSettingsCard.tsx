@@ -51,7 +51,10 @@ export const ModelSettingsCard: React.FC = () => {
       {/* Cabecera del panel destacado: el modelo activo, su ficha y sus dos
           medidas. Es lo único con borde en degradado en esta pantalla. */}
       <div className="flex items-center gap-3.5 flex-wrap mb-4">
-        <span className="trz-chip-grupo" style={{ flexBasis: 40, width: 40, height: 40, borderRadius: 12 }}>
+        <span
+          className="trz-chip-grupo"
+          style={{ flexBasis: 40, width: 40, height: 40, borderRadius: 12 }}
+        >
           <Cpu className="w-5 h-5" />
         </span>
         <div className="flex-1 min-w-[200px] flex flex-col gap-0.5">
@@ -82,7 +85,10 @@ export const ModelSettingsCard: React.FC = () => {
             [t("onboarding.modelCard.accuracy"), precision],
             [t("onboarding.modelCard.speed"), velocidad],
           ].map(([etiqueta, valor]) => (
-            <div key={etiqueta as string} className="flex-1 min-w-0 flex flex-col gap-2">
+            <div
+              key={etiqueta as string}
+              className="flex-1 min-w-0 flex flex-col gap-2"
+            >
               <div className="flex items-baseline justify-between gap-2.5">
                 <span className="trz-metric__label uppercase">{etiqueta}</span>
                 <span className="trz-metric">{valor}%</span>

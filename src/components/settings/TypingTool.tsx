@@ -63,7 +63,7 @@ export const TypingToolSetting: React.FC<TypingToolProps> = React.memo(
 
     return (
       <SettingContainer
-      icon={Type}
+        icon={Type}
         title={t("settings.advanced.typingTool.title")}
         description={t("settings.advanced.typingTool.description")}
         descriptionMode={descriptionMode}

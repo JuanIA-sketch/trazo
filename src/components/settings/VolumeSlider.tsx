@@ -13,7 +13,7 @@ export const VolumeSlider: React.FC<{ disabled?: boolean }> = ({
 
   return (
     <Slider
-        icon={Volume2}
+      icon={Volume2}
       value={audioFeedbackVolume}
       onChange={(value: number) =>
         updateSetting("audio_feedback_volume", value)

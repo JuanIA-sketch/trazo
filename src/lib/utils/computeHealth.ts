@@ -21,9 +21,7 @@ export type ComputeNotice =
  * desapareció del bus PCI, la transcripción pasó de ~11x a ~0,5x tiempo real y
  * durante 18 horas el único rastro fue una línea de log.
  */
-export function computeNotice(
-  info: ActiveComputeInfo | null,
-): ComputeNotice {
+export function computeNotice(info: ActiveComputeInfo | null): ComputeNotice {
   if (!info) return { kind: "ok" };
 
   const runningOn = info.device_name ?? info.bound_backend;

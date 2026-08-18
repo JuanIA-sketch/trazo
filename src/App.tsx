@@ -10,6 +10,7 @@ import {
 import { ModelStateEvent, RecordingErrorEvent } from "./lib/types/events";
 import "./App.css";
 import AccessibilityPermissions from "./components/AccessibilityPermissions";
+import ComputeHealthBanner from "./components/ComputeHealthBanner";
 import Onboarding, {
   AccessibilityOnboarding,
   AutostartOnboarding,
@@ -317,6 +318,7 @@ function App() {
             <div className="trz-screen mx-auto w-full max-w-3xl">
               <ScreenHeader section={currentSection} />
               <AccessibilityPermissions />
+              <ComputeHealthBanner />
               <div className="flex flex-col gap-4">
                 {renderSettingsContent(currentSection)}
               </div>

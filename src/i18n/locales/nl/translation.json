@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Draait op een trager apparaat",
+    "lostGpu": "De gpu die je hebt gekozen is niet meer beschikbaar, dus dicteren draait op {{device}} — veel trager dan normaal.",
+    "cpuFallback": "Dicteren draait op {{device}} in plaats van de gekozen accelerator, wat veel trager is."
+  },
   "theme": {
     "label": "Thema",
     "light": "Licht",

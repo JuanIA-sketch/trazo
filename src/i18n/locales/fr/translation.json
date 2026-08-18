@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Exécution sur un appareil plus lent",
+    "lostGpu": "Le GPU que vous avez choisi n’est plus disponible, la dictée s’exécute donc sur {{device}} — bien plus lentement que d’habitude.",
+    "cpuFallback": "La dictée s’exécute sur {{device}} au lieu de l’accélérateur choisi, ce qui est bien plus lent."
+  },
   "theme": {
     "label": "Thème",
     "light": "Clair",

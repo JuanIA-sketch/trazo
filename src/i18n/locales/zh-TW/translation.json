@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "正在較慢的裝置上執行",
+    "lostGpu": "你選擇的 GPU 已無法使用，聽寫正在 {{device}} 上執行，速度比平常慢很多。",
+    "cpuFallback": "聽寫正在 {{device}} 上執行，而不是你選擇的加速器，速度慢很多。"
+  },
   "theme": {
     "label": "主題",
     "light": "淺色",

@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "In esecuzione su un dispositivo più lento",
+    "lostGpu": "La GPU che hai scelto non è più disponibile, quindi la dettatura gira su {{device}}: molto più lentamente del solito.",
+    "cpuFallback": "La dettatura gira su {{device}} invece dell’acceleratore scelto, ed è molto più lenta."
+  },
   "theme": {
     "label": "Tema",
     "light": "Chiaro",

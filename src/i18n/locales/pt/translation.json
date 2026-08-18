@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "A funcionar num dispositivo mais lento",
+    "lostGpu": "A GPU que escolheu já não está disponível, por isso o ditado está a correr em {{device}} — muito mais lento do que o normal.",
+    "cpuFallback": "O ditado está a correr em {{device}} em vez do acelerador escolhido, o que é muito mais lento."
+  },
   "theme": {
     "label": "Tema",
     "light": "Claro",

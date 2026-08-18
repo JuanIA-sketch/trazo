@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Körs på en långsammare enhet",
+    "lostGpu": "Grafikkortet du valde är inte längre tillgängligt, så diktering körs på {{device}} — mycket långsammare än vanligt.",
+    "cpuFallback": "Diktering körs på {{device}} i stället för den valda acceleratorn, vilket är mycket långsammare."
+  },
   "theme": {
     "label": "Tema",
     "light": "Ljust",

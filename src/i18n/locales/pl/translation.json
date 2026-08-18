@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Działa na wolniejszym urządzeniu",
+    "lostGpu": "Wybrana karta graficzna nie jest już dostępna, więc dyktowanie działa na {{device}} — znacznie wolniej niż zwykle.",
+    "cpuFallback": "Dyktowanie działa na {{device}} zamiast na wybranym akceleratorze, co jest znacznie wolniejsze."
+  },
   "theme": {
     "label": "Motyw",
     "light": "Jasny",

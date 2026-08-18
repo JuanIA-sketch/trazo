@@ -605,16 +605,25 @@ impl TranscriptionManager {
                 // --device-index flag) hard-select that registered device;
                 // otherwise re-read the persisted accelerator preference (so an
                 // accelerator change marked for reload takes effect here).
-                let (backend, gpu_device) = match device_index {
-                    Some(index) => resolve_device_index(index).inspect_err(|e| {
-                        emit_loading_failed(&e.to_string());
-                    })?,
+                let (backend, gpu_device, gpu_choice) = match device_index {
+                    Some(index) => {
+                        let (backend, device) = resolve_device_index(index).inspect_err(|e| {
+                            emit_loading_failed(&e.to_string());
+                        })?;
+                        // A hard --device-index selection is the caller's
+                        // explicit choice for this one load; it has no stored
+                        // preference to have gone stale.
+                        (backend, device, GpuChoice::Auto)
+                    }
                     None => {
                         let settings = get_settings(&self.app_handle);
                         let accelerator = settings.transcribe_accelerator;
+                        let choice =
+                            resolve_gpu_device(accelerator, settings.transcribe_gpu_device);
                         (
                             select_transcribe_backend(accelerator),
-                            resolve_gpu_device(accelerator, settings.transcribe_gpu_device),
+                            choice.device_index(),
+                            choice,
                         )
                     }
                 };
@@ -661,7 +670,16 @@ impl TranscriptionManager {
                     caps.supports_translate,
                     caps.supports_language_detect
                 );
-                record_active_compute(backend, &bound_backend.to_string());
+                record_active_compute(backend, &bound_backend.to_string(), gpu_choice);
+                // Losing the picked GPU is a ~20x slowdown that otherwise leaves
+                // no trace outside the log. Push it instead of waiting for the
+                // UI to ask: the user is not going to open settings to find out
+                // why dictation got slow (incident of 2026-08-17).
+                if gpu_choice.is_degraded() {
+                    let _ = self
+                        .app_handle
+                        .emit("compute-degraded", get_active_compute_info());
+                }
                 LoadedEngine::TranscribeCpp(session)
             }
             EngineType::Parakeet => {
@@ -2032,21 +2050,79 @@ fn select_transcribe_backend(setting: TranscribeAcceleratorSetting) -> Backend {
 /// only when the user chose the GPU accelerator and the stored index still
 /// resolves to a registered GPU device — otherwise fall back to `0` so a stale
 /// selection can never fail the load.
-fn resolve_gpu_device(setting: TranscribeAcceleratorSetting, gpu_device: i32) -> i32 {
-    if setting != TranscribeAcceleratorSetting::Gpu || gpu_device <= 0 {
-        return 0;
-    }
-    let still_valid = transcribe_cpp::devices()
+fn resolve_gpu_device(setting: TranscribeAcceleratorSetting, gpu_device: i32) -> GpuChoice {
+    let registered: Vec<usize> = transcribe_cpp::devices()
         .iter()
-        .any(|d| d.index == Some(gpu_device as usize) && d.kind != "cpu" && d.kind != "accel");
-    if still_valid {
-        gpu_device
-    } else {
+        .filter(|d| d.kind != "cpu" && d.kind != "accel")
+        .filter_map(|d| d.index)
+        .collect();
+
+    let choice = decide_gpu_device(setting, gpu_device, &registered);
+    if let GpuChoice::Stale { requested } = choice {
         warn!(
             "Stored transcribe GPU device index {} is no longer available; using auto",
-            gpu_device
+            requested
         );
-        0
+    }
+    choice
+}
+
+/// What matching the user's stored GPU pick against the currently registered
+/// devices concluded.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GpuChoice {
+    /// Nothing explicit to honor: the CPU accelerator, or the auto sentinel.
+    Auto,
+    /// The stored index still names a registered GPU.
+    Honored(i32),
+    /// The stored index names a device that is no longer registered. The load
+    /// still falls back to auto — a stale index must never fail a load — but
+    /// that fallback can be ~20x slower, so this case is the one the user has
+    /// to hear about. See the test that documents the 2026-08-17 incident.
+    Stale { requested: i32 },
+}
+
+impl GpuChoice {
+    /// The [`ModelOptions::gpu_device`] this choice resolves to. Both `Auto` and
+    /// `Stale` load on `0`; they differ in what the user is told, not in what
+    /// gets loaded.
+    fn device_index(self) -> i32 {
+        match self {
+            GpuChoice::Honored(index) => index,
+            GpuChoice::Auto | GpuChoice::Stale { .. } => 0,
+        }
+    }
+
+    /// True when the user lost the device they picked. Drives the user-facing
+    /// warning; a plain `Auto` must stay silent or it cries wolf on every
+    /// default install.
+    fn is_degraded(self) -> bool {
+        matches!(self, GpuChoice::Stale { .. })
+    }
+}
+
+/// Pure decision behind [`resolve_gpu_device`], split out so the vanished-GPU
+/// case is testable without a Vulkan driver: the incident that motivated it can
+/// only be reproduced on real hardware by physically losing a GPU.
+///
+/// `registered_gpu_indices` are the `Device::index` values of the non-CPU
+/// devices transcribe-cpp currently reports.
+fn decide_gpu_device(
+    setting: TranscribeAcceleratorSetting,
+    gpu_device: i32,
+    registered_gpu_indices: &[usize],
+) -> GpuChoice {
+    // `<= 0` covers both the UI's `-1` auto sentinel and transcribe-cpp's own
+    // "0 = first match" meaning: neither is a device the user singled out.
+    if setting != TranscribeAcceleratorSetting::Gpu || gpu_device <= 0 {
+        return GpuChoice::Auto;
+    }
+    if registered_gpu_indices.contains(&(gpu_device as usize)) {
+        GpuChoice::Honored(gpu_device)
+    } else {
+        GpuChoice::Stale {
+            requested: gpu_device,
+        }
     }
 }
 
@@ -2093,6 +2169,11 @@ pub struct ActiveComputeInfo {
     /// True when something other than CPU was requested but execution bound
     /// to a CPU device.
     pub is_cpu_fallback: bool,
+    /// Registry index of the GPU the user had picked, when that device is gone
+    /// and the load fell back to auto. `None` on a healthy load. This is a
+    /// degradation the user cannot see any other way — the fallback works, it
+    /// is just far slower.
+    pub lost_gpu_device: Option<i32>,
 }
 
 static ACTIVE_COMPUTE: Mutex<Option<ActiveComputeInfo>> = Mutex::new(None);
@@ -2103,7 +2184,7 @@ pub fn get_active_compute_info() -> Option<ActiveComputeInfo> {
 
 /// Record which device a whisper model load actually bound to, looking up the
 /// registry for the human-readable description and CPU-fallback detection.
-fn record_active_compute(requested: Backend, bound_backend: &str) {
+fn record_active_compute(requested: Backend, bound_backend: &str, gpu_choice: GpuChoice) {
     let device = transcribe_cpp::devices()
         .into_iter()
         .find(|d| d.name == bound_backend);
@@ -2122,6 +2203,10 @@ fn record_active_compute(requested: Backend, bound_backend: &str) {
             }
         }),
         is_cpu_fallback: bound_is_cpu && !matches!(requested, Backend::Cpu),
+        lost_gpu_device: match gpu_choice {
+            GpuChoice::Stale { requested } => Some(requested),
+            GpuChoice::Auto | GpuChoice::Honored(_) => None,
+        },
     };
     *ACTIVE_COMPUTE.lock().unwrap() = Some(info);
 }
@@ -2185,6 +2270,74 @@ pub fn get_available_accelerators() -> AvailableAccelerators {
 
 #[cfg(test)]
 mod tests {
+
+    /// Incident of 2026-08-17. Dictation went from ~11x real-time to ~0.5x —
+    /// 68.79s of audio took 111.12s — and stayed there for 18 hours without a
+    /// single user-visible sign.
+    ///
+    /// Cause: the machine's GTX 1650 dropped off the PCI bus (Windows error 43,
+    /// `CM_PROB_FAILED_POST_START`), so transcribe-cpp enumerated one Vulkan
+    /// device instead of two. The stored `transcribe_gpu_device = 1` no longer
+    /// named anything, the load fell back to device 0 — the Intel iGPU — and the
+    /// only trace was one `warn!` in a log nobody reads.
+    ///
+    /// Falling back is right: a stale index must never fail the load. Falling
+    /// back *quietly* is not, because the fallback is ~20x slower. So the
+    /// decision has to distinguish "no GPU was ever picked" from "the picked GPU
+    /// vanished" — the second is the one worth telling the user about.
+    #[test]
+    fn a_gpu_that_vanished_is_reported_as_stale_not_as_plain_auto() {
+        // Only device 0 (the iGPU) is left; the user's stored pick was 1.
+        let choice = decide_gpu_device(TranscribeAcceleratorSetting::Gpu, 1, &[0]);
+
+        assert_eq!(
+            choice,
+            GpuChoice::Stale { requested: 1 },
+            "a vanished GPU must be distinguishable from a plain auto selection, \
+             otherwise the 20x slowdown stays invisible"
+        );
+    }
+
+    #[test]
+    fn a_stored_gpu_that_is_still_registered_is_honored() {
+        let choice = decide_gpu_device(TranscribeAcceleratorSetting::Gpu, 1, &[0, 1]);
+
+        assert_eq!(choice, GpuChoice::Honored(1));
+    }
+
+    /// `0` is the UI's auto sentinel, not a device the user picked. Reporting it
+    /// as a degradation would cry wolf on every default install.
+    #[test]
+    fn the_auto_sentinel_is_not_a_degradation() {
+        assert_eq!(
+            decide_gpu_device(TranscribeAcceleratorSetting::Gpu, 0, &[0]),
+            GpuChoice::Auto
+        );
+        assert_eq!(
+            decide_gpu_device(TranscribeAcceleratorSetting::Gpu, -1, &[0]),
+            GpuChoice::Auto
+        );
+    }
+
+    /// Someone who deliberately chose the CPU accelerator is not being degraded,
+    /// however stale the GPU index left over in their store happens to be.
+    #[test]
+    fn choosing_the_cpu_accelerator_never_reports_a_stale_gpu() {
+        assert_eq!(
+            decide_gpu_device(TranscribeAcceleratorSetting::Cpu, 1, &[]),
+            GpuChoice::Auto
+        );
+    }
+
+    /// The degenerate case behind the incident: every GPU is gone. It must still
+    /// be reported as stale rather than silently sliding to CPU.
+    #[test]
+    fn losing_every_gpu_is_still_reported_as_stale() {
+        assert_eq!(
+            decide_gpu_device(TranscribeAcceleratorSetting::Gpu, 1, &[]),
+            GpuChoice::Stale { requested: 1 }
+        );
+    }
 
     /// Companion to the panic case: the ordinary path must release the flag too.
     /// Guards against "fixing" the hang in a way that only handles panics.

@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Běží na pomalejším zařízení",
+    "lostGpu": "Vybraná grafická karta už není dostupná, takže diktování běží na {{device}} — mnohem pomaleji než obvykle.",
+    "cpuFallback": "Diktování běží na {{device}} místo zvoleného akcelerátoru, což je mnohem pomalejší."
+  },
   "theme": {
     "label": "Motiv",
     "light": "Světlý",

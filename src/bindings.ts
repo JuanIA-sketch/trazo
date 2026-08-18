@@ -1000,7 +1000,14 @@ device_name: string | null;
  * True when something other than CPU was requested but execution bound
  * to a CPU device.
  */
-is_cpu_fallback: boolean }
+is_cpu_fallback: boolean; 
+/**
+ * Registry index of the GPU the user had picked, when that device is gone
+ * and the load fell back to auto. `None` on a healthy load. This is a
+ * degradation the user cannot see any other way — the fallback works, it
+ * is just far slower.
+ */
+lost_gpu_device: number | null }
 /**
  * El mapa de actividad tal como lo pinta la interfaz: la ventana pedida, las
  * filas con actividad dentro de ella, y la racha en curso.

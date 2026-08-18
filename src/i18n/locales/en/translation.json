@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Running on a slower device",
+    "lostGpu": "The GPU you selected is no longer available, so dictation is running on {{device}} — much slower than usual.",
+    "cpuFallback": "Dictation is running on {{device}} instead of the accelerator you selected, which is much slower."
+  },
   "theme": {
     "label": "Theme",
     "light": "Light",

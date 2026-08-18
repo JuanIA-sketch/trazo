@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "低速なデバイスで動作中",
+    "lostGpu": "選択した GPU が利用できなくなったため、音声入力は {{device}} で実行されています。通常よりかなり低速です。",
+    "cpuFallback": "音声入力は選択したアクセラレータではなく {{device}} で実行されており、かなり低速です。"
+  },
   "theme": {
     "label": "テーマ",
     "light": "ライト",

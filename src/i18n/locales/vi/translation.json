@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Đang chạy trên thiết bị chậm hơn",
+    "lostGpu": "GPU bạn đã chọn không còn khả dụng, nên việc đọc chính tả đang chạy trên {{device}} — chậm hơn bình thường rất nhiều.",
+    "cpuFallback": "Việc đọc chính tả đang chạy trên {{device}} thay vì bộ tăng tốc bạn đã chọn, nên chậm hơn nhiều."
+  },
   "theme": {
     "label": "Giao diện",
     "light": "Sáng",

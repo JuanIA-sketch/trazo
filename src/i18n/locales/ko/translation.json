@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "느린 장치에서 실행 중",
+    "lostGpu": "선택한 GPU를 더 이상 사용할 수 없어 받아쓰기가 {{device}}에서 실행 중입니다. 평소보다 훨씬 느립니다.",
+    "cpuFallback": "받아쓰기가 선택한 가속기 대신 {{device}}에서 실행 중이며 훨씬 느립니다."
+  },
   "theme": {
     "label": "테마",
     "light": "밝게",

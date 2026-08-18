@@ -6,6 +6,7 @@ import { SettingContainer } from "../ui/SettingContainer";
 import { Dropdown, type DropdownOption } from "../ui/Dropdown";
 import { useSettings } from "../../hooks/useSettings";
 import { commands } from "@/bindings";
+import { computeNotice } from "@/lib/utils/computeHealth";
 import type {
   ActiveComputeInfo,
   TranscribeAcceleratorSetting,
@@ -153,25 +154,34 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
               isUpdating("transcribe_gpu_device")
             }
           />
-          {activeCompute && (
-            <p
-              className={`text-xs ${
-                activeCompute.is_cpu_fallback
-                  ? "text-amber-500"
-                  : "text-mid-gray"
-              }`}
-            >
-              {activeCompute.is_cpu_fallback
-                ? t(
-                    "settings.advanced.acceleration.transcribe.cpuFallbackWarning",
-                  )
-                : t("settings.advanced.acceleration.transcribe.activeDevice", {
-                    device: activeCompute.device_name
-                      ? `${activeCompute.device_name} (${activeCompute.bound_backend})`
-                      : activeCompute.bound_backend,
-                  })}
-            </p>
-          )}
+          {activeCompute &&
+            (() => {
+              // Caer de GPU dedicada a integrada NO es `is_cpu_fallback`: liga a
+              // otra GPU, así que ese aviso nunca se disparaba pese a costar ~20x.
+              // `computeNotice` distingue los dos casos.
+              const notice = computeNotice(activeCompute);
+              const device = activeCompute.device_name
+                ? `${activeCompute.device_name} (${activeCompute.bound_backend})`
+                : activeCompute.bound_backend;
+              return (
+                <p
+                  className={`text-xs ${
+                    notice.kind === "ok" ? "text-mid-gray" : "text-amber-500"
+                  }`}
+                >
+                  {notice.kind === "lost-gpu"
+                    ? t("computeHealth.lostGpu", { device: notice.runningOn })
+                    : notice.kind === "cpu-fallback"
+                      ? t(
+                          "settings.advanced.acceleration.transcribe.cpuFallbackWarning",
+                        )
+                      : t(
+                          "settings.advanced.acceleration.transcribe.activeDevice",
+                          { device },
+                        )}
+                </p>
+              );
+            })()}
         </div>
       </SettingContainer>
       {ortOptions.length > 2 && (

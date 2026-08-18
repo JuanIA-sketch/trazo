@@ -726,6 +726,11 @@
     "name": "Hey Trazo",
     "soon": "Coming soon"
   },
+  "computeHealth": {
+    "title": "Daha yavaş bir aygıtta çalışıyor",
+    "lostGpu": "Seçtiğiniz GPU artık kullanılamıyor, bu yüzden dikte {{device}} üzerinde çalışıyor — normalden çok daha yavaş.",
+    "cpuFallback": "Dikte, seçtiğiniz hızlandırıcı yerine {{device}} üzerinde çalışıyor ve bu çok daha yavaş."
+  },
   "theme": {
     "label": "Tema",
     "light": "Açık",

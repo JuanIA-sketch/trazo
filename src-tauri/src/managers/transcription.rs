@@ -1257,9 +1257,12 @@ impl TranscriptionManager {
     ) -> Result<String> {
         let rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE;
 
-        let whole = self.transcribe(audio.clone(), translate_override)?;
-
+        // Se mide ANTES del primer decode porque tambien decide el idioma, y esa
+        // decision tiene que ser la misma para el dictado entero y para cada
+        // trozo del reintento.
         let speech = crate::audio_toolkit::speech_seconds(&audio, rate);
+
+        let whole = self.transcribe(audio.clone(), translate_override, Some(speech))?;
         let total = audio.len() as f32 / rate as f32;
         let words = whole.split_whitespace().count();
         // Two nets, OR-ed. The speech-based one is the calibrated primary; the
@@ -1300,7 +1303,7 @@ impl TranscriptionManager {
         let mut parts: Vec<String> = Vec::new();
         let mut last_error: Option<anyhow::Error> = None;
         for range in segments {
-            match self.transcribe(audio[range].to_vec(), translate_override) {
+            match self.transcribe(audio[range].to_vec(), translate_override, Some(speech)) {
                 Ok(text) => {
                     let text = text.trim();
                     if !text.is_empty() {
@@ -1333,7 +1336,18 @@ impl TranscriptionManager {
         }
     }
 
-    pub fn transcribe(&self, audio: Vec<f32>, translate_override: Option<bool>) -> Result<String> {
+    /// `speech_secs_override` son los segundos de habla del dictado COMPLETO.
+    /// Existe por el reintento troceado: cada trozo es corto por construcción, y
+    /// si cada uno decidiera su idioma por su cuenta caerían todos bajo el
+    /// umbral y se fijarían al idioma configurado --- justo el fallo que este
+    /// cambio arregla, reaparecido dentro del rescate. La decisión de idioma
+    /// pertenece a la grabación, no al trozo.
+    pub fn transcribe(
+        &self,
+        audio: Vec<f32>,
+        translate_override: Option<bool>,
+        speech_secs_override: Option<f32>,
+    ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANDY_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
             return Err(anyhow::anyhow!(
@@ -1393,6 +1407,21 @@ impl TranscriptionManager {
                 settings.selected_language, validated_language, active_model
             );
         }
+        // El idioma configurado deja de ser un pin absoluto y pasa a ser la red
+        // de seguridad de los clips cortos: ver `language_for_clip`. Se mide
+        // sobre el audio de ESTE dictado, con la misma cuenta de segundos de
+        // habla que decide el reintento troceado.
+        let speech_secs = speech_secs_override.unwrap_or_else(|| {
+            crate::audio_toolkit::speech_seconds(
+                &audio,
+                crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE,
+            )
+        });
+        let validated_language = language_for_clip(&validated_language, speech_secs);
+        debug!(
+            "Language for this clip: '{}' ({:.2}s of speech, threshold {:.1}s)",
+            validated_language, speech_secs, AUTO_DETECT_MIN_SPEECH_SECS
+        );
 
         // Whether the loaded transcribe-cpp model advertises
         // Feature::InitialPrompt. Informational (logged below); the whisper
@@ -2075,6 +2104,58 @@ fn resolve_gpu_device(setting: TranscribeAcceleratorSetting, gpu_device: i32) ->
     choice
 }
 
+/// Segundos de **habla** por debajo de los cuales no se confía en la detección
+/// automática de idioma.
+///
+/// Medido el 2026-08-18 sobre grabaciones reales de este proyecto, pasando cada
+/// una por `auto` y mirando qué idioma detectó whisper-large-v3-turbo:
+///
+/// | habla | detección |
+/// | ----- | --------- |
+/// | 0,06 s · 0,27 s · 0,54 s · 1,25 s | **falla** (español detectado como inglés) |
+/// | 1,56 s · 2,91 s · 3,21 s · 6,09 s · 8,82 s | acierta |
+///
+/// El hueco real está entre 1,25 y 1,56. El umbral se pone en 2,0 —por encima
+/// del hueco— a propósito: entregar el idioma equivocado al usuario en su
+/// idioma principal es peor que no aprovechar la detección en un dictado de
+/// cuatro palabras, y para el inglés corto existe el atajo dedicado.
+///
+/// Se mide en segundos de HABLA y no de reloj porque la detección se alimenta
+/// de habla, no de silencio: en las medidas hay un clip de 2,9 s de reloj con
+/// **0,06 s de habla** que falla, y uno de 3,1 s con 1,56 s que acierta. Por
+/// duración total esos dos casi se tocan; por habla están en extremos opuestos.
+const AUTO_DETECT_MIN_SPEECH_SECS: f32 = 2.0;
+
+/// Idioma con el que decodificar ESTE dictado.
+///
+/// El ajuste de idioma deja de ser un pin absoluto y pasa a ser **la red de
+/// seguridad de los clips cortos**. El motivo son dos fallos reales que tiran
+/// en direcciones opuestas:
+///
+/// - Con el idioma fijado a `es`, un dictado en inglés no sale mal
+///   transcrito: sale **traducido o inventado**. Medido sobre tres dictados de
+///   22-30 s, uno de ellos con una palabra en cirílico dentro.
+/// - Con `auto`, un "Gracias." de 1,2 s se detecta como inglés y sale "you".
+///
+/// Ninguna de las dos opciones gana siempre, así que la elección la decide la
+/// cantidad de habla: por debajo del umbral manda el ajuste, por encima manda
+/// la detección.
+///
+/// ⚠️ Consecuencia que hay que tener presente: en un dictado largo el ajuste de
+/// idioma **ya no se obedece**. Para el español está medido que da exactamente
+/// el mismo texto, pero la etiqueta de la interfaz debería dejar de prometer un
+/// pin absoluto.
+fn language_for_clip(configured: &str, speech_secs: f32) -> String {
+    // Sin idioma configurado no hay red de seguridad que aplicar.
+    if configured == "auto" || configured.is_empty() {
+        return "auto".to_string();
+    }
+    if speech_secs < AUTO_DETECT_MIN_SPEECH_SECS {
+        return configured.to_string();
+    }
+    "auto".to_string()
+}
+
 /// What matching the user's stored GPU pick against the currently registered
 /// devices concluded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2278,6 +2359,59 @@ pub fn get_available_accelerators() -> AvailableAccelerators {
 
 #[cfg(test)]
 mod tests {
+
+    /// Un dictado corto se queda con el idioma configurado: es justo donde la
+    /// detección falla. El caso real es un "Gracias." de 1,2 s que con `auto`
+    /// se detecta como inglés y sale "you".
+    #[test]
+    fn a_short_clip_keeps_the_configured_language() {
+        assert_eq!(language_for_clip("es", 1.25), "es");
+        assert_eq!(language_for_clip("es", 0.06), "es");
+    }
+
+    /// Y uno largo pasa a detección. El caso real son tres dictados en inglés
+    /// de 22-30 s que con el idioma fijado a `es` salían traducidos o
+    /// inventados, y que con `auto` salen palabra por palabra correctos.
+    #[test]
+    fn a_long_clip_falls_back_to_auto_detection() {
+        assert_eq!(language_for_clip("es", 8.82), "auto");
+    }
+
+    /// EL test que justifica medir habla y no reloj. Este clip dura 2,9 s de
+    /// reloj —más que otro de 1,56 s que la detección acierta— pero solo tiene
+    /// 0,06 s de habla, y la detección lo falla. Un umbral sobre la duración
+    /// total mandaría este caso a `auto` y volvería a romperlo.
+    #[test]
+    fn a_long_clip_that_is_almost_all_silence_keeps_the_pin() {
+        assert_eq!(language_for_clip("es", 0.06), "es");
+    }
+
+    /// Quien eligió detección automática no tiene red de seguridad que aplicar:
+    /// no hay idioma al que caer.
+    #[test]
+    fn auto_stays_auto_at_any_length() {
+        assert_eq!(language_for_clip("auto", 0.1), "auto");
+        assert_eq!(language_for_clip("auto", 30.0), "auto");
+        assert_eq!(language_for_clip("", 0.1), "auto");
+    }
+
+    /// El borde exacto pertenece a la detección, no al pin. Se fija en un test
+    /// para que un cambio de `<` a `<=` no pase inadvertido.
+    #[test]
+    fn the_threshold_itself_belongs_to_auto() {
+        assert_eq!(language_for_clip("es", AUTO_DETECT_MIN_SPEECH_SECS), "auto");
+        assert_eq!(
+            language_for_clip("es", AUTO_DETECT_MIN_SPEECH_SECS - 0.01),
+            "es"
+        );
+    }
+
+    /// La red no es solo para el español: cualquier idioma configurado la usa.
+    #[test]
+    fn the_safety_net_is_not_spanish_specific() {
+        assert_eq!(language_for_clip("ja", 0.5), "ja");
+        assert_eq!(language_for_clip("ja", 12.0), "auto");
+    }
 
     /// Incident of 2026-08-17. Dictation went from ~11x real-time to ~0.5x —
     /// 68.79s of audio took 111.12s — and stayed there for 18 hours without a

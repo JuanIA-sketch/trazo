@@ -1,10 +1,28 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-08-02 · **Rama:** `main` = **`56e0ed6`**,
-sincronizado con `origin/main`
+**Última actualización:** 2026-08-17 · **Rama:** `main` = **`e93ed62`** =
+`origin/main` (sincronizados)
 **Entrega del hackathon:** 31 de julio de 2026
 
-> **⚠️ LO PRIMERO AL RETOMAR — cierre del 2026-08-02 (§13)**
+> **⚠️ LO PRIMERO AL RETOMAR — 2026-08-17 (§15)**
+>
+> 1. **La lentitud de transcripción está RESUELTA y medida** (§15.1): la GTX 1650
+>    se cayó del bus PCI, el índice de GPU guardado quedó caducado y la carga
+>    replegó a la iGPU Intel — **66x más lenta** en la medición A/B. La GPU ya
+>    está recuperada, y el aviso en pantalla está commiteado (`e93ed62`).
+> 2. **`main` local = `origin/main` = `e93ed62`.** Todo lo commiteado está
+>    pusheado. §14.3 decía lo contrario y estaba equivocada (§15.2).
+> 3. **El árbol tiene TRES grupos de WIP, no uno** (§15.3). El grupo B (atajo
+>    F10 dictar-en-inglés) está **terminado y en verde**, solo falta autorización
+>    para commitear. El grupo C (wakeword) **no es distribuible**:
+>    `FORCE_ALWAYS_ON = true` abre el micrófono permanentemente.
+> 4. **§14 se quedó vieja en casi todo.** Antes de creerle nada, leer §15.4.
+> 5. Ante cualquier reporte de lentitud, lo PRIMERO es descartar el dispositivo:
+>    `C:/h/debug/handy.exe --transcribe-file <wav> --device-index N --repeat 2`.
+>
+> ---
+>
+> **Cierre del 2026-08-02 (§13) — parcialmente superado por §15**
 >
 > 1. **`feat/rebrand-material` YA ESTÁ FUSIONADA en `main`** (`8d83fcc`,
 >    autorizado por Charly el 2026-08-02). El rediseño de material y el overlay
@@ -2730,7 +2748,7 @@ a ciegas en `C:\Handy`**.
 Sección de cierre. Consolida el estado real; el historial de cómo se llegó
 sigue en las secciones anteriores.
 
-### 14.1 ⚠️ «Lentitud en la transcripción»: NO HAY DIAGNÓSTICO
+### 14.1 ~~«Lentitud en la transcripción»: NO HAY DIAGNÓSTICO~~ — SUPERADA por §15.1
 
 Al cerrar, se pidió dejar «el diagnóstico de la lentitud en la transcripción,
 causa raíz o estado exacto donde quedó», descrito como el pendiente más urgente.
@@ -2783,7 +2801,7 @@ Archivos vivos en `origin/main`: `src-tauri/src/managers/insights.rs`,
 
 No es solo un esquema SQL: hay backend, componente y tests.
 
-### 14.3 Git — estado exacto
+### 14.3 ~~Git — estado exacto~~ — EQUIVOCADA, ver §15.2
 
 | ref | commit | nota |
 | --- | --- | --- |
@@ -2800,7 +2818,7 @@ Ponerlo al día toca `src/main.tsx` y
 primero por el arranque del selector de tema, el segundo por el WIP de wakeword.
 **No hacer `git pull` a ciegas en `C:\Handy`.** Detalle en §13.7.
 
-### 14.4 Sin commitear (deliberado)
+### 14.4 ~~Sin commitear (deliberado)~~ — DESACTUALIZADA, ver §15.3
 
 **WIP de wakeword de Charly — intacto, 4 entradas:**
 
@@ -2852,3 +2870,210 @@ Ninguno de los dos está en riesgo: están en el árbol de trabajo y documentado
 `Recorder not available` en el log. Arranca solo desde la carpeta de Inicio.
 Charly pidió no tocarlo. Para verificar cosas visuales sin micrófono, forzar el
 overlay por CDP (§13.4); añadir la clase `show` **no sirve**, React la quita.
+
+---
+
+## 15. Sesión 2026-08-17 (noche)
+
+Sesión corta y con un solo hallazgo grande. **§14 se había quedado vieja en casi
+todo lo que decía sobre git y sobre el árbol de trabajo**; las correcciones están
+en §15.4 y son la razón por la que esta sección existe.
+
+### 15.1 La lentitud: causa raíz encontrada, MEDIDA y arreglada
+
+§14.1 decía que no había diagnóstico. Era cierto **cuando se escribió**, pero
+entre medias hubo una sesión (hoy mismo, 17:33–18:45 hora local) que sí lo hizo y
+dejó el arreglo **sin commitear ni verificar**. Esta sesión lo verificó, lo midió
+y lo commiteó.
+
+**Causa raíz, confirmada con el log — no deducida:**
+
+La GTX 1650 se cayó del bus PCI (error 43 de Windows,
+`CM_PROB_FAILED_POST_START`). El rastro en
+`%LOCALAPPDATA%\com.trazo.app\logs\handy.log` es inequívoco (horas en UTC):
+
+```
+[03:28:31] ggml_vulkan: Found 2 Vulkan devices:   0 = Intel UHD · 1 = GTX 1650
+[03:45:31] ggml_vulkan: Found 1 Vulkan devices:   0 = Intel UHD
+[03:48:13] WARN Stored transcribe GPU device index 1 is no longer available; using auto
+[03:48:13] whisper: using vulkan backend: Vulkan0
+```
+
+Y el efecto, en el mismo log:
+
+| cuándo | dispositivo | rendimiento |
+| --- | --- | --- |
+| hasta 03:28 UTC | `Vulkan1` (GTX) | 10,2x · 13,4x · 14,3x · 12,0x tiempo real |
+| desde 03:48 UTC | `Vulkan0` (iGPU) | 0,72x · 0,62x · 0,63x · 0,46x · 0,43x |
+
+**18 horas así, y el único rastro fue ese `warn!`.** Charly dictó toda la tarde
+con esperas de 30-110 s por dictado (el peor: 111,12 s para 68,79 s de audio).
+
+**La medición A/B, hecha hoy con el hardware ya recuperado** — mismo clip de
+1,68 s, mismo modelo (`whisper-large-v3-turbo-Q8_0`), vía
+`handy.exe --transcribe-file <wav> --device-index N --repeat 2`:
+
+| dispositivo | mejor decode | contra la GPU |
+| --- | --- | --- |
+| **GTX 1650** (`--device-index 1`) | **1,46 s** | — |
+| CPU i5-10300H (`--device-index 2`) | 24,3 s | 17x más lento |
+| **Intel UHD** (`--device-index 0`) | **96,5 s** | **66x más lento** |
+
+⚠️ **El repliegue aterrizaba en el PEOR de los tres.** La iGPU es 4x más lenta
+que la CPU pura en esta máquina. Se decidió (Charly, esta sesión) **no cambiar el
+repliegue**: en una APU de AMD la iGPU sí le gana a la CPU, y generalizar desde
+una sola medición sería apostar. Queda anotado por si algún día hay más datos.
+
+**Estado del hardware:** recuperada. A las 01:25 UTC del 18 (20:25 local del 17)
+el log vuelve a enumerar 2 dispositivos Vulkan y liga `Vulkan1`;
+`Get-PnpDevice -Class Display` da `Status: OK` para las dos. **No se hizo nada
+para recuperarla** — se recuperó sola, probablemente en un reinicio. Puede
+repetirse.
+
+**El arreglo — `e93ed62`, ya en `origin/main`:**
+
+Replegar está bien: un índice caducado jamás debe hacer fallar la carga.
+Replegar **en silencio** no. `decide_gpu_device` (`managers/transcription.rs`,
+función pura) distingue ahora tres casos:
+
+- `Auto` — nadie eligió GPU (centinela `-1`/`0`, o acelerador CPU). **Silencio**:
+  un equipo sin GPU dedicada corre en la integrada desde el primer día y avisarlo
+  sería ruido permanente.
+- `Honored(i)` — el índice guardado sigue nombrando una GPU registrada.
+- `Stale { requested }` — **la GPU elegida desapareció**. Carga en `0` igual, pero
+  emite `compute-degraded` y rellena `ActiveComputeInfo.lost_gpu_device`.
+
+En la interfaz: `ComputeHealthBanner` arriba del contenido (no dentro de
+Ajustes — la información ya estaba en Ajustes → Avanzado, que es justo donde
+nadie mira cuando lo único que nota es «hoy esto va lento»), y
+`AccelerationSelector` deja de depender de `is_cpu_fallback`, que **nunca se
+disparaba en este caso** porque caer de GPU dedicada a integrada liga a otra GPU,
+no a la CPU. La regla de producto vive en `src/lib/utils/computeHealth.ts`, pura y
+con 7 tests; la de Rust, 5 tests.
+
+⚠️ **Lo único que NO está validado: el banner nunca se ha visto en pantalla.**
+Ambas capas de lógica están cubiertas por tests, pero el aviso pintado no. Para
+verlo en vivo hace falta forzar un índice caducado (`transcribe_gpu_device` a un
+número inexistente en `settings_store.json` — **sin BOM**, ver `CLAUDE.md`) y
+arrancar la app. No se hizo para no tocar la configuración de Charly.
+
+### 15.2 El estado de git era el INVERSO del que decía §14
+
+§14.3 decía que `main` local iba **2 commits por detrás** de `origin/main` y que
+no se podía adelantar sin decidir antes qué hacer con dos archivos sucios.
+
+**Falso al retomar.** `main` local iba **2 commits por DELANTE**, y los dos
+commits eran justo el trabajo que §14.4 daba por pendiente:
+
+```
+0045ec8 feat(window): la ventana arranca en 1100x880 y se puede maximizar
+7febb30 feat(ui): selector de tema claro/oscuro/automatico
+```
+
+No había nada que traer (`git rev-list --left-right --count origin/main...HEAD`
+→ `0  2`). **Lo que faltaba era subirlos**, y se subieron con autorización de
+Charly. `origin/main` = **`e93ed62`** e incluye los tres commits.
+
+Moraleja operativa: **medir antes de decidir**. Un `git fetch` y un
+`rev-list --left-right --count` habrían ahorrado la mitad de la confusión.
+
+### 15.3 El árbol de trabajo: TRES grupos, no dos
+
+§14.4 describía el WIP como «wakeword, 4 entradas». En realidad hay tres bloques
+independientes, y uno de ellos ni siquiera es wakeword:
+
+| grupo | qué | estado |
+| --- | --- | --- |
+| **A — aviso de GPU perdida** | `transcription.rs` (parte), `bindings.ts`, `App.tsx`, `AccelerationSelector.tsx`, `ComputeHealthBanner.tsx`, `computeHealth.{ts,test.ts}`, 21 locales | ✅ **commiteado y pusheado** (`e93ed62`) |
+| **B — atajo dictar-en-inglés (F10)** | `actions.rs`, `settings.rs` (esquema **v9** + `TRANSLATE_BINDING_ID`), `transcription.rs` (`translate_override`), `transcription_coordinator.rs`, `commands/history.rs`, `lib.rs`, `shortcut/*.rs`, `examples/es_model_eval.rs`, `ModelSettingsCard.tsx`, 21 locales | **terminado y en verde, sin commitear** |
+| **C — wakeword** | `Cargo.{toml,lock}` (`ort`, `ndarray`), `lib.rs` (`mod wakeword;`), `src/wakeword/` (5 archivos, 15 tests), `resources/models/wakeword/` (3 ONNX), `recorder.rs`, `managers/audio.rs` | **no distribuible tal cual** |
+
+Correcciones concretas a §14.4:
+
+- `ModelSettingsCard.tsx` **no** tiene WIP de wakeword: tiene el `ShortcutInput`
+  del grupo B.
+- `settings.rs` **no** tiene WIP de wakeword: tiene la migración v9 del grupo B.
+- Los 21 `translation.json` llevaban mezcladas las claves de **A y B**, no de
+  wakeword.
+
+⚠️ **C no es distribuible**: `wakeword/mod.rs` tiene `FORCE_ALWAYS_ON = true`, que
+**abre el micrófono permanentemente ignorando el ajuste** `always_on_microphone`.
+El propio código lo dice y es de una línea revertirlo, pero antes de commitear
+esto tiene que existir su toggle.
+
+**Cómo se separó A del resto** (por si hay que repetirlo): `transcription.rs` y
+las 21 locales tenían hunks de A y de B mezclados. Se filtraron los hunks por
+marcador y se llevaron al índice con **`git apply --cached`**, que **no toca el
+árbol de trabajo**. Después: `git diff --cached` para comprobar que no se coló
+nada de B/C, y el commit verificado en un worktree desechable
+(`CARGO_TARGET_DIR=C:/h`, **nunca un target dir nuevo**: uno vacío significa
+recompilar transcribe-cpp-sys entero y `C:` está al 96 %).
+
+### 15.4 Correcciones a §14 — qué hay que dejar de creer
+
+| §14 dice | realidad al 2026-08-17 |
+| --- | --- |
+| «No existe diagnóstico de la lentitud» | Existe, está medido y arreglado (§15.1) |
+| «`main` local va 2 commits por detrás» | Iba 2 **por delante**; ya está pusheado (§15.2) |
+| «Selector de tema y ventana esperan al wakeword» | Ya estaban commiteados (`7febb30`, `0045ec8`) |
+| «WIP de wakeword, 4 entradas» | Tres grupos; dos de ellos no son wakeword (§15.3) |
+
+§14.2 (el mapa de actividad diaria **sí** está construido) sigue siendo correcta:
+verificado en `HEAD` — `insights.rs`, `ActivityMap.tsx`, `activityGrid.{ts,test.ts}`,
+y la tabla `insights_daily` viva en `history.db`.
+
+### 15.5 El bug de inglés: sigue bloqueado por la muestra, y ahora se sabe por qué
+
+§10.2 pedía una muestra en inglés de más de 6-7 s **marcada con la estrella**.
+Se consultó `history.db` directamente:
+
+```
+20 entradas · 0 marcadas (saved=0) · todas en español
+```
+
+**El historial guarda 20 entradas y ninguna está marcada**, así que cualquier
+prueba que Charly haga se pierde en 20 dictados. Sin esa muestra no hay nada que
+medir: el clip de 4,7 s que hay documentado en §10.2 falla igual en `es`, en `en`
+forzado y en Auto, así que no demuestra nada.
+
+**Petición concreta para Charly:** dictar 2-3 frases en inglés de **más de 7
+segundos** y **marcarlas con la estrella en el Historial en el momento**.
+
+### 15.6 Lo que falta, por orden
+
+1. **Grupo B (atajo F10)**: terminado y en verde, esperando el visto bueno para
+   commitear. Ojo al detalle de §10.3: `whisper-large-v3-turbo` **ignora** la
+   tarea `translate`, así que el atajo solo aparece en modelos que de verdad
+   traducen (`large-v3`), que es el comportamiento correcto pero conviene
+   recordarlo antes de probarlo con el modelo por defecto.
+2. **Grupo C (wakeword)**: convertir `FORCE_ALWAYS_ON` en un ajuste con toggle
+   antes de commitear nada.
+3. **Validar el banner en vivo** (§15.1, último párrafo).
+4. **Muestra de inglés** (§15.5) — bloqueado por Charly.
+5. **Pagefile** (§11.1) — sigue sin subir. Requiere PowerShell **como
+   administrador**; no se puede hacer desde aquí.
+6. Persistir el tema en `settings.rs` quitando el `localStorage` de
+   `useTheme.ts` (§14.5).
+7. `#[cfg(not(debug_assertions))]` en el autostart (§12.9).
+
+### 15.7 Entorno al cerrar
+
+| | |
+| --- | --- |
+| `origin/main` = `main` local | **`e93ed62`**, sincronizados |
+| GTX 1650 | **recuperada**, `Status: OK`, y la app liga `Vulkan1` |
+| Trazo instalado | corriendo (`AppData\Local\Trazo\Trazo.exe`) |
+| Trazo de desarrollo + Vite | cerrados |
+| Binario de dev | reconstruido en `C:\h\debug\handy.exe` (grupos A+B+C) |
+| `C:` | 96 % lleno, ~20 GB libres |
+| Wispr Flow | **no estaba corriendo** esta sesión (§14.6 lo daba por activo) |
+
+**Herramienta que conviene recordar**, porque resolvió esta sesión entera:
+
+```bash
+C:/h/debug/handy.exe --transcribe-file <wav> --device-index N --repeat 2
+```
+
+Mide un dispositivo concreto sin tocar la configuración de la app, e imprime
+`load=…ms best=…ms rtf=…x`. Es la forma más rápida de descartar «¿está corriendo
+en el dispositivo que creo?» ante cualquier reporte de lentitud.

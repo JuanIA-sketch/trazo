@@ -12,14 +12,21 @@ El feature-freeze del upstream NO aplica aquí.
   luego implementación mínima hasta verde. Sin excepciones, también en bugfixes.
 - **Nunca `git push`** (ni commit salvo pedido explícito) **sin confirmación
   manual explícita de Charly** en la conversación.
-- **`CARGO_TARGET_DIR=D:\h` es obligatorio en Windows**: con el target dir por
-  defecto, el generador de shaders Vulkan de transcribe-cpp-sys revienta el
-  límite MAX_PATH (error FTK1011/MSB3491). Ver BUILD.md.
-  ⚠️ Va en **`D:`**, no en `C:`. El build pesa decenas de GB y `C:` está al 93%
-  (quedan ~17 GB): ahí no entra. El build vivo está en `D:\h\debug\handy.exe`.
+- **El target dir va en `C:\h`, y ya está puesto**: `.cargo/config.toml` lleva
+  `target-dir = "C:/h"` protegido con `git update-index --skip-worktree`, así
+  que **no hace falta exportar `CARGO_TARGET_DIR` en cada terminal**. Existe
+  porque con el target dir por defecto el generador de shaders Vulkan de
+  transcribe-cpp-sys revienta el límite MAX_PATH (FTK1011/MSB3491). Ver BUILD.md.
+  ⚠️ **No existe unidad `D:` en esta máquina** (verificado 2026-08-17): si algún
+  documento manda a `D:\h`, está desactualizado. El build vivo está en
+  `C:\h\debug\handy.exe` y `C:` está al 96% (~26 GB libres), así que un target
+  dir NUEVO (recompilar transcribe-cpp-sys entero) es lo que hay que evitar,
+  no el disco.
 - No renombrar nada de `handy-keys`/`HandyKeys`/`handy_keys`: es la crate de
   teclado (ahora vendorizada), no branding.
-- Al editar `%APPDATA%\com.pais.handy\settings_store.json` a mano: **sin BOM**
+- Al editar `%APPDATA%\com.trazo.app\settings_store.json` a mano (el
+  identificador es `com.trazo.app` desde el rebrand; `com.pais.handy` es el
+  directorio viejo y ya no manda): **sin BOM**
   (PowerShell `Out-File utf8` mete BOM y serde_json lo rechaza → la app
   resetea la configuración a defaults). Reescribir con python/`utf-8` plano.
 
@@ -29,7 +36,7 @@ El feature-freeze del upstream NO aplica aquí.
 bun install
 mkdir src-tauri/resources/models -Force
 curl -o src-tauri/resources/models/silero_vad_v4.onnx https://blob.handy.computer/silero_vad_v4.onnx
-$env:CARGO_TARGET_DIR = "D:\h"
+# (el target dir ya viene de .cargo/config.toml; esta linea no hace falta)
 bun run tauri dev
 ```
 

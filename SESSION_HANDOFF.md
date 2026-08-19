@@ -1,9 +1,32 @@
 # Trazo — traspaso de sesión
 
-**Última actualización:** 2026-08-18 · **Rama:** `main` = `origin/main`
-(sincronizados)
+**Última actualización:** 2026-08-18 (noche) · **Rama:** `main` =
+`origin/main` = `227e954` (pusheado con autorización) + el commit local de
+este traspaso
 **Entrega del hackathon:** 31 de julio de 2026
 
+> **⚠️ LO PRIMERO AL RETOMAR — 2026-08-18 noche (§17): HAY PLAN ACORDADO**
+>
+> 1. **Charly dejó un plan de 4 puntos EN ORDEN para esta sesión** (§17.2):
+>    validar el banner de GPU en pantalla → aterrizar el wakeword (el micrófono
+>    NO puede quedar siempre abierto por defecto) → guard del autostart →
+>    **cortar release para su novia** (Windows, micrófono normal). Todo lo
+>    demás queda EN PAUSA por decisión explícita (§17.2, último punto).
+> 2. **El bug B (palabras duplicadas del prefill) está ARREGLADO y commiteado**
+>    en `main` (`227e954`), validado en vivo. **Sin pushear.** El bug A
+>    (titubeo del onset) queda EN ESPERA del WAV de Benja — decisión de Charly,
+>    no adivinar umbrales sin datos (§17.1).
+> 3. **El selector de canal vive en la rama `propuesta/selector-de-canal`**
+>    (`de2efc9` preservación + `8ada533` blindaje contra sus tres puntos
+>    ciegos, 17 tests). Sin enganchar al grabador, a propósito: el enganche
+>    espera a que aterrice el wakeword porque comparten `recorder.rs`.
+> 4. **Trampa de entorno nueva:** si rustc muere con `0xc0000409`
+>    (STATUS_STACK_BUFFER_OVERRUN) con el commit libre en ~3 GB, lo destraba
+>    borrar `C:/h/debug/incremental/handy_app_lib-*` (solo caché; **nunca**
+>    `cargo clean`). Pasó 3 veces el 18/08 por la noche.
+>
+> ---
+>
 > **⚠️ LO PRIMERO AL RETOMAR — 2026-08-18 (§16)**
 >
 > 1. **El bug del VAD de Benja está REPRODUCIDO** sin su grabación, con su
@@ -3242,3 +3265,116 @@ medir de verdad hace falta el WAV.
 | Sin commitear                | WIP de wakeword (grupo C) + la propuesta del selector     |
 | Tests                        | 357 lib + 1 versión + 102 front, 0 fallos                 |
 | `code quality` en CI         | debería pasar a verde: el formato se arregló en `eb650f8` |
+
+---
+
+## 17. Sesión 2026-08-18 (noche)
+
+### 17.1 Lo hecho
+
+- **Análisis profundo de los tres puntos pedidos** (selector / bugs latentes /
+  WAV de Benja), con veredictos entregados antes de tocar nada.
+- **El WAV de Benja NO llegó.** Búsqueda real, no de memoria: Descargas (ningún
+  `.wav` desde enero 2026), Escritorio, Documentos, Música, Telegram, fixtures,
+  y el zip de Drive del 16/08 (152 MB — trae 4 grabaciones de pantalla `.mp4`,
+  ningún WAV). Gmail no se pudo consultar (vetado por el clasificador de
+  permisos de la sesión). Charly quedó en preguntarle a Benja directamente.
+- **Rama `propuesta/selector-de-canal`** (local, sin push):
+  - `de2efc9` — la propuesta preservada TAL CUAL estaba (3 archivos, cero
+    contaminación del WIP de wakeword, verificado por `--numstat`).
+  - `8ada533` — blindaje contra los tres puntos ciegos que encontró la
+    revisión, cada uno con su test visto en rojo: (1) ZCR **por segundo** (por
+    muestra dependía del sample rate: el mismo ruido que puntuaba 0 a 16 kHz
+    daba speechiness 0,94 a 48 kHz — y el enganche corre a la tasa nativa);
+    (2) el ruido grave lo degradaba a selector por volumen (DC de entrada
+    muerta ganaba 4,8×, zumbido fuerte 10×, ventilador 7,6× contra la voz real
+    a −39,6 dBFS) — ahora: señal sin su media + suelo de cruces + exigencia de
+    modulación silábica (máquina estacionaria = 0); (3) `pick_with_evidence`:
+    sin ganador claro (suelo + dominancia 2×) NO se decide y el llamante sigue
+    con la media — comprometerse en la ventana de silencio inicial del PTT era
+    una moneda al aire. El módulo pasó de 10 a **17 tests**; suite en la rama
+    370/370. Los puntos ciegos que QUEDAN (loopback con programa hablado,
+    golpeteo fuerte no estacionario) están documentados en la cabecera.
+- **Bug B — duplicación del prefill: ARREGLADO en `main` (`227e954`)**,
+  validado en vivo por Charly (VAD activo, pausas largas, sin palabras
+  repetidas). Causa exacta: `frame_buffer` retenía frames ya emitidos y la
+  reapertura tras una pausa reemitía hasta 13 frames = 390 ms (el rojo del
+  test reprodujo exactamente esos 13). Arreglo = invariante "el buffer solo
+  contiene audio no emitido". Entró el **primer arnés de tests de
+  `SmoothedVad`** (`ScriptedVad` de veredictos guionizados + frames
+  etiquetados) con 3 pins del comportamiento sano. ⚠️ **Los porcentajes de
+  `vad_survival` leerán algo más bajos al recalcularse** (antes contaban las
+  reemisiones como audio superviviente); el veredicto TITUBEO/SEÑAL no cambia
+  (usa veredictos crudos).
+- **Bug A (titubeo del onset, `smoothed.rs:92`): EN ESPERA del WAV de Benja**,
+  decisión de Charly — no adivinar el umbral sin datos. El arnés `ScriptedVad`
+  deja su fix a una sesión de distancia cuando toque.
+- **Verificado que YA NO están pendientes** (no rehacer): el F10 de inglés está
+  en `main` (`795ae03`), el ejecutable del bundle ya es `Trazo.exe`
+  (`37e97dc`), y `Cargo.toml` ya está en 0.9.5 con test (`70b41be`).
+- **Balance completo de pendientes entregado a Charly** (deuda no documentada
+  incluida: el VAD se inicializa ~167 ms en cada apertura de micrófono aunque
+  esté apagado y sus eventos `speech-active` nunca disparan con el default;
+  el suelo de −50 dBFS de §9.8; el lease de `unload_model` de §3.7; el tema en
+  `localStorage`; la asimetría de `transcript_lands_on_clipboard()` con pegado
+  `Direct`; el ejemplo `basic` de handy-keys; los fantasmas CRLF; los tests ES
+  contra la API real; la release 22 commits por detrás de `main`).
+- **Un fallo intermitente más de la suite, sin capturar cuál** (el `tail` se
+  comió la salida); dos pasadas completas verdes después (357/357). Encaja con
+  los perfiles ES (§6), pero sigue la regla de §9.9: si reaparece,
+  `cargo test --lib > salida.txt 2>&1` ANTES que nada.
+
+### 17.2 PLAN ACORDADO para la próxima sesión (orden de Charly — respetarlo)
+
+1. **Validar el aviso de GPU perdida EN PANTALLA.** Forzarlo a propósito:
+   `transcribe_gpu_device` a un índice inexistente en `settings_store.json`
+   (app cerrada, **sin BOM**, ver CLAUDE.md), arrancar y confirmar que
+   `ComputeHealthBanner` se ve (CDP si hace falta,
+   `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222`).
+   Revertir el ajuste al terminar. Es la única capa sin validar de §15.1.
+2. **Aterrizar el WIP de wakeword.** Regla dura de Charly: **el micrófono NO
+   puede quedar siempre abierto por defecto.** Recomendación: sustituir
+   `FORCE_ALWAYS_ON` por un ajuste `wake_word_enabled` (default `false`,
+   `#[serde(default)]` → sin migración de esquema), TDD, y commitear el grupo
+   C completo. Si algo se tuerce, el patrón seguro es el respaldo en rama
+   propia (como `980aca6`). Esto además **desbloquea `recorder.rs`** (donde
+   irá el enganche del selector) y deja el árbol limpio por primera vez en
+   semanas. Los `.onnx` de `resources/models/wakeword/`: **RESUELTO por
+   Charly (18/08 noche)** — `hey_jarvis_v0.1.onnx` (CC-BY-NC-SA, no
+   distribuible) queda **gitignored** (línea ya añadida a `.gitignore`, sin
+   commitear: viaja con el aterrizaje del grupo C); se retoma cuando llegue
+   el `hey_trazo.onnx` propio. El backbone (melspectrogram/embedding, Apache
+   2.0) sí puede commitearse. El wakeword NO va en la release del punto 4.
+3. **Guard del autostart**: `#[cfg(not(debug_assertions))]` en el bloque de
+   `lib.rs` que llama `autostart_manager.enable()` en cada arranque (§12.9).
+   Verificado el 18/08 noche: **sigue sin guard**. Tres líneas.
+4. **Con 1-3 en verde: cortar release nueva.** Motivación: se la va a dar a
+   **la novia de Charly** para uso real — Windows, micrófono normal (no
+   compuesto), así que **NO hacen falta** ni firma de Mac ni el selector de
+   canal para su caso (decisión explícita). Contenido que la justifica: banner
+   de GPU (`e93ed62`), fix de idioma en clips cortos (`381b4e5`), fix de
+   palabras duplicadas (`227e954`), F10 (`795ae03`), más el wakeword ya
+   aterrizado con su toggle en `false`. Mecánica (la de §10.4): bump de
+   versión, `cross-platform-check.yml` (NO `release.yml`, que exige firma),
+   tag apuntando **al commit del que compiló el matrix**, y `gh` siempre con
+   `--repo JuanIA-sketch/trazo`. **Aviso honesto para la instalación:** el
+   instalador va sin firma → SmartScreen ("Más información → Ejecutar de
+   todas formas", README §7.7); conviene que Charly se lo instale él o se lo
+   explique antes.
+
+**EN PAUSA sin prisa, por decisión explícita de Charly (no retomar por
+iniciativa propia):** el resto del Grupo 1 del balance (Wispr Flow, pagefile,
+test intermitente), TODO el Grupo 2 (bug A hasta el WAV, enganche del selector,
+muestra de inglés >7 s con estrella, firma macOS/Windows, `hey_trazo.onnx`,
+audio bajo del Mac de Benja), y el frente entero de "compartir con más gente".
+
+### 17.3 Estado al cerrar
+
+| ref                          | valor                                                          |
+| ---------------------------- | -------------------------------------------------------------- |
+| `main` local                 | = `origin/main` (`227e954` **pusheado** con autorización, 18/08 noche; encima va el commit de este traspaso) |
+| `propuesta/selector-de-canal`| `8ada533` (local, sin push)                                    |
+| Sin commitear                | WIP de wakeword (grupo C) + la línea nueva de `.gitignore` (viaja con el grupo C) |
+| Suite                        | `cargo test --lib` 357/357 + 1 ignored (verificado 2 veces)    |
+| Frontend                     | sin tocar esta sesión                                          |
+| Benja                        | Charly le preguntó por el WAV; avisará cuando lo tenga         |
